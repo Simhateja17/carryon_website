@@ -1,197 +1,259 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-/* ── Sidebar nav items ───────────────────────────────────────── */
-const sideNav = [
-  { label: 'Command Center', href: '/command-center', icon: (<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><rect x="1" y="1" width="6.5" height="6.5" rx="1.5" fill="currentColor"/><rect x="9.5" y="1" width="6.5" height="6.5" rx="1.5" fill="currentColor"/><rect x="1" y="9.5" width="6.5" height="6.5" rx="1.5" fill="currentColor"/><rect x="9.5" y="9.5" width="6.5" height="6.5" rx="1.5" fill="currentColor"/></svg>) },
-  { label: 'Live Map',       href: '/',              icon: (<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M8.5 1C6.015 1 4 3.015 4 5.5c0 4.167 4.5 10.5 4.5 10.5S13 9.667 13 5.5C13 3.015 10.985 1 8.5 1Z" stroke="currentColor" strokeWidth="1.4"/><circle cx="8.5" cy="5.5" r="1.8" fill="currentColor"/></svg>) },
-  { label: 'Orders',         href: '/orders',        icon: (<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><rect x="2" y="2" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M5 6.5h7M5 9h7M5 11.5h4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>) },
-  { label: 'Drivers',        href: '/drivers',       icon: (<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="5.5" r="2.8" stroke="currentColor" strokeWidth="1.4"/><path d="M2.5 15c0-3.038 2.686-5.5 6-5.5s6 2.462 6 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>) },
-  { label: 'Customers',      href: '/customers',     icon: (<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><circle cx="6" cy="5.5" r="2.3" stroke="currentColor" strokeWidth="1.4"/><path d="M1 14c0-2.761 2.239-5 5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="11.5" cy="5.5" r="2.3" stroke="currentColor" strokeWidth="1.4"/><path d="M16 14c0-2.761-2.239-5-5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>) },
-  { label: 'Revenue',        href: '/revenue',       icon: (<svg width="17" height="17" viewBox="0 0 17 17" fill="none"><polyline points="2,13 5.5,7.5 9,10.5 15,3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><line x1="2" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>) },
-];
+import { useRouter, usePathname } from 'next/navigation';
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
+const sideNav = [
+  {
+    label: 'Command Center', href: '/command-center',
+    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.2" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.2" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.2" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.2" fill="currentColor"/></svg>,
+  },
+  {
+    label: 'Fleet Tracking', href: '/live-map',
+    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="9" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.3"/><path d="M10 5.5h2.5l2 4H10V5.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor"/><circle cx="11" cy="12" r="1.5" fill="currentColor"/></svg>,
+  },
+  {
+    label: 'Job Management', href: '/orders',
+    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 6h6M5 9h6M5 12h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Route Analytics', href: '/analytics',
+    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="2,12 5,7 8,9.5 14,3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><line x1="2" y1="14" x2="14" y2="14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Asset Ledger', href: '/customers',
+    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 8h6M8 5v6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Settings', href: '/settings',
+    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  },
+];
+
 function Sidebar() {
-  const router = useRouter();
+  const router   = useRouter();
+  const pathname = usePathname();
+
   return (
-    <aside style={{ width: '210px', flexShrink: 0, height: '100vh', background: '#fff', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
+    <aside style={{
+      width: '210px', flexShrink: 0, height: '100vh',
+      background: '#fff', borderRight: '1px solid #E2E8F0',
+      display: 'flex', flexDirection: 'column',
+    }}>
       {/* Logo */}
-      <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <rect x="1" y="1" width="7.5" height="7.5" rx="1.5" fill="white"/>
-            <rect x="11.5" y="1" width="7.5" height="7.5" rx="1.5" fill="white"/>
-            <rect x="1" y="11.5" width="7.5" height="7.5" rx="1.5" fill="white"/>
-            <rect x="11.5" y="11.5" width="7.5" height="7.5" rx="1.5" fill="white"/>
+      <div style={{ padding: '20px 20px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '8px',
+          background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
+            <rect x="0.75" y="3.5" width="13.5" height="10" rx="1.75" stroke="white" strokeWidth="1.6"/>
+            <path d="M14.25 6.5h4.5l2.75 4.5H14.25V6.5Z" stroke="white" strokeWidth="1.6" strokeLinejoin="round"/>
+            <circle cx="4.5" cy="15.25" r="1.75" fill="white"/>
+            <circle cx="14.75" cy="15.25" r="1.75" fill="white"/>
           </svg>
         </div>
-        <div>
-          <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 800, color: '#0F172A', lineHeight: '16px', letterSpacing: '-0.2px' }}>FLEET ENGINE</div>
-          <div style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 500, color: '#94A3B8', letterSpacing: '0.4px' }}>Operational HQ</div>
-        </div>
+        <span style={{ fontFamily: 'Inter', fontSize: '20px', fontWeight: 800, color: '#2563EB', letterSpacing: '-0.3px' }}>
+          Carry On
+        </span>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '4px 10px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+      <nav style={{ flex: 1, padding: '4px 12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {sideNav.map((item) => {
-          const isActive = item.label === 'Command Center';
+          const isActive = pathname === item.href;
           return (
-            <button key={item.label} suppressHydrationWarning onClick={() => router.push(item.href)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', width: '100%', textAlign: 'left', background: isActive ? '#EFF6FF' : 'transparent', border: 'none', borderLeft: isActive ? '3px solid #2563EB' : '3px solid transparent', borderRadius: isActive ? '0 8px 8px 0' : '8px', cursor: 'pointer' }}>
-              <span style={{ display: 'flex', flexShrink: 0, color: isActive ? '#2563EB' : '#64748B' }}>{item.icon}</span>
-              <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: isActive ? 700 : 400, color: isActive ? '#2563EB' : '#374151' }}>{item.label}</span>
+            <button
+              key={item.label}
+              suppressHydrationWarning
+              onClick={() => router.push(item.href)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '9px 12px', width: '100%', textAlign: 'left',
+                background: isActive ? '#EFF6FF' : 'transparent',
+                border: 'none', borderRadius: '8px', cursor: 'pointer',
+              }}
+            >
+              <span style={{ color: isActive ? '#2563EB' : '#64748B', display: 'flex', flexShrink: 0 }}>{item.icon}</span>
+              <span style={{
+                fontFamily: 'Inter', fontSize: '13px',
+                fontWeight: isActive ? 700 : 400,
+                color: isActive ? '#2563EB' : '#374151',
+              }}>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
       {/* Bottom */}
-      <div style={{ padding: '12px 12px 18px', borderTop: '1px solid #F1F5F9' }}>
-        <button suppressHydrationWarning style={{ width: '100%', height: '38px', borderRadius: '8px', background: '#2563EB', border: 'none', cursor: 'pointer', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#fff' }}>
+      <div style={{ padding: '12px 12px 20px', borderTop: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <button suppressHydrationWarning style={{
+          width: '100%', height: '40px', borderRadius: '8px',
+          background: '#2563EB', border: 'none', cursor: 'pointer',
+          fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#fff',
+          marginBottom: '4px',
+        }}>
           + New Dispatch
+        </button>
+        <button suppressHydrationWarning style={{
+          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+          background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+        }}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="#64748B" strokeWidth="1.3"/>
+            <path d="M8 11v-1M8 8.5a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Z" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>Support</span>
+        </button>
+        <button suppressHydrationWarning style={{
+          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+          background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+        }}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M6 14H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h3" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round"/>
+            <path d="M11 12l4-4-4-4M15 8H7" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>Sign Out</span>
         </button>
       </div>
     </aside>
   );
 }
 
-/* ── Mini sparkline bar chart ────────────────────────────────── */
-function Sparkline({ bars }: { bars: number[] }) {
-  const max = Math.max(...bars);
-  return (
-    <svg width="80" height="28" viewBox="0 0 80 28">
-      {bars.map((v, i) => {
-        const h = Math.round((v / max) * 22);
-        const x = i * (80 / bars.length) + 2;
-        const isLast = i === bars.length - 1;
-        return (
-          <rect key={i} x={x} y={28 - h} width={8} height={h} rx="2"
-            fill={isLast ? '#2563EB' : '#BFDBFE'} />
-        );
-      })}
-    </svg>
-  );
+/* ── Stat Card ───────────────────────────────────────────────── */
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  trend: string;
+  trendUp: boolean | null; // null = stable
 }
-
-/* ── Orders & Revenue line chart ─────────────────────────────── */
-function TrendChart() {
-  // Chart area: viewBox 540 × 190, drawing area x:50–520, y:10–160
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'];
-  const ordersData  = [42, 55, 48, 67, 76, 70]; // × 1000
-  const revenueData = [28, 34, 30, 45, 62, 58]; // × 1000
-  const maxV = 100;
-  const cW = 470; const cH = 150; const xOff = 48; const yOff = 10;
-
-  const xPos = (i: number) => xOff + (i / (months.length - 1)) * cW;
-  const yPos = (v: number) => yOff + cH - (v / maxV) * cH;
-
-  const toPath = (data: number[]) => data.map((v, i) => `${i === 0 ? 'M' : 'L'}${xPos(i)},${yPos(v)}`).join(' ');
-  const toArea = (data: number[]) => `${toPath(data)} L${xPos(data.length - 1)},${yOff + cH} L${xPos(0)},${yOff + cH} Z`;
-
-  const gridLines = [0, 25, 50, 75, 100];
-
+function StatCard({ icon, label, value, trend, trendUp }: StatCardProps) {
+  const trendColor = trendUp === null ? '#64748B' : trendUp ? '#10B981' : '#EF4444';
   return (
-    <svg viewBox="0 0 540 185" width="100%" style={{ overflow: 'visible' }}>
-      {/* Grid lines */}
-      {gridLines.map((g) => (
-        <g key={g}>
-          <line x1={xOff} y1={yPos(g)} x2={xOff + cW} y2={yPos(g)} stroke="#F1F5F9" strokeWidth="1" />
-          <text x={xOff - 6} y={yPos(g) + 4} textAnchor="end" fontFamily="Inter" fontSize="9" fill="#94A3B8">{g > 0 ? `${g}k` : '0'}</text>
-        </g>
-      ))}
-      {/* Month labels */}
-      {months.map((m, i) => (
-        <text key={m} x={xPos(i)} y={yOff + cH + 18} textAnchor="middle" fontFamily="Inter" fontSize="9" fill="#94A3B8">{m}</text>
-      ))}
-      {/* Revenue area fill */}
-      <path d={toArea(revenueData)} fill="#EFF6FF" opacity="0.7" />
-      {/* Orders area fill */}
-      <path d={toArea(ordersData)} fill="#BFDBFE" opacity="0.5" />
-      {/* Revenue line */}
-      <path d={toPath(revenueData)} fill="none" stroke="#93C5FD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Orders line */}
-      <path d={toPath(ordersData)} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Dots on orders line */}
-      {ordersData.map((v, i) => (
-        <circle key={i} cx={xPos(i)} cy={yPos(v)} r="3.5" fill="#2563EB" />
-      ))}
-    </svg>
-  );
-}
-
-/* ── Order Status donut ──────────────────────────────────────── */
-function OrderStatusDonut() {
-  const r = 54; const cx = 80; const cy = 80;
-  const circ = 2 * Math.PI * r;
-  // segments: In Transit 65%, Completed 25%, Delayed 10%
-  const segments = [
-    { pct: 65, color: '#60A5FA', label: 'In Transit' },
-    { pct: 25, color: '#2563EB', label: 'Completed' },
-    { pct: 10, color: '#1E3A8A', label: 'Delayed'   },
-  ];
-  let acc = 0;
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-      <div style={{ position: 'relative', width: '160px', height: '160px' }}>
-        <svg width="160" height="160" viewBox="0 0 160 160">
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#EFF6FF" strokeWidth="20" />
-          {segments.map((s) => {
-            const len    = circ * (s.pct / 100);
-            const offset = circ / 4 - acc;
-            acc += len;
-            return (
-              <circle key={s.label} cx={cx} cy={cy} r={r} fill="none"
-                stroke={s.color} strokeWidth="20"
-                strokeDasharray={`${len} ${circ}`}
-                strokeDashoffset={offset} />
-            );
-          })}
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>88%</span>
-          <span style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: '#64748B', letterSpacing: '0.6px', marginTop: '3px' }}>ON TIME</span>
-        </div>
+    <div style={{
+      background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0',
+      padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: '14px',
+    }}>
+      <div style={{
+        width: '40px', height: '40px', borderRadius: '10px',
+        background: '#EFF6FF', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexShrink: 0, color: '#2563EB',
+      }}>
+        {icon}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', width: '100%' }}>
-        {segments.map((s) => (
-          <div key={s.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-              <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151' }}>{s.label}</span>
-            </div>
-            <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{s.pct}%</span>
-          </div>
-        ))}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 500, color: '#64748B' }}>{label}</span>
+          <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: trendColor }}>
+            {trendUp === true ? '↗' : trendUp === false ? '↘' : ''}{trend}
+          </span>
+        </div>
+        <div style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>
+          {value}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── Data ────────────────────────────────────────────────────── */
-const orders = [
-  { id: '#ORD-78229', initials: 'JD', initBg: '#DBEAFE', initColor: '#1D4ED8', customer: 'John Dorsey',   vehicle: 'Truck A-22 (Heavy)',    route: 'Brooklyn → Manhattan', amount: '$1,240.00', status: 'IN TRANSIT', statusBg: '#2563EB', statusColor: '#fff' },
-  { id: '#ORD-78230', initials: 'SM', initBg: '#D1FAE5', initColor: '#065F46', customer: 'Sarah Miller',  vehicle: 'Van V-102 (Express)',   route: 'Queens → Bronx',       amount: '$450.00',   status: 'COMPLETED',  statusBg: '#10B981', statusColor: '#fff' },
-  { id: '#ORD-78231', initials: 'BK', initBg: '#FEF3C7', initColor: '#92400E', customer: 'Brian King',    vehicle: 'Moto M-09 (Fast)',      route: 'Staten Is. → Jersey',  amount: '$89.00',    status: 'PENDING',    statusBg: '#E2E8F0', statusColor: '#64748B' },
-];
+/* ── Driver Status Row ───────────────────────────────────────── */
+/* 404-6412 / 404-6438 / 404-6451 / 404-6464:
+   display:flex; justify-content:space-between; align-items:center; align-self:stretch */
+function DriverRow({ name, status, detail, avatarSrc, dotColor }: {
+  name: string; status: string; detail: string; avatarSrc: string; dotColor: string;
+}) {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      alignSelf: 'stretch',
+    }}>
+      {/* Left: avatar + text */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Avatar with status dot — dot at bottom-left */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={avatarSrc}
+            alt={name}
+            style={{
+              width: '48px', height: '48px', borderRadius: '50%',
+              objectFit: 'cover', display: 'block',
+              background: '#F1F5F9',
+            }}
+          />
+          <span style={{
+            position: 'absolute', bottom: '1px', left: '1px',
+            width: '12px', height: '12px', borderRadius: '50%',
+            background: dotColor, border: '2px solid #fff',
+          }} />
+        </div>
 
-const topDrivers = [
-  { initials: 'MV', initBg: '#DBEAFE', initColor: '#1D4ED8', name: 'Marco V.', badge: 'ELITE RUNNER', badgeBg: '#EFF6FF', badgeColor: '#2563EB', amount: '$12.4k', rating: '98%' },
-  { initials: 'LT', initBg: '#D1FAE5', initColor: '#065F46', name: 'Lana T.',  badge: 'GOLD STAR',   badgeBg: '#ECFDF5', badgeColor: '#059669', amount: '$10.2k', rating: '89%' },
-  { initials: 'SR', initBg: '#EDE9FE', initColor: '#5B21B6', name: 'Sam R.',   badge: 'PRO ROUTE',   badgeBg: '#F5F3FF', badgeColor: '#7C3AED', amount: '$9.8k',  rating: '95%' },
-];
+        {/* Name + status */}
+        <div>
+          <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', lineHeight: '20px' }}>
+            {name}
+          </div>
+          <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '16px' }}>
+            {status} • {detail}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const stats = [
-  { label: 'TOTAL ORDERS',   value: '42,891',  trend: '+12%', up: true,  bars: [35,42,38,50,46,42,58] },
-  { label: 'REVENUE',        value: '$842.2k', trend: '+8.4%',up: true,  bars: [28,34,30,40,38,36,52] },
-  { label: 'ACTIVE DRIVERS', value: '1,024',   trend: '-2%',  up: false, bars: [56,52,54,50,48,50,44] },
-  { label: 'AVG TIME',       value: '28.4m',   trend: '+5%',  up: true,  bars: [22,26,24,28,27,25,32] },
-];
+/* ── Progress Bar ────────────────────────────────────────────── */
+function ProgressBar({ label, pct }: { label: string; pct: number }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</span>
+        <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#2563EB' }}>{pct}%</span>
+      </div>
+      <div style={{ height: '6px', borderRadius: '9999px', background: '#E2E8F0', overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: '9999px', background: '#2563EB' }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Job Status Badge ────────────────────────────────────────── */
+function StatusBadge({ status }: { status: 'ACTIVE' | 'COMPLETED' | 'PENDING' }) {
+  const styles = {
+    ACTIVE:    { background: '#2563EB', color: '#fff' },
+    COMPLETED: { background: '#10B981', color: '#fff' },
+    PENDING:   { background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' },
+  };
+  const s = styles[status];
+  return (
+    <span style={{
+      display: 'inline-block', padding: '3px 10px', borderRadius: '9999px',
+      fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
+      whiteSpace: 'nowrap', ...s,
+    }}>
+      {status}
+    </span>
+  );
+}
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function CommandCenterPage() {
-  const [period, setPeriod] = useState<'Today' | 'Weekly' | 'Monthly'>('Today');
+  const jobs = [
+    { id: '#CR-9042', driver: 'David Chen',     avatarSrc: '/driver-avatar.png', from: 'ORD', to: 'DWT', routeType: 'Long Haul', dist: '420mi', status: 'ACTIVE'    as const, earnings: '$1,240.00' },
+    { id: '#CR-8991', driver: 'Sarah Miller',   avatarSrc: '/driver-sarah.png',  from: 'SFO', to: 'SJX', routeType: 'Local',     dist: '45mi',  status: 'COMPLETED' as const, earnings: '$320.00'   },
+    { id: '#CR-9102', driver: 'Marcus Johnson', avatarSrc: '/driver-james.png',  from: 'LGA', to: 'PHL', routeType: 'Express',   dist: '95mi',  status: 'PENDING'   as const, earnings: '$580.00'   },
+  ];
+
+  const drivers = [
+    { name: 'Jordan P.', status: 'In Route',   detail: 'Truck #042',           avatarSrc: '/driver-avatar.png',   dotColor: '#22C55E' },
+    { name: 'Sarah L.',  status: 'Available',  detail: 'Truck #011',           avatarSrc: '/driver-sarah.png',    dotColor: '#22C55E' },
+    { name: 'Kevin H.',  status: 'Offline',    detail: 'Last seen 2h ago',     avatarSrc: '/driver-michael.png',  dotColor: '#94A3B8' },
+    { name: 'Emily R.',  status: 'In Route',   detail: 'Truck #088',           avatarSrc: '/driver-elena.png',    dotColor: '#22C55E' },
+    { name: 'Robert T.', status: 'Offline',    detail: 'Last seen 14m ago',    avatarSrc: '/driver-sam.png',      dotColor: '#94A3B8' },
+  ];
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', background: '#F8FAFC', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
@@ -200,189 +262,267 @@ export default function CommandCenterPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Navbar ── */}
-        <header style={{ height: '56px', flexShrink: 0, background: '#fff', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', boxSizing: 'border-box' }}>
-          {/* Brand */}
-          <div style={{ lineHeight: '1.1' }}>
-            <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 800, color: '#2563EB', letterSpacing: '-0.3px' }}>Logistics</div>
-            <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 800, color: '#2563EB', letterSpacing: '-0.3px' }}>Command</div>
-          </div>
-
+        <header style={{
+          height: '60px', flexShrink: 0, background: '#fff',
+          borderBottom: '1px solid #E2E8F0',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 24px',
+          boxSizing: 'border-box', gap: '16px',
+        }}>
           {/* Search */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '36px', padding: '0 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '999px', width: '280px' }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#94A3B8" strokeWidth="1.3"/><path d="M9.5 9.5l2.5 2.5" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round"/></svg>
-            <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#CBD5E1' }}>Search orders, vehicles or drivers...</span>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            height: '38px', padding: '0 14px',
+            background: '#F8FAFC', border: '1px solid #E2E8F0',
+            borderRadius: '999px', flex: 1, maxWidth: '420px',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="#94A3B8" strokeWidth="1.3"/>
+              <path d="M9.5 9.5l2.5 2.5" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#CBD5E1' }}>Search fleet, jobs, or drivers...</span>
           </div>
 
-          {/* Icons + avatar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* Bell */}
-            <button suppressHydrationWarning style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <span style={{ position: 'absolute', top: '6px', right: '6px', width: '7px', height: '7px', borderRadius: '50%', background: '#EF4444', border: '1.5px solid #fff' }} />
+          {/* Right: bell + profile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button suppressHydrationWarning style={{
+              width: '36px', height: '36px', borderRadius: '50%',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span style={{ position: 'absolute', top: '7px', right: '7px', width: '7px', height: '7px', borderRadius: '50%', background: '#EF4444', border: '1.5px solid #fff' }} />
             </button>
-            {/* Help */}
-            <button suppressHydrationWarning style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#64748B" strokeWidth="1.5"/><path d="M12 17v-2M12 9a2 2 0 1 1 0 4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            </button>
-            {/* Settings */}
-            <button suppressHydrationWarning style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#64748B" strokeWidth="1.5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            </button>
+
             {/* Alex Rivera */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>Alex Rivera</div>
-                <div style={{ fontFamily: 'Inter', fontSize: '10px', color: '#64748B' }}>Senior Dispatcher</div>
+                <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>Alex Rivera</div>
+                <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B' }}>Fleet Admin</div>
               </div>
-              <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#BFDBFE', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#2563EB"/><path d="M3 21c0-4.971 4.029-9 9-9s9 4.029 9 9" fill="#2563EB"/></svg>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/driver-avatar.png" alt="Alex Rivera" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E2E8F0' }} />
             </div>
           </div>
         </header>
 
         {/* ── Main content ── */}
-        <main style={{ flex: 1, padding: '22px 24px', overflowY: 'auto', boxSizing: 'border-box' }}>
+        <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', boxSizing: 'border-box' }}>
 
-          {/* Fleet Overview header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-            <div>
-              <h1 style={{ margin: 0, fontFamily: 'Inter', fontSize: '22px', fontWeight: 800, color: '#0F172A' }}>Fleet Overview</h1>
-              <p style={{ margin: '4px 0 0', fontFamily: 'Inter', fontSize: '12px', color: '#64748B' }}>Real-time performance metrics for 1,248 active units.</p>
-            </div>
-            {/* Period tabs */}
-            <div style={{ display: 'flex', background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
-              {(['Today', 'Weekly', 'Monthly'] as const).map((p) => (
-                <button key={p} suppressHydrationWarning onClick={() => setPeriod(p)} style={{ padding: '6px 14px', border: 'none', borderRight: p !== 'Monthly' ? '1px solid #E2E8F0' : 'none', cursor: 'pointer', fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, background: period === p ? '#2563EB' : 'transparent', color: period === p ? '#fff' : '#64748B', transition: 'background 0.15s', whiteSpace: 'nowrap' }}>{p}</button>
-              ))}
-            </div>
+          {/* Stat cards row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+            <StatCard
+              icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="#2563EB" strokeWidth="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+              label="Active Jobs" value="142" trend="+12%" trendUp={true}
+            />
+            <StatCard
+              icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="#2563EB" strokeWidth="1.5"/><path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+              label="Available Drivers" value="28" trend="Stable" trendUp={null}
+            />
+            <StatCard
+              icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="6" width="12" height="8" rx="1.5" stroke="#2563EB" strokeWidth="1.5"/><path d="M13 9h3l2.5 4H13V9Z" stroke="#2563EB" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="4.5" cy="16" r="1.8" fill="#2563EB"/><circle cx="13" cy="16" r="1.8" fill="#2563EB"/></svg>}
+              label="Fleet Utilization" value="94.2%" trend="-2%" trendUp={false}
+            />
+            <StatCard
+              icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-5 3 3 4-6 3 2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="5" r="2" fill="#2563EB"/></svg>}
+              label="Today's Revenue" value="$14.2k" trend="+8%" trendUp={true}
+            />
           </div>
 
-          {/* Stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
-            {stats.map((s) => (
-              <div key={s.label} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 18px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.5px' }}>{s.label}</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: s.up ? '#10B981' : '#EF4444' }}>
-                    {s.up ? '▲' : '▼'}{s.trend}
+          {/* Two-column layout: Map+Jobs | Driver Status */}
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+
+            {/* LEFT — Map + Recent Jobs */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
+
+              {/* Map — node 414-987
+                  aspect-ratio: 122/77; background: url(/blue_map.png) lightgray
+                  -77.529px -8.879px / 136.345% 111.821% no-repeat */}
+              <div style={{
+                borderRadius: '12px', overflow: 'hidden',
+                border: '1px solid #E2E8F0',
+                position: 'relative',
+                aspectRatio: '122 / 77',
+                backgroundColor: 'lightgray',
+                backgroundImage: 'url(/blue_map.png)',
+                backgroundPosition: '-77.529px -8.879px',
+                backgroundSize: '136.345% 111.821%',
+                backgroundRepeat: 'no-repeat',
+              }}>
+                {/* Live Fleet overlay card */}
+                <div style={{
+                  position: 'absolute', top: '16px', left: '16px',
+                  background: 'rgba(255,255,255,0.95)',
+                  borderRadius: '10px', padding: '12px 14px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.10)',
+                  backdropFilter: 'blur(4px)',
+                }}>
+                  <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
+                    Live Fleet (32)
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
+                      <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151' }}>24 In Motion</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#94A3B8', display: 'inline-block' }} />
+                      <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151' }}>8 Stationary</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* +12 Active Drivers pill */}
+                <div style={{
+                  position: 'absolute', bottom: '16px', right: '16px',
+                  background: 'rgba(255,255,255,0.95)',
+                  borderRadius: '999px', padding: '8px 14px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.10)',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  backdropFilter: 'blur(4px)',
+                }}>
+                  {/* Mini overlapping avatars */}
+                  <div style={{ display: 'flex', position: 'relative', width: '52px', height: '24px' }}>
+                    {['/driver-avatar.png', '/driver-sarah.png', '/driver-elena.png'].map((src, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={src} alt="" style={{
+                        width: '24px', height: '24px', borderRadius: '50%',
+                        objectFit: 'cover', border: '2px solid #fff',
+                        position: 'absolute', left: `${i * 14}px`,
+                      }} />
+                    ))}
+                  </div>
+                  <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>
+                    +12 Active Drivers
                   </span>
                 </div>
-                <div style={{ fontFamily: 'Inter', fontSize: '24px', fontWeight: 800, color: '#0F172A', lineHeight: 1.1, marginBottom: '10px' }}>{s.value}</div>
-                <Sparkline bars={s.bars} />
               </div>
-            ))}
-          </div>
 
-          {/* Middle row: Trend chart + Order Status */}
-          <div style={{ display: 'flex', gap: '14px', marginBottom: '14px', alignItems: 'stretch' }}>
-
-            {/* Orders & Revenue Trend */}
-            <div style={{ flex: 1, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 22px', minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#2563EB' }}>Orders &amp; Revenue Trend</div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>Monthly overview of performance</div>
+              {/* Recent Jobs */}
+              <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                {/* Header */}
+                <div style={{
+                  padding: '14px 20px', display: 'flex',
+                  justifyContent: 'space-between', alignItems: 'center',
+                  borderBottom: '1px solid #F1F5F9',
+                }}>
+                  <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>Recent Jobs</span>
+                  <button suppressHydrationWarning style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#2563EB',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                  }}>
+                    View All →
+                  </button>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB' }} />
-                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#374151' }}>Orders</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#93C5FD' }} />
-                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#374151' }}>Revenue</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', cursor: 'pointer' }}>
-                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#374151', fontWeight: 500 }}>Last 6 Months</span>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                </div>
-              </div>
-              <TrendChart />
-            </div>
 
-            {/* Order Status */}
-            <div style={{ width: '200px', flexShrink: 0, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 18px' }}>
-              <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '16px' }}>Order Status</div>
-              <OrderStatusDonut />
-            </div>
-
-          </div>
-
-          {/* Bottom row: Recent Orders + Top Drivers */}
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-
-            {/* Recent Orders */}
-            <div style={{ flex: 1, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', minWidth: 0 }}>
-              <div style={{ padding: '16px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#2563EB' }}>Recent Orders</span>
-                <button suppressHydrationWarning style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
-                    {['ORDER ID', 'CUSTOMER', 'VEHICLE', 'ROUTE', 'AMOUNT', 'STATUS'].map((h) => (
-                      <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((o, i) => (
-                    <tr key={o.id} style={{ borderBottom: i < orders.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
-                      <td style={{ padding: '12px 14px', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap' }}>{o.id}</td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: o.initBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 800, color: o.initColor }}>{o.initials}</span>
-                          </div>
-                          <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#0F172A', whiteSpace: 'nowrap' }}>{o.customer}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 14px', fontFamily: 'Inter', fontSize: '11px', color: '#64748B', whiteSpace: 'nowrap' }}>{o.vehicle}</td>
-                      <td style={{ padding: '12px 14px', fontFamily: 'Inter', fontSize: '11px', color: '#374151', whiteSpace: 'nowrap' }}>{o.route}</td>
-                      <td style={{ padding: '12px 14px', fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#2563EB', whiteSpace: 'nowrap' }}>{o.amount}</td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '999px', background: o.statusBg, fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: o.statusColor, whiteSpace: 'nowrap' }}>{o.status}</span>
-                      </td>
+                {/* Table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#F8FAFC' }}>
+                      {['JOB ID', 'DRIVER', 'ROUTE', 'STATUS', 'EARNINGS'].map((h) => (
+                        <th key={h} style={{
+                          padding: '10px 16px', textAlign: 'left',
+                          fontFamily: 'Inter', fontSize: '10px',
+                          fontWeight: 600, color: '#94A3B8',
+                          letterSpacing: '0.5px', whiteSpace: 'nowrap',
+                        }}>{h}</th>
+                      ))}
                     </tr>
+                  </thead>
+                  <tbody>
+                    {jobs.map((job, i) => (
+                      <tr key={job.id} style={{ borderTop: '1px solid #F1F5F9' }}>
+                        <td style={{ padding: '12px 16px', fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap' }}>
+                          {job.id}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={job.avatarSrc} alt={job.driver} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                            <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#0F172A', whiteSpace: 'nowrap' }}>{job.driver}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>
+                            {job.from} → {job.to}
+                          </div>
+                          <div style={{ fontFamily: 'Inter', fontSize: '10px', color: '#94A3B8' }}>
+                            {job.routeType} • {job.dist}
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <StatusBadge status={job.status} />
+                        </td>
+                        <td style={{ padding: '12px 16px', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap' }}>
+                          {job.earnings}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* RIGHT — Driver Status + Efficiency Overview */}
+            <div style={{ width: '270px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* 404-6404: Driver Status card
+                  padding: 24px 24px 24px 24px; gap: 24px; border-radius: 12px; background: #FFF */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '24px',
+                alignSelf: 'stretch',
+                borderRadius: '12px',
+                background: '#FFF',
+                border: '1px solid #E2E8F0',
+                padding: '24px',
+                boxSizing: 'border-box',
+              }}>
+                {/* Title */}
+                <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>
+                  Driver Status
+                </div>
+
+                {/* Driver rows with dividers */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignSelf: 'stretch', gap: '0' }}>
+                  {drivers.map((d, i) => (
+                    <div key={d.name}>
+                      {i > 0 && (
+                        <div style={{ height: '1px', background: '#F1F5F9', margin: '0' }} />
+                      )}
+                      <div style={{ padding: '12px 0' }}>
+                        <DriverRow {...d} />
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Top Drivers */}
-            <div style={{ width: '210px', flexShrink: 0, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 18px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <span style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>Top Drivers</span>
-                <button suppressHydrationWarning style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center' }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="2.5" r="1.2" fill="currentColor"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/><circle cx="7" cy="11.5" r="1.2" fill="currentColor"/></svg>
-                </button>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
-                {topDrivers.map((d) => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: d.initBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 800, color: d.initColor }}>{d.initials}</span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{d.name}</div>
-                      <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: '4px', background: d.badgeBg, fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: d.badgeColor, letterSpacing: '0.3px' }}>{d.badge}</span>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 800, color: '#2563EB' }}>{d.amount}</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '10px', color: '#94A3B8' }}>{d.rating} Rating</div>
-                    </div>
-                  </div>
-                ))}
+              {/* Efficiency Overview */}
+              <div style={{
+                background: '#EFF6FF',
+                borderRadius: '12px',
+                border: '1px solid #BFDBFE',
+                padding: '20px',
+              }}>
+                <div style={{
+                  fontFamily: 'Inter', fontSize: '15px', fontWeight: 700,
+                  color: '#2563EB', marginBottom: '16px',
+                }}>
+                  Efficiency Overview
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <ProgressBar label="On Time Rate" pct={98} />
+                  <ProgressBar label="Fuel Economy" pct={82} />
+                </div>
               </div>
 
-              <button suppressHydrationWarning style={{ width: '100%', height: '34px', borderRadius: '8px', background: '#EFF6FF', border: '1px solid #BFDBFE', cursor: 'pointer', fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#2563EB' }}>
-                Performance Reports
-              </button>
             </div>
-
           </div>
         </main>
       </div>
