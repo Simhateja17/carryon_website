@@ -1,0 +1,402 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+/* ── Sidebar nav items ───────────────────────────────────────── */
+const navItems = [
+  {
+    label: 'Command Center', href: '/command-center',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="10.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>,
+  },
+  {
+    label: 'Analytics', href: '/analytics',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14l4-5 3 3 4-6 3 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  },
+  {
+    label: 'Live Map', href: '/',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C6.515 1.5 4.5 3.515 4.5 6c0 3.75 4.5 10.5 4.5 10.5S13.5 9.75 13.5 6c0-2.485-2.015-4.5-4.5-4.5Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="9" cy="6" r="1.5" fill="currentColor"/></svg>,
+  },
+  {
+    label: 'Orders', href: '/orders',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="2.25" width="12" height="13.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6 6h6M6 9h6M6 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Drivers', href: '/drivers',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 15.75c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Customers', href: '/customers',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6.75" cy="5.25" r="2.25" stroke="currentColor" strokeWidth="1.5"/><path d="M2.25 14.25c0-2.485 2.015-4.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12.75" cy="7.5" r="2.25" stroke="currentColor" strokeWidth="1.5"/><path d="M8.25 15.75c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Revenue', href: '/revenue',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5"/><path d="M9 5.25v1.5M9 11.25v1.5M6.75 7.5a2.25 2.25 0 0 1 4.5 0c0 1.5-2.25 1.5-2.25 3h0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  },
+  {
+    label: 'Settings', href: '/settings',
+    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.25" stroke="currentColor" strokeWidth="1.5"/><path d="M9 1.5v1.5M9 15v1.5M1.5 9H3M15 9h1.5M3.697 3.697l1.06 1.06M13.243 13.243l1.06 1.06M3.697 14.303l1.06-1.06M13.243 4.757l1.06-1.06" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  },
+];
+
+function AppSidebar({ activeLabel }: { activeLabel: string }) {
+  const router = useRouter();
+  return (
+    <aside style={{ width: '200px', flexShrink: 0, height: '100vh', background: '#fff', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
+      {/* Logo */}
+      <div style={{ padding: '18px 16px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="22" height="17" viewBox="0 0 22 17" fill="none">
+            <rect x="0.75" y="3" width="12.5" height="9" rx="1.75" stroke="white" strokeWidth="1.6"/>
+            <path d="M13.25 5.5h4l2.75 4.5H13.25V5.5Z" stroke="white" strokeWidth="1.6" strokeLinejoin="round"/>
+            <circle cx="4.5" cy="14" r="1.75" fill="white"/>
+            <circle cx="14.25" cy="14" r="1.75" fill="white"/>
+          </svg>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 800, color: '#2563EB', lineHeight: '18px' }}>FleetAdmin</div>
+          <div style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.8px' }}>GLOBAL LOGISTICS</div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: '1px', overflowY: 'auto' }}>
+        {navItems.map((item) => {
+          const isActive = item.label === activeLabel;
+          return (
+            <button key={item.label} suppressHydrationWarning onClick={() => router.push(item.href)}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', width: '100%', textAlign: 'left', background: isActive ? '#EFF6FF' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+              <span style={{ display: 'flex', flexShrink: 0, color: isActive ? '#2563EB' : '#64748B' }}>{item.icon}</span>
+              <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: isActive ? 600 : 400, color: isActive ? '#2563EB' : '#374151' }}>{item.label}</span>
+              {isActive && <span style={{ marginLeft: 'auto', width: '3px', height: '18px', background: '#2563EB', borderRadius: '2px' }} />}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Bottom */}
+      <div style={{ padding: '10px 10px 16px', borderTop: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <button suppressHydrationWarning style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', width: '100%', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="#64748B" strokeWidth="1.5"/><path d="M9 13v-1M9 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>Help Center</span>
+        </button>
+        <button suppressHydrationWarning style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', width: '100%', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 16H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round"/><path d="M12 13l4-4-4-4M16 9H7" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>Logout</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+/* ── Chart data ───────────────────────────────────────────────── */
+const weekData = [
+  { orders: 62, deliveries: 48 },
+  { orders: 75, deliveries: 60 },
+  { orders: 70, deliveries: 55 },
+  { orders: 80, deliveries: 63 },
+  { orders: 95, deliveries: 75 },
+  { orders: 88, deliveries: 68 },
+  { orders: 72, deliveries: 56 },
+];
+const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const weeks = ['WEEK 28', 'WEEK 29', 'WEEK 30', 'WEEK 31', 'WEEK 32', 'WEEK 33', 'WEEK 34', 'WEEK 35'];
+
+/* ── Donut Chart ─────────────────────────────────────────────── */
+function DonutChart() {
+  const cx = 80, cy = 80, r = 60, sw = 22;
+  const segments = [
+    { pct: 78.2, color: '#1E3A8A' },
+    { pct: 15.5, color: '#60A5FA' },
+    { pct: 4.1,  color: '#BFDBFE' },
+    { pct: 2.2,  color: '#1F2937' },
+  ];
+  let cumAngle = -90;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const arcs = segments.map((s) => {
+    const startAngle = cumAngle;
+    const sweep = (s.pct / 100) * 360;
+    cumAngle += sweep;
+    const endAngle = cumAngle;
+    const x1 = cx + r * Math.cos(toRad(startAngle));
+    const y1 = cy + r * Math.sin(toRad(startAngle));
+    const x2 = cx + r * Math.cos(toRad(endAngle));
+    const y2 = cy + r * Math.sin(toRad(endAngle));
+    const largeArc = sweep > 180 ? 1 : 0;
+    return { ...s, d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}` };
+  });
+
+  return (
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      {arcs.map((a, i) => (
+        <path key={i} d={a.d} fill="none" stroke={a.color} strokeWidth={sw} strokeLinecap="butt"/>
+      ))}
+      <text x="80" y="74" textAnchor="middle" fontFamily="Inter" fontSize="20" fontWeight="800" fill="#0F172A">100%</text>
+      <text x="80" y="91" textAnchor="middle" fontFamily="Inter" fontSize="9" fontWeight="600" fill="#94A3B8" letterSpacing="0.5">FLEET TOTAL</text>
+    </svg>
+  );
+}
+
+/* ── Main Page ───────────────────────────────────────────────── */
+export default function AnalyticsPage() {
+  const [dateRange] = useState('Q3 2023: Jul 01 – Sep 30');
+
+  const statCards = [
+    {
+      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="18" height="14" rx="2" stroke="#2563EB" strokeWidth="1.5"/><path d="M6 8h10M6 12h6" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+      badge: '+12.4%', badgeUp: true,
+      label: 'TOTAL SHIPMENTS', value: '124,892',
+      sub: 'vs. 111,104 in Q2',
+    },
+    {
+      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#F59E0B" strokeWidth="1.5"/><path d="M11 6.5v4.5l3 2" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+      badge: '-2.1%', badgeUp: false,
+      label: 'AVG. DELIVERY TIME', value: '18.4 hrs',
+      sub: 'Improved by 24 mins avg.',
+    },
+    {
+      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#22C55E" strokeWidth="1.5"/><path d="M7 11.5l2.5 2.5 5.5-5" stroke="#22C55E" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      badge: '+0.8%', badgeUp: true,
+      label: 'ON-TIME DELIVERY %', value: '98.2%',
+      sub: 'Target: 97.5%',
+    },
+    {
+      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#64748B" strokeWidth="1.5"/><path d="M11 7v1.5M11 13.5V15M8.5 10a2.5 2.5 0 0 1 5 0c0 1.5-2.5 1.5-2.5 3" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+      badge: '+4.5%', badgeUp: true,
+      label: 'COST PER MILE', value: '$2.42',
+      sub: 'fuel surcharge impact: high',
+    },
+  ];
+
+  const regions = [
+    { name: 'North America', pct: 94.8 },
+    { name: 'Europe (EU)', pct: 88.2 },
+    { name: 'Asia Pacific', pct: 72.4 },
+    { name: 'South America', pct: 64.1 },
+    { name: 'Africa', pct: 58.9 },
+  ];
+
+  const drivers = [
+    { initials: 'MS', bg: '#DBEAFE', color: '#1D4ED8', name: 'Marcus Sterling', sub: 'Heavy Transport', rating: 4.95, trips: '1,204', onTime: '99.2%', onTimeBg: '#DCFCE7', onTimeColor: '#16A34A', fuel: 'A+' },
+    { initials: 'ER', bg: '#FCE7F3', color: '#9D174D', name: 'Elena Rodriguez', sub: 'Last Mile Delivery', rating: 4.92, trips: '985', onTime: '88.8%', onTimeBg: '#DBEAFE', onTimeColor: '#1D4ED8', fuel: 'A' },
+    { initials: 'JW', bg: '#E0E7FF', color: '#3730A3', name: 'James Whitaker', sub: 'Regional Haul', rating: 4.88, trips: '1,540', onTime: '87.4%', onTimeBg: '#DBEAFE', onTimeColor: '#1D4ED8', fuel: 'A-' },
+  ];
+
+  const donutLegend = [
+    { label: 'Completed', pct: '78.2%', color: '#1E3A8A' },
+    { label: 'In Transit', pct: '15.5%', color: '#60A5FA' },
+    { label: 'Delayed',    pct: '4.1%',  color: '#BFDBFE' },
+    { label: 'Cancelled',  pct: '2.2%',  color: '#1F2937' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter' }}>
+      <AppSidebar activeLabel="Analytics" />
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* ── Header ── */}
+        <div style={{ background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '20px 28px 18px', flexShrink: 0 }}>
+          {/* Breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            {['CARRY ON', 'INTELLIGENCE', 'PERFORMANCE ANALYTICS'].map((crumb, i) => (
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {i > 0 && <span style={{ color: '#94A3B8', fontSize: '11px' }}>›</span>}
+                <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: i === 2 ? 600 : 400, color: i === 2 ? '#2563EB' : '#94A3B8', letterSpacing: '0.3px' }}>{crumb}</span>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <div>
+              <h1 style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: '1.1' }}>Historical Insights</h1>
+              <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B', margin: '4px 0 0' }}>Deep dive into fleet performance and operational metrics.</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* Date range */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1.5px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', background: '#fff', cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10.5" rx="1.5" stroke="#64748B" strokeWidth="1.3"/><path d="M1.5 5.5h11M4.5 1v2M9.5 1v2" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#374151' }}>
+                  <span style={{ fontSize: '10px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.4px', marginRight: '4px' }}>DATE RANGE</span>
+                  {dateRange}
+                </span>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              {/* Export button */}
+              <button style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '9px 16px', background: '#2563EB', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1.5 11h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#fff', letterSpacing: '0.5px' }}>EXPORT DATA</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <main style={{ flex: 1, overflowY: 'auto', padding: '20px 28px 0' }}>
+
+          {/* ── 4 Stat Cards ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '18px' }}>
+            {statCards.map((card, i) => (
+              <div key={i} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{card.icon}</div>
+                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: card.badgeUp ? '#16A34A' : '#DC2626', background: card.badgeUp ? '#DCFCE7' : '#FEE2E2', padding: '2px 7px', borderRadius: '999px' }}>{card.badge}</span>
+                </div>
+                <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.7px', marginBottom: '4px' }}>{card.label}</div>
+                <div style={{ fontFamily: 'Inter', fontSize: '22px', fontWeight: 800, color: '#0F172A', lineHeight: '1.1', marginBottom: '4px' }}>{card.value}</div>
+                <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8' }}>{card.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Volume Trend + Status Distribution ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '14px', marginBottom: '18px' }}>
+
+            {/* Volume Trend */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                <div>
+                  <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>Volume Trend</div>
+                  <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8' }}>Daily order volume vs. completed deliveries</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB', display: 'inline-block' }} />
+                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#374151', fontWeight: 500 }}>ORDERS</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', display: 'inline-block' }} />
+                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>DELIVERIES</span>
+                  </div>
+                </div>
+              </div>
+              {/* Bar chart */}
+              <div style={{ marginTop: '10px' }}>
+                <svg width="100%" viewBox="0 0 490 180" preserveAspectRatio="xMidYMid meet">
+                  {weekData.map((d, i) => {
+                    const maxVal = 100;
+                    const chartH = 130;
+                    const barW = 18;
+                    const groupW = 54;
+                    const x = 10 + i * groupW;
+                    const oh = (d.orders / maxVal) * chartH;
+                    const dh = (d.deliveries / maxVal) * chartH;
+                    return (
+                      <g key={i}>
+                        <rect x={x} y={chartH - oh} width={barW} height={oh} rx="3" fill="#2563EB" opacity="0.85"/>
+                        <rect x={x + barW + 2} y={chartH - dh} width={barW} height={dh} rx="3" fill="#BFDBFE"/>
+                        <text x={x + barW + 1} y={148} textAnchor="middle" fontFamily="Inter" fontSize="9" fill="#94A3B8">{days[i]}</text>
+                      </g>
+                    );
+                  })}
+                  {weeks.slice(0, 7).map((w, i) => (
+                    <text key={i} x={10 + i * 54 + 19} y={165} textAnchor="middle" fontFamily="Inter" fontSize="7.5" fill="#CBD5E1">{w}</text>
+                  ))}
+                </svg>
+              </div>
+            </div>
+
+            {/* Status Distribution */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
+              <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>Status Distribution</div>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginBottom: '16px' }}>Performance breakdown by status</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <DonutChart />
+                <div style={{ width: '100%', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {donutLegend.map((l, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: l.color, display: 'inline-block', flexShrink: 0 }} />
+                        <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151' }}>{l.label}</span>
+                      </div>
+                      <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>{l.pct}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Regional Performance + Top Performers ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '14px', marginBottom: '0' }}>
+
+            {/* Regional Performance */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
+              <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>Regional Performance</div>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#2563EB', fontWeight: 500, marginBottom: '18px' }}>Efficiency by geographic sector</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {regions.map((r, i) => (
+                  <div key={i}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151', fontWeight: 500 }}>{r.name}</span>
+                      <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#2563EB' }}>{r.pct}%</span>
+                    </div>
+                    <div style={{ height: '7px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${r.pct}%`, background: 'linear-gradient(90deg, #1E40AF 0%, #3B82F6 100%)', borderRadius: '999px' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Performers */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>Top Performers</div>
+                <button style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>VIEW ALL DRIVERS</button>
+              </div>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginBottom: '14px' }}>Driver efficiency & rating leaderboard</div>
+
+              {/* Table header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.7fr 1fr 1fr', padding: '0 0 8px', borderBottom: '1px solid #F1F5F9' }}>
+                {['DRIVER', 'RATING', 'TRIPS', 'ON-TIME', 'FUEL EFF.'].map((h) => (
+                  <span key={h} style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.5px' }}>{h}</span>
+                ))}
+              </div>
+
+              {/* Driver rows */}
+              {drivers.map((d, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.7fr 1fr 1fr', alignItems: 'center', padding: '10px 0', borderBottom: i < drivers.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
+                  {/* Driver */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: d.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: d.color }}>{d.initials}</span>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>{d.name}</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '10px', color: '#94A3B8' }}>{d.sub}</div>
+                    </div>
+                  </div>
+                  {/* Rating */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <span style={{ color: '#F59E0B', fontSize: '12px' }}>★</span>
+                    <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#374151' }}>{d.rating}</span>
+                  </div>
+                  {/* Trips */}
+                  <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#374151' }}>{d.trips}</span>
+                  {/* On-time */}
+                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: d.onTimeColor, background: d.onTimeBg, padding: '2px 7px', borderRadius: '999px', display: 'inline-block' }}>{d.onTime}</span>
+                  {/* Fuel */}
+                  <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#374151' }}>{d.fuel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Footer ── */}
+          <div style={{ borderTop: '1px solid #E2E8F0', marginTop: '20px', padding: '14px 0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.3px' }}>© 2023 CARRY ON GLOBAL LOGISTICS</span>
+              {['PRIVACY POLICY', 'DATA SECURITY'].map((link) => (
+                <button key={link} style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.3px' }}>{link}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.3px' }}>SERVER STATUS:</span>
+              <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#16A34A', letterSpacing: '0.5px' }}>OPERATIONAL</span>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  );
+}
