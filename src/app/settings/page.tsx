@@ -271,7 +271,7 @@ export default function SettingsPage() {
       display: 'flex', width: '100vw', minHeight: '100vh',
       maxWidth: '1280px', margin: '0 auto',
       background: '#F8FAFC', fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden',
+      overflow: 'hidden', overflowX: 'hidden', overflowY: 'hidden',
     }}>
       <Sidebar />
 
@@ -279,7 +279,7 @@ export default function SettingsPage() {
       <div style={{
         width: '1024px', minHeight: '1297px', flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: '#F8FAFC',
+        background: '#F8FAFC', overflow: 'hidden',
       }}>
 
         {/* ── Navbar — height 64px, top: 0 ── */}
@@ -412,7 +412,6 @@ export default function SettingsPage() {
             flex: 1,
             padding: '32px',
             display: 'flex', flexDirection: 'column', gap: '32px',
-            overflowY: 'auto',
             boxSizing: 'border-box',
           }}>
 
