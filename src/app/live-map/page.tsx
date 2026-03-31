@@ -77,13 +77,15 @@ function ActiveAlertsCard() {
       /* 404-3374: active/highlighted alert */
       bg: 'rgba(47, 128, 237, 0.10)',
       border: '1px solid #2F80ED',
-      titleColor: '#0F172A',
+      titleColor: '#2F80ED',
       subColor: '#475569',
       timeColor: '#64748B',
+      titleWidth: '224px',
+      titleHeight: '32px',
     },
     {
       type: 'ROUTE DEVIATION',
-      typeColor: '#F59E0B',
+      typeColor: '#2F80ED',
       time: '14m ago',
       title: 'TRK-4412 left planned route by 1.2 miles',
       sub: 'Driver: Sarah L. • Downtown Loop',
@@ -91,12 +93,15 @@ function ActiveAlertsCard() {
       bg: '#FFF',
       border: 'none',
       titleColor: '#0F172A',
-      subColor: '#475569',
-      timeColor: '#64748B',
+      subColor: '#2F80ED',
+      timeColor: '#2F80ED',
+      typeWidth: '91.13px',
+      timeWidth: '52px',
+      subWidth: '226px',
     },
     {
       type: 'WEATHER DELAY',
-      typeColor: '#60A5FA',
+      typeColor: '#2F80ED',
       time: '28m ago',
       title: 'Heavy rain affecting Zone 4 speeds',
       sub: '8 drivers impacted • North Suburbs',
@@ -104,8 +109,10 @@ function ActiveAlertsCard() {
       bg: '#FFF',
       border: 'none',
       titleColor: '#0F172A',
-      subColor: '#475569',
-      timeColor: '#64748B',
+      subColor: '#2F80ED',
+      timeColor: '#2F80ED',
+      timeWidth: '41.61px',
+      subWidth: '226px',
     },
   ];
 
@@ -156,22 +163,33 @@ function ActiveAlertsCard() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
               <span style={{
-                fontFamily: 'Inter', fontSize: '9px', fontWeight: 700,
-                color: alert.typeColor, letterSpacing: '0.5px', textTransform: 'uppercase',
+                fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, lineHeight: '15px',
+                color: alert.typeColor, letterSpacing: '0px', textTransform: 'uppercase',
+                width: (alert as { typeWidth?: string }).typeWidth ?? 'auto',
               }}>
                 {alert.type}
               </span>
-              <span style={{ fontFamily: 'Inter', fontSize: '10px', color: alert.timeColor }}>
+              <span style={{
+                fontFamily: 'Inter', fontSize: '10px', fontWeight: 400, lineHeight: '15px',
+                color: alert.timeColor,
+                width: (alert as { timeWidth?: string }).timeWidth ?? 'auto',
+              }}>
                 {alert.time}
               </span>
             </div>
             <div style={{
               fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
-              color: alert.titleColor, lineHeight: '1.4',
+              color: alert.titleColor, lineHeight: '16px',
+              width: (alert as { titleWidth?: string }).titleWidth ?? '100%',
+              minHeight: (alert as { titleHeight?: string }).titleHeight ?? 'auto',
             }}>
               {alert.title}
             </div>
-            <div style={{ fontFamily: 'Inter', fontSize: '10px', color: alert.subColor }}>
+            <div style={{
+              fontFamily: 'Inter', fontSize: '10px', fontWeight: 400, lineHeight: '15px',
+              color: alert.subColor,
+              width: (alert as { subWidth?: string }).subWidth ?? 'auto',
+            }}>
               {alert.sub}
             </div>
           </div>
@@ -190,17 +208,16 @@ function DriverPopup() {
       top: '24px',
       right: '24px',
       width: '320px',
-      height: '266.5px',
+      height: '267px',
       borderRadius: '16px',
-      background: 'rgba(47, 128, 237, 0.20)',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.20)',
-      padding: '16px',
+      background: '#FFFFFFB2',
+      border: '1px solid #FFFFFF66',
+      backdropFilter: 'blur(20px)',
+      padding: '20px',
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px',
+      gap: '24px',
     }}>
 
       {/* 404-3401: header row — avatar + name/id + badge */}
@@ -212,33 +229,41 @@ function DriverPopup() {
       }}>
         {/* Avatar circle */}
         <div style={{
-          width: '48px', height: '48px', borderRadius: '50%',
+          width: '48px', height: '48px', borderRadius: '9999px',
           overflow: 'hidden', flexShrink: 0,
-          border: '2px solid rgba(255,255,255,0.30)',
+          border: '2px solid #FFFFFF',
+          boxShadow: '0px 1px 2px 0px #0000000D',
         }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/driver-avatar.png" alt="Marcus Jensen" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src="/marcus-jensen.png" alt="Marcus Jensen" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
         {/* Name + ID */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#FFFFFF', marginBottom: '2px' }}>
+          <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '14px', fontWeight: 800, lineHeight: '17.5px', color: '#191C1E', marginBottom: '2px' }}>
             Marcus Jensen
           </div>
-          <div style={{ fontFamily: 'Inter', fontSize: '10px', color: 'rgba(255,255,255,0.55)' }}>
-            ID: DRV-00982 • 1 river • Tier
+          <div style={{ fontFamily: 'Inter', fontSize: '10px', color: '#5F6B7A', lineHeight: '14px' }}>
+            ID: DRV-00982 • 1 river
+            <br />
+            Tier
           </div>
         </div>
 
         {/* ON DUTY badge */}
         <span style={{
-          padding: '4px 8px',
-          borderRadius: '6px',
-          background: '#2563EB',
-          fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
-          color: '#FFFFFF', letterSpacing: '0.3px', flexShrink: 0,
+          width: '61px',
+          height: '31px',
+          borderRadius: '4px',
+          background: '#B7DAF5',
+          fontFamily: 'Inter', fontSize: '10px', fontWeight: 800,
+          color: '#2F80ED', letterSpacing: '0.2px', flexShrink: 0,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          textAlign: 'center', lineHeight: '12px',
         }}>
-          ON DUTY
+          ON
+          <br />
+          DUTY
         </span>
       </div>
 
@@ -254,13 +279,13 @@ function DriverPopup() {
         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <span style={{
             fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
-            color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px',
+            color: '#5F6B7A', textTransform: 'uppercase', letterSpacing: '0.5px',
           }}>
             ROUTE PROGRESS
           </span>
           <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#2F80ED' }}>72%</span>
         </div>
-        <div style={{ height: '4px', borderRadius: '9999px', background: 'rgba(255,255,255,0.15)', width: '100%', overflow: 'hidden' }}>
+        <div style={{ height: '4px', borderRadius: '9999px', background: 'rgba(25, 28, 30, 0.20)', width: '100%', overflow: 'hidden' }}>
           <div style={{ width: '72%', height: '100%', borderRadius: '9999px', background: '#2F80ED' }} />
         </div>
       </div>
@@ -274,14 +299,14 @@ function DriverPopup() {
         alignSelf: 'stretch',
         gridTemplateRows: '33px',
         gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-        borderTop: '1px solid rgba(255, 255, 255, 0.20)',
+        borderTop: '1px solid #FFFFFF66',
       }}>
         {/* Vehicle column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {/* 404-3424: label */}
           <span style={{
             alignSelf: 'stretch',
-            color: '#64748B',
+            color: '#5F6B7A',
             fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
             lineHeight: '15px', textTransform: 'uppercase',
           }}>
@@ -290,7 +315,7 @@ function DriverPopup() {
           {/* 404-3426: value */}
           <span style={{
             alignSelf: 'stretch',
-            color: '#FFFFFF',
+            color: '#191C1E',
             fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
             lineHeight: '16px',
           }}>
@@ -302,7 +327,7 @@ function DriverPopup() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <span style={{
             alignSelf: 'stretch',
-            color: '#64748B',
+            color: '#5F6B7A',
             fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
             lineHeight: '15px', textTransform: 'uppercase',
           }}>
@@ -311,7 +336,7 @@ function DriverPopup() {
           {/* 404-3431: value */}
           <span style={{
             alignSelf: 'stretch',
-            color: '#FFFFFF',
+            color: '#191C1E',
             fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
             lineHeight: '16px',
           }}>
@@ -324,13 +349,15 @@ function DriverPopup() {
       <div style={{ display: 'flex', gap: '8px', alignSelf: 'stretch', marginTop: 'auto' }}>
         {/* 404-3433: View Log — gray bg */}
         <button suppressHydrationWarning style={{
-          display: 'flex', padding: '8px 0',
+          display: 'flex', padding: '0',
           flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
           flex: '1 0 0',
-          borderRadius: '8px',
+          height: '48px',
+          borderRadius: '12px',
           background: '#E0E3E5',
           border: 'none',
           fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#191C1E',
+          lineHeight: '16px',
           cursor: 'pointer',
         }}>
           View Log
@@ -338,13 +365,15 @@ function DriverPopup() {
 
         {/* 404-3435: Message — blue */}
         <button suppressHydrationWarning style={{
-          display: 'flex', padding: '8px 0',
+          display: 'flex', padding: '0',
           flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
           flex: '1 0 0',
-          borderRadius: '8px',
-          background: '#2563EB',
+          height: '48px',
+          borderRadius: '12px',
+          background: '#2F80ED',
           border: 'none',
           fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#FFFFFF',
+          lineHeight: '16px',
           cursor: 'pointer',
           gap: '6px',
         }}>

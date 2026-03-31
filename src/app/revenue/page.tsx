@@ -27,7 +27,7 @@ const shareItems = [
 
 /* ── Regional distribution ───────────────────────────────────── */
 const regions = [
-  { name: 'North America',  amount: '$842,300', pct: 100 },
+  { name: 'North America',  amount: '$642,300', pct: 84 },
   { name: 'European Union', amount: '$412,900', pct: 49  },
   { name: 'Asia Pacific',   amount: '$298,400', pct: 35  },
   { name: 'Latin America',  amount: '$75,350',  pct: 9   },
@@ -99,23 +99,21 @@ function DonutChart() {
 /* ── Revenue bar chart ───────────────────────────────────────── */
 function RevenueBarChart() {
   const maxVal = Math.max(...barData.map((d) => d.gross));
-  const chartH = 130;
+  const chartH = 288;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', height: `${chartH + 24}px`, padding: '0 4px' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', height: `${chartH + 24}px` }}>
       {barData.map((d) => {
         const grossH = Math.round((d.gross / maxVal) * chartH);
         const netH   = Math.round((d.net   / maxVal) * chartH);
         return (
-          <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            {/* Stacked bar: net (dark) at bottom, gross above */}
-            <div style={{ width: '100%', height: `${grossH}px`, borderRadius: '5px 5px 0 0', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-              {/* Gross (light blue) — full bar */}
-              <div style={{ position: 'absolute', inset: 0, background: '#BFDBFE', borderRadius: '5px 5px 0 0' }} />
-              {/* Net (dark blue) — bottom portion */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${netH}px`, background: '#2563EB', borderRadius: '0' }} />
+          <div key={d.day} style={{ width: '73.9048px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            {/* Stacked bar: gross (light) with net (dark) at the base */}
+            <div style={{ width: '73.9048px', height: `${grossH}px`, borderTopLeftRadius: '2px', borderTopRightRadius: '2px', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: '#B7DAF5' }}>
+              {/* Net (dark blue) — bottom segment */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${netH}px`, background: '#3364D8', borderRadius: '0' }} />
             </div>
-            <span style={{ fontFamily: 'Inter', fontSize: '9px', color: '#94A3B8', fontWeight: 500, letterSpacing: '0.2px' }}>{d.day}</span>
+            <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#111827', fontWeight: 700, letterSpacing: '0.2px', lineHeight: 1 }}>{d.day}</span>
           </div>
         );
       })}
@@ -264,18 +262,18 @@ export default function RevenuePage() {
           <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'stretch' }}>
 
             {/* Revenue Performance Trend */}
-            <div style={{ flex: 1, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '22px 24px', minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ flex: 1, background: '#FFFFFF', borderRadius: '12px', boxShadow: '0px 1px 2px 0px #0000000D', padding: '32px 32px 52px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
                   Revenue Performance Trend
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#2563EB' }} />
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3364D8' }} />
                     <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B' }}>Gross</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#BFDBFE' }} />
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#B7DAF5' }} />
                     <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B' }}>Net</span>
                   </div>
                 </div>
@@ -323,16 +321,16 @@ export default function RevenuePage() {
             {/* Rows */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {regions.map((r) => (
-                <div key={r.name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
+                <div key={r.name} style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 500, color: '#374151' }}>{r.name}</span>
                     <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>{r.amount}</span>
                   </div>
-                  <div style={{ height: '7px', background: '#EFF6FF', borderRadius: '999px', overflow: 'hidden' }}>
+                  <div style={{ height: '12px', background: '#B7DAF5', borderRadius: '9999px', overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', width: `${r.pct}%`,
-                      background: 'linear-gradient(90deg, #1E40AF 0%, #2563EB 50%, #60A5FA 100%)',
-                      borderRadius: '999px',
+                      background: '#2F80ED',
+                      borderRadius: '9999px',
                       transition: 'width 0.6s ease',
                     }} />
                   </div>

@@ -154,35 +154,39 @@ function Sidebar() {
 const orders = [
   {
     id: '#ORD-9421', customer: 'Global Logistics Corp', type: 'Retail Supply',
-    destination: 'Chicago, IL', driver: 'Robert Mitchell', driverBg: '#DBEAFE',
+    destination: 'Chicago, IL', driver: 'Robert Mitchell', driverBg: '#DBEAFE', driverImage: '/order-driver-1.png',
     status: 'PENDING', statusBg: '#2F80ED', statusText: '#fff', statusBorder: 'none',
   },
   {
     id: '#ORD-9422', customer: 'Zenith Manufacturing', type: 'Industrial Goods',
-    destination: 'Austin, TX', driver: 'Sarah Jenkins', driverBg: '#D1FAE5',
-    status: 'IN-TRANSIT', statusBg: '#191C1E', statusText: '#fff', statusBorder: 'none',
+    destination: 'Austin, TX', driver: 'Sarah Jenkins', driverBg: '#D1FAE5', driverImage: '/order-driver-2.png',
+    status: 'IN-TRANSIT', statusBg: '#2F80ED', statusText: '#fff', statusBorder: 'none', statusWidth: '82.14px',
   },
   {
     id: '#ORD-9423', customer: 'Apex Fresh Market', type: 'Perishables',
-    destination: 'Seattle, WA', driver: 'Michael Vance', driverBg: '#E2E8F0',
-    status: 'DELAYED', statusBg: '#1E3A5F', statusText: '#fff', statusBorder: 'none',
+    destination: 'Seattle, WA', driver: 'Michael Vance', driverBg: '#E2E8F0', driverImage: '/order-driver-3.png',
+    status: 'DELAYED', statusBg: '#2F80ED', statusText: '#fff', statusBorder: 'none', statusWidth: '69.86px',
   },
   {
     id: '#ORD-9424', customer: 'Starlight Tech', type: 'Electronics',
-    destination: 'Miami, FL', driver: 'Elena Rodriguez', driverBg: '#FEE2E2',
-    status: 'DELIVERED', statusBg: 'transparent', statusText: '#2F80ED',
-    statusBorder: '1.5px solid #BFDBFE',
+    destination: 'Miami, FL', driver: 'Elena Rodriguez', driverBg: '#FEE2E2', driverImage: '/order-driver-4.png',
+    status: 'DELIVERED', statusBg: '#B7DAF5', statusText: '#2F80ED',
+    statusBorder: 'none', statusWidth: '78.84px',
   },
 ];
 
-function DriverAvatar({ bg, initials }: { bg: string; initials: string }) {
+function DriverAvatar({ bg, initials, image, name }: { bg: string; initials: string; image?: string; name: string }) {
   return (
     <div style={{
       width: '24px', height: '24px', borderRadius: '50%', background: bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: '#374151', flexShrink: 0,
+      overflow: 'hidden',
     }}>
-      {initials}
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt={name} style={{ width: '24px', height: '24px', borderRadius: '9999px', objectFit: 'cover' }} />
+      ) : initials}
     </div>
   );
 }
@@ -377,18 +381,20 @@ export default function OrdersPage() {
                     Date Range
                   </span>
                   <div style={{
-                    height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0',
-                    background: '#fff', display: 'flex', alignItems: 'center',
+                    width: '154.5px', height: '32px', borderRadius: '8px', border: 'none',
+                    background: '#F2F4F6', display: 'flex', alignItems: 'center',
                     padding: '0 10px', gap: '8px', cursor: 'pointer',
                   }}>
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                      <rect x="1" y="2" width="11" height="10" rx="1.5" stroke="#64748B" strokeWidth="1.2" />
-                      <path d="M1 5h11M4 1v2M9 1v2" stroke="#64748B" strokeWidth="1.2" strokeLinecap="round" />
+                      <rect x="1" y="2" width="11" height="10" rx="1.5" stroke="#2F80ED" strokeWidth="1.2" />
+                      <path d="M1 5h11M4 1v2M9 1v2" stroke="#2F80ED" strokeWidth="1.2" strokeLinecap="round" />
                     </svg>
-                    <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', lineHeight: '16px', color: '#374151', flex: 1 }}>
+                    <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', lineHeight: '16px', color: '#2F80ED', flex: 1 }}>
                       Last 30 Days
                     </span>
-                    <Chevron />
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M3 4.5L6 7.5L9 4.5" stroke="#2F80ED" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
                 </div>
 
@@ -401,20 +407,22 @@ export default function OrdersPage() {
                     Status
                   </span>
                   <div style={{
-                    height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0',
-                    background: '#fff', display: 'flex', alignItems: 'center',
+                    width: '154.5px', height: '32px', borderRadius: '8px', border: 'none',
+                    background: '#F2F4F6', display: 'flex', alignItems: 'center',
                     padding: '0 10px', gap: '8px', cursor: 'pointer',
                   }}>
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                      <rect x="1" y="1" width="5" height="5" rx="1" stroke="#64748B" strokeWidth="1.2" />
-                      <rect x="7" y="1" width="5" height="5" rx="1" stroke="#64748B" strokeWidth="1.2" />
-                      <rect x="1" y="7" width="5" height="5" rx="1" stroke="#64748B" strokeWidth="1.2" />
-                      <rect x="7" y="7" width="5" height="5" rx="1" stroke="#64748B" strokeWidth="1.2" />
+                      <rect x="1" y="1" width="5" height="5" rx="1" stroke="#2F80ED" strokeWidth="1.2" />
+                      <rect x="7" y="1" width="5" height="5" rx="1" stroke="#2F80ED" strokeWidth="1.2" />
+                      <rect x="1" y="7" width="5" height="5" rx="1" stroke="#2F80ED" strokeWidth="1.2" />
+                      <rect x="7" y="7" width="5" height="5" rx="1" stroke="#2F80ED" strokeWidth="1.2" />
                     </svg>
-                    <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', lineHeight: '16px', color: '#374151', flex: 1 }}>
+                    <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', lineHeight: '16px', color: '#2F80ED', flex: 1 }}>
                       All Statuses
                     </span>
-                    <Chevron />
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M3 4.5L6 7.5L9 4.5" stroke="#2F80ED" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
                 </div>
 
@@ -427,20 +435,22 @@ export default function OrdersPage() {
                     Vehicle Type
                   </span>
                   <div style={{
-                    height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0',
-                    background: '#fff', display: 'flex', alignItems: 'center',
+                    width: '154.5px', height: '32px', borderRadius: '8px', border: 'none',
+                    background: '#F2F4F6', display: 'flex', alignItems: 'center',
                     padding: '0 10px', gap: '8px', cursor: 'pointer',
                   }}>
                     <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-                      <rect x="1" y="3" width="10" height="7" rx="1.2" stroke="#64748B" strokeWidth="1.2" />
-                      <path d="M11 5h2.5l1.5 3H11V5Z" stroke="#64748B" strokeWidth="1.2" strokeLinejoin="round" />
-                      <circle cx="4" cy="11" r="1.2" fill="#64748B" />
-                      <circle cx="11.5" cy="11" r="1.2" fill="#64748B" />
+                      <rect x="1" y="3" width="10" height="7" rx="1.2" stroke="#2F80ED" strokeWidth="1.2" />
+                      <path d="M11 5h2.5l1.5 3H11V5Z" stroke="#2F80ED" strokeWidth="1.2" strokeLinejoin="round" />
+                      <circle cx="4" cy="11" r="1.2" fill="#2F80ED" />
+                      <circle cx="11.5" cy="11" r="1.2" fill="#2F80ED" />
                     </svg>
-                    <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', lineHeight: '16px', color: '#374151', flex: 1 }}>
+                    <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', lineHeight: '16px', color: '#2F80ED', flex: 1 }}>
                       All Vehicles
                     </span>
-                    <Chevron />
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M3 4.5L6 7.5L9 4.5" stroke="#2F80ED" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
                 </div>
 
@@ -630,11 +640,12 @@ export default function OrdersPage() {
                   {/* Destination */}
                   <div style={{ paddingLeft: '0', paddingRight: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <svg width="13" height="15" viewBox="0 0 13 15" fill="none">
-                        <path d="M6.5 1C4.015 1 2 3.015 2 5.5c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C11 3.015 8.985 1 6.5 1Z"
-                          stroke="#94A3B8" strokeWidth="1.3" />
-                        <circle cx="6.5" cy="5.5" r="1.5" fill="#94A3B8" />
-                      </svg>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/order-destination-icon.png"
+                        alt="Destination"
+                        style={{ width: '10.6667px', height: '13.3333px', objectFit: 'contain', flexShrink: 0 }}
+                      />
                       <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#191C1E' }}>
                         {order.destination}
                       </span>
@@ -644,7 +655,12 @@ export default function OrdersPage() {
                   {/* Assigned Driver */}
                   <div style={{ paddingLeft: '0', paddingRight: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <DriverAvatar bg={order.driverBg} initials={order.driver.split(' ').map((n) => n[0]).join('')} />
+                      <DriverAvatar
+                        bg={order.driverBg}
+                        initials={order.driver.split(' ').map((n) => n[0]).join('')}
+                        image={order.driverImage}
+                        name={order.driver}
+                      />
                       <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#191C1E' }}>
                         {order.driver}
                       </span>
@@ -654,7 +670,9 @@ export default function OrdersPage() {
                   {/* Status */}
                   <div style={{ paddingTop: '32px', paddingRight: '32px', paddingBottom: '32.5px', paddingLeft: '0', display: 'flex', alignItems: 'center' }}>
                     <span style={{
-                      display: 'inline-flex', alignItems: 'center',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: (order as { statusWidth?: string }).statusWidth ?? 'auto',
+                      height: '20px',
                       padding: '4px 12px', borderRadius: '9999px',
                       background: order.statusBg,
                       border: order.statusBorder,
