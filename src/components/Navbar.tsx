@@ -11,99 +11,82 @@
 ─────────────────────────────────────────────────────────────── */
 export default function Navbar() {
   return (
-    <header
-      style={{
-        display: 'flex',
-        height: '64px',
-        padding: '0 32px',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexShrink: 0,
-        alignSelf: 'stretch',
-        borderBottom: '1px solid #F1F5F9',
-        background: 'rgba(255, 255, 255, 0.80)',
-        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(6px)',
-        boxSizing: 'border-box',
-        zIndex: 10,
-        position: 'relative',
-      }}
-    >
-      {/* Search */}
-      <div style={{ position: 'relative', flex: 1, maxWidth: '420px' }}>
-        <svg
-          style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-          width="14" height="14" viewBox="0 0 14 14" fill="none"
-        >
-          <circle cx="6" cy="6" r="5" stroke="#94A3B8" strokeWidth="1.4" />
-          <path d="M10.5 10.5l2.5 2.5" stroke="#94A3B8" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-        <input
-          suppressHydrationWarning
-          type="text"
-          placeholder="Search drivers, orders, or vehicles..."
-          style={{
-            width: '100%',
-            height: '40px',
-            padding: '0 14px 0 38px',
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: '999px',
-            fontFamily: 'Inter',
-            fontSize: '13px',
-            color: '#94A3B8',
-            outline: 'none',
-            boxSizing: 'border-box',
-          }}
-        />
-      </div>
+    <div style={{ width: '100%', height: '64px', paddingLeft: '256px', boxSizing: 'border-box', flexShrink: 0, background: '#F8FAFC' }}>
 
-      {/* Right icons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      {/* Inner bar: full width content with screenshot style */}
+      <header
+        style={{
+          width: '100%',
+          maxWidth: '1136px',
+          height: '64px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: '16px',
+          boxShadow: '0px 4px 16px rgba(15, 23, 42, 0.08)',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* Search */}
+        <div style={{ position: 'relative', width: '754px', height: '36px', display: 'flex', alignItems: 'center', background: '#FFFFFF', borderRadius: '18px', border: '1px solid #E6E8EC' }}>
+          <div style={{ width: '384px', height: '36px', display: 'flex', alignItems: 'center', padding: '0 12px 0 10px', boxSizing: 'border-box' }}>
+            <svg
+              width="16"
+              height="20"
+              viewBox="0 0 16 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ marginRight: '10px', display: 'block' }}
+            >
+              <path d="M6.5 1C3.462 1 1 3.462 1 6.5S3.462 12 6.5 12c1.36 0 2.618-.51 3.57-1.35l4.55 4.55c.2.2.512.2.71 0s.2-.51 0-.71l-4.55-4.55A5.43 5.43 0 0012 6.5C12 3.462 9.538 1 6.5 1zm0 2c2.205 0 4 1.795 4 4s-1.795 4-4 4-4-1.795-4-4 1.795-4 4-4z" fill="#000" />
+            </svg>
+            <input
+              suppressHydrationWarning
+              type="text"
+              placeholder="Search fleet, jobs, or drivers..."
+              style={{
+                width: '100%',
+                height: '36px',
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                fontFamily: 'Inter',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '100%',
+                letterSpacing: '0px',
+                color: '#000000',
+                verticalAlign: 'middle',
+              }}
+            />
+          </div>
+        </div>
 
-        {/* Bell */}
-        <button suppressHydrationWarning style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nav-bell.png" alt="notifications" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
-        </button>
+        {/* Right bell + profile (screenshot1 style) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <img src="/nav-bell.png" alt="notifications" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          </div>
 
-        {/* Settings */}
-        <button suppressHydrationWarning style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nav-settings.png" alt="settings" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
-        </button>
+          <div style={{ width: '1px', height: '40px', background: '#E2E8F0' }} />
 
-        {/* Help */}
-        <button suppressHydrationWarning style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nav-help.png" alt="help" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#FFFFFF' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, textAlign: 'right' }}>
+              <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '14px', color: '#0F172A' }}>Alex Rivera</span>
+              <span style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '12px', color: '#64748B' }}>aleet Admin</span>
+            </div>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden' }}>
+              <img src="/nav-user-profile.png" alt="user profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          </div>
 
-        {/* User Profile */}
-        <button suppressHydrationWarning style={{
-          width: '36px', height: '36px', borderRadius: '50%',
-          background: 'transparent', border: '1.5px solid #E2E8F0', cursor: 'pointer',
-          overflow: 'hidden', marginLeft: '4px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nav-user-profile.png" alt="user profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </button>
-
-      </div>
-    </header>
+        </div>
+      </header>
+    </div>
   );
 }

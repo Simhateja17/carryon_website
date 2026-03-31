@@ -37,7 +37,7 @@ const drivers: Driver[] = [
     id: '2', name: 'Elena Rodriguez', drvId: 'DRV-72104', license: 'Class B CDL',
     status: 'ON BREAK', rating: 4.7, vehicle: 'Kenworth T680 (CA-102)',
     detail: 'Resting • Resuming in 45 mins',
-    initials: 'ER', initialsColor: '#7C3AED', dotColor: '#F59E0B',
+    initials: 'ER', initialsColor: '#2563EB', dotColor: '#2563EB',
     avatarBg: '#EDE9FE', avatarType: 'beard',
     avatarSrc: '/driver-elena.png',
   },
@@ -53,7 +53,7 @@ const drivers: Driver[] = [
     id: '4', name: 'Sam Thompson', drvId: 'DRV-44211', license: 'Class A CDL',
     status: 'OFFLINE', rating: 4.4, vehicle: null,
     detail: 'Off-duty since 08:00 AM',
-    initials: 'ST', initialsColor: '#64748B', dotColor: '#94A3B8',
+    initials: 'ST', initialsColor: '#2563EB', dotColor: '#2563EB',
     avatarBg: '#F1F5F9', avatarType: 'away',
     avatarSrc: '/driver-sam.png',
   },
@@ -77,8 +77,8 @@ const drivers: Driver[] = [
 
 function statusStyle(status: DriverStatus): { bg: string; color: string } {
   if (status === 'ACTIVE') return { bg: '#2563EB', color: '#fff' };
-  if (status === 'ON BREAK') return { bg: '#F59E0B', color: '#fff' };
-  return { bg: '#94A3B8', color: '#fff' };
+  if (status === 'ON BREAK') return { bg: '#2563EB', color: '#fff' };
+  return { bg: '#2F80ED', color: '#fff' }; // OFFLINE uses requested #2F80ED
 }
 
 /* Driver avatar — 64×64 per-driver image asset */
@@ -97,7 +97,9 @@ function DriverAvatar({ src }: { src: string }) {
 
 /* ── Driver Card ─────────────────────────────────────────────── */
 function DriverCard({ driver }: { driver: Driver }) {
-  const { bg, color } = statusStyle(driver.status);
+  const status = statusStyle(driver.status);
+  const bg = status.bg;
+  const color = driver.name === 'Sarah Connor' && driver.status === 'ACTIVE' ? '#0F172A' : status.color;
   return (
     <div style={{
       width: '222px',
@@ -118,19 +120,33 @@ function DriverCard({ driver }: { driver: Driver }) {
       {/* Top: avatar (64×64) + status badge + star rating */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 
-        {/* Avatar wrapper — dot anchored to bottom-left */}
+        {/* Avatar wrapper — blue status ring indicator for James Wilson */}
         <div style={{ position: 'relative', width: '64px', height: '64px', flexShrink: 0 }}>
           <DriverAvatar src={driver.avatarSrc} />
-          <span style={{
-            position: 'absolute',
-            bottom: '-4px',
-            left: '6px',
-            width: '14px',
-            height: '14px',
-            borderRadius: '50%',
-            background: driver.dotColor,
-            border: '2.5px solid #fff',
-          }} />
+          {(driver.id === '3' || driver.id === '5') && (
+            <div style={{
+              position: 'absolute',
+              top: '60%',
+              right: '-10px',
+              transform: 'translateY(50%)',
+              width: '20px',
+              height: '20px',
+              borderRadius: '9999px',
+              background: '#2F80ED',
+              border: '2px solid #FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxSizing: 'border-box',
+            }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '9999px',
+                background: '#FFFFFF',
+              }} />
+            </div>
+          )}
         </div>
 
         {/* Badge + rating column */}
@@ -162,7 +178,7 @@ function DriverCard({ driver }: { driver: Driver }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <path d="M6.5 1l1.545 3.09L11.5 4.745l-2.5 2.437.59 3.418L6.5 9l-3.09 1.6.59-3.418-2.5-2.437 3.455-.655L6.5 1Z"
-                fill="#F59E0B" />
+                fill="#2F80ED" />
             </svg>
             <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, lineHeight: '16px', color: '#191C1E' }}>
               {driver.rating.toFixed(1)}
@@ -252,7 +268,7 @@ function DriverCard({ driver }: { driver: Driver }) {
       }}>
         <div style={{
           width: '28px', height: '28px', borderRadius: '50%',
-          background: `${driver.initialsColor}20`,
+        background: '#B7DAF5',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <span style={{
@@ -291,7 +307,7 @@ function AddNewDriverCard() {
     }}>
       <div style={{
         width: '44px', height: '44px', borderRadius: '50%',
-        background: '#DBEAFE',
+        background: '#B7DAF5',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -302,8 +318,9 @@ function AddNewDriverCard() {
         <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
           Add New Driver
         </div>
-        <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '1.5' }}>
-          Onboard a new member to your<br />fleet directory.
+        <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#2563EB', lineHeight: '1.5' }}>
+          Onboard a new member to your<br />
+          fleet directory.
         </div>
       </div>
     </div>

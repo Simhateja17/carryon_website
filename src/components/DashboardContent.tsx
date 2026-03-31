@@ -1,18 +1,18 @@
 'use client';
 
 const stats = [
-  { label: 'Active Jobs', value: '142', trend: '+12%', trendUp: true, trendColor: '#10B981' },
-  { label: 'Available Drivers', value: '28', trend: 'Stable', trendUp: null, trendColor: '#0058BE' },
-  { label: 'Fleet Utilization', value: '94.2%', trend: '-2%', trendUp: false, trendColor: '#EF4444' },
-  { label: "Today's Revenue", value: '$14.2k', trend: '+8%', trendUp: true, trendColor: '#10B981' },
+  { label: 'Active Jobs', value: '142', trend: '+12%', trendUp: true, trendColor: '#2F80ED', iconType: 'activeJobs' },
+  { label: 'Available Drivers', value: '28', trend: 'Stable', trendUp: null, trendColor: '#2F80ED', iconType: 'availableDrivers' },
+  { label: 'Fleet Utilization', value: '94.2%', trend: '-2%', trendUp: false, trendColor: '#2F80ED', iconType: 'fleetUtilization' },
+  { label: "Today's Revenue", value: '$14.2k', trend: '+8%', trendUp: true, trendColor: '#2F80ED', iconType: 'todaysRevenue' },
 ];
 
 const drivers = [
-  { name: 'Jordan P.', sub: 'In Route • Truck #042', dot: '#10B981', avatarBg: '#DBEAFE', light: true },
-  { name: 'Sarah L.', sub: 'Available • Truck #011', dot: '#10B981', avatarBg: '#1e293b', light: false },
-  { name: 'Kevin H.', sub: 'Offline • Last seen 2h ago', dot: '#94A3B8', avatarBg: '#334155', light: false },
-  { name: 'Emily R.', sub: 'In Route • Truck #088', dot: '#10B981', avatarBg: '#e2e8f0', light: true },
-  { name: 'Robert T.', sub: 'Offline • Last seen 14m ago', dot: '#94A3B8', avatarBg: '#1e3a5f', light: false },
+  { name: 'Jordan P.', sub: 'In Route • Truck #042', subColor: '#2F80ED', dot: '#2F80ED', avatarBg: '#F1F5F9', light: false },
+  { name: 'Sarah L.', sub: 'Available • Truck #011', subColor: '#10B981', dot: '#10B981', avatarBg: '#F1F5F9', light: false },
+  { name: 'Kevin H.', sub: 'Offline • Last seen 2h ago', subColor: '#64748B', dot: '#64748B', avatarBg: '#F1F5F9', light: false },
+  { name: 'Emily R.', sub: 'In Route • Truck #088', subColor: '#2F80ED', dot: '#2F80ED', avatarBg: '#F1F5F9', light: false },
+  { name: 'Robert T.', sub: 'Offline • Last seen 14m ago', subColor: '#64748B', dot: '#64748B', avatarBg: '#F1F5F9', light: false },
 ];
 
 const jobs = [
@@ -36,32 +36,68 @@ const jobs = [
   },
 ];
 
-function StatCardIcon({ index }: { index: number }) {
-  const icons = [
-    <svg key={0} width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <rect x="4" y="2" width="12" height="15" rx="2" stroke="#3B82F6" strokeWidth="1.5" />
-      <path d="M7 7h6M7 10h6M7 13h4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>,
-    <svg key={1} width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="7" r="3" stroke="#3B82F6" strokeWidth="1.5" />
-      <path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>,
-    <svg key={2} width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <rect x="2" y="3" width="16" height="12" rx="2" stroke="#3B82F6" strokeWidth="1.5" />
-      <path d="M2 17h16" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M6 13V9M10 13V7M14 13V10" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>,
-    <svg key={3} width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <rect x="2" y="4" width="16" height="11" rx="2" stroke="#3B82F6" strokeWidth="1.5" />
-      <path d="M10 7v6M8 8.5c0-.828.672-1.5 1.5-1.5h1a1.5 1.5 0 0 1 0 3h-1a1.5 1.5 0 0 0 0 3h1c.828 0 1.5-.672 1.5-1.5" stroke="#3B82F6" strokeWidth="1.2" strokeLinecap="round" />
-    </svg>,
-  ];
+function StatCardIcon({ type }: { type: 'activeJobs' | 'availableDrivers' | 'fleetUtilization' | 'todaysRevenue' }) {
+  const iconRoot = {
+    width: '32px',
+    height: '36px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    padding: '8px',
+  } as const;
+
+  const iconShapes: Record<typeof type, { bg: string; svg: JSX.Element }> = {
+    activeJobs: {
+      bg: '#E3F2FF',
+      svg: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 2h8v12H4z" stroke="#2F80ED" strokeWidth="1.5" />
+          <path d="M4 4h8" stroke="#2F80ED" strokeWidth="1.5" />
+          <path d="M6 7l1.5 1.5L10 6" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 10l1.5 1.5L10 9" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    availableDrivers: {
+      bg: '#EEF5FF',
+      svg: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8" cy="5" r="2.5" stroke="#2563EB" strokeWidth="1.5" />
+          <path d="M3 14c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke="#2563EB" strokeWidth="1.5" />
+        </svg>
+      ),
+    },
+    fleetUtilization: {
+      bg: '#ECFFF3',
+      svg: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="9" width="2" height="5" fill="#10B981" />
+          <rect x="6" y="5" width="2" height="9" fill="#10B981" />
+          <rect x="10" y="7" width="2" height="7" fill="#10B981" />
+          <rect x="14" y="3" width="0" height="0" />
+          <path d="M1 14h14" stroke="#10B981" strokeWidth="1" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    todaysRevenue: {
+      bg: '#FFFBEB',
+      svg: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 2h8v12H4z" stroke="#F59E0B" strokeWidth="1.5" />
+          <path d="M4 5h8" stroke="#F59E0B" strokeWidth="1.2" />
+          <path d="M8 4v8" stroke="#F59E0B" strokeWidth="1.5" />
+          <path d="M6.3 7.5c0-.92.74-1.6 1.7-1.6h0.6" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  };
+
+  const selected = iconShapes[type];
   return (
-    <div style={{
-      width: '38px', height: '38px', borderRadius: '10px',
-      background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-    }}>
-      {icons[index]}
+    <div style={{ ...iconRoot, background: selected.bg }}>
+      {selected.svg}
     </div>
   );
 }
@@ -70,41 +106,33 @@ function TrendBadge({ trend, trendUp, color }: { trend: string; trendUp: boolean
   if (trend === 'Stable') {
     return (
       <span style={{
-        padding: '2px 10px', borderRadius: '999px',
-        background: 'rgba(0,88,190,0.08)',
-        fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#0058BE',
-      }}>Stable</span>
+        fontFamily: 'Inter',
+        fontWeight: 700,
+        fontSize: '10px',
+        lineHeight: '15px',
+        color: '#2F80ED',
+      }}>
+        Stable
+      </span>
     );
   }
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color }}>
       {trendUp ? (
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-          <path d="M1.5 8.5L5.5 2.5L9.5 8.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 4.2L3.5 1.3L5.2 2.8L8.5 0.2" stroke={color} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8.5 0.2L8.5 0" stroke={color} strokeWidth="1.35" strokeLinecap="round" />
+          <path d="M8.5 0.2L7.5 0.2" stroke={color} strokeWidth="1.35" strokeLinecap="round" />
         </svg>
       ) : (
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-          <path d="M1.5 2.5L5.5 8.5L9.5 2.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 1.8L3.5 4.7L5.2 3.0L8.5 5.8" stroke={color} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8.5 5.8L8.5 6" stroke={color} strokeWidth="1.35" strokeLinecap="round" />
+          <path d="M8.5 5.8L7.5 5.8" stroke={color} strokeWidth="1.35" strokeLinecap="round" />
         </svg>
       )}
       {trend}
     </span>
-  );
-}
-
-function DriverAvatar({ bg, light }: { bg: string; light: boolean }) {
-  const personColor = light ? '#94a3b8' : 'rgba(255,255,255,0.75)';
-  return (
-    <div style={{
-      width: '38px', height: '38px', borderRadius: '50%', background: bg,
-      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      overflow: 'hidden', flexShrink: 0,
-    }}>
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="10" r="5" fill={personColor} />
-        <path d="M4 26c0-5.523 4.477-10 10-10s10 4.477 10 10" fill={personColor} />
-      </svg>
-    </div>
   );
 }
 
@@ -139,17 +167,38 @@ export default function DashboardContent() {
   return (
     <main style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', background: '#F7F9FB' }}>
 
-      {/* Stats row — full width */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '20px' }}>
-        {stats.map((s, i) => (
+      {/* Stats row — fixed 960x160 cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 222px)',
+        columnGap: '24px',
+        rowGap: '24px',
+        width: '960px',
+        minHeight: '160px',
+        margin: '0 auto 20px',
+      }}>
+        {stats.map((s) => (
           <div key={s.label} style={{
-            background: '#fff', borderRadius: '12px', padding: '16px 18px', border: '1px solid #E2E8F0',
+            width: '222px',
+            height: '160px',
+            background: '#FFFFFF',
+            borderRadius: '12px',
+            padding: '24px 18px 16px',
+            border: '1px solid #E2E8F0',
+            boxSizing: 'border-box',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-              <StatCardIcon index={i} />
+            <div style={{
+              width: '174px',
+              height: '36px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '12px',
+            }}>
+              <StatCardIcon type={s.iconType} />
               <TrendBadge trend={s.trend} trendUp={s.trendUp} color={s.trendColor} />
             </div>
-            <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#64748B', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#2F80ED', marginBottom: '4px' }}>
               {s.label}
             </div>
             <div style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 700, color: '#0F172A', lineHeight: '1.2' }}>
@@ -314,19 +363,22 @@ export default function DashboardContent() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {drivers.map((d) => (
                 <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
-                    <DriverAvatar bg={d.avatarBg} light={d.light} />
+                  <div style={{ position: 'relative', flexShrink: 0, width: '48px', height: '48px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                      <circle cx="12" cy="8" r="4" fill="#94A3B8" />
+                      <path d="M4 22c0-4.418 3.582-8 8-8s8 3.582 8 8" fill="#94A3B8" />
+                    </svg>
                     <div style={{
-                      position: 'absolute', bottom: '1px', right: '1px',
-                      width: '9px', height: '9px', borderRadius: '50%',
-                      background: d.dot, border: '1.5px solid #fff',
+                      position: 'absolute', bottom: '2px', right: '2px',
+                      width: '16px', height: '16px', borderRadius: '9999px',
+                      background: d.dot, border: '2px solid #FFFFFF',
                     }} />
                   </div>
                   <div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                    <div style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>
                       {d.name}
                     </div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B' }}>
+                    <div style={{ fontFamily: 'Inter', fontSize: '13px', color: d.subColor }}>
                       {d.sub}
                     </div>
                   </div>
