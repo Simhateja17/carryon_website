@@ -41,14 +41,15 @@ function DonutChart() {
   const circ = 2 * Math.PI * r;     // ≈ 364.4
 
   // Build segments from shareItems
-  let accumulated = 0;
-  const segments = shareItems.map((item) => {
-    const len   = circ * (item.pct / 100);
-    // dashoffset: start from top (−circ/4) minus accumulated arc
-    const offset = circ / 4 - accumulated;
-    accumulated += len;
-    return { ...item, len, offset };
-  });
+  const segmentLengths = shareItems.map((item) => circ * (item.pct / 100));
+  const segmentOffsets = segmentLengths.map((_, idx) =>
+    segmentLengths.slice(0, idx).reduce((sum, len) => sum + len, 0)
+  );
+  const segments = shareItems.map((item, idx) => ({
+    ...item,
+    len: segmentLengths[idx],
+    offset: circ / 4 - segmentOffsets[idx],
+  }));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
@@ -153,16 +154,27 @@ function CardIcon({ index }: { index: number }) {
 }
 
 /* ── Trend badge ─────────────────────────────────────────────── */
-function TrendBadge({ value, up }: { value: string; up: boolean }) {
+function TrendBadge({ value, up, color, icon }: { value: string; up: boolean; color?: string; icon?: React.ReactNode }) {
+  const badgeColor = color ?? (up ? '#059669' : '#DC2626');
+  const badgeBg = color ? (color === '#2F80ED' ? '#B7DAF5' : '#DEF0FF') : (up ? '#D1FAE5' : '#FEE2E2');
+  const defaultIcon = up ? (
+    <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1 6L4 3L7 5L10 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 2V6H6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ) : (
+    <span>▼</span>
+  );
+
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '3px',
       padding: '2px 8px', borderRadius: '999px',
-      background: up ? '#D1FAE5' : '#FEE2E2',
+      background: badgeBg,
       fontFamily: 'Inter', fontSize: '11px', fontWeight: 700,
-      color: up ? '#059669' : '#DC2626',
+      color: badgeColor,
     }}>
-      {up ? '▲' : '▼'}{value}
+      {icon ?? defaultIcon}{value}
     </span>
   );
 }
@@ -175,19 +187,26 @@ export default function RevenuePage() {
     {
       label: 'Total Revenue',
       value: '$1,428,950.00',
-      trendVal: '12.5%', trendUp: false,
+      trendVal: '12.5%', trendUp: true,
+      trendColor: '#2F80ED',
+      trendIcon: '↗',
       sub: 'vs. previous period',
     },
     {
       label: 'Profit Margin',
       value: '32.4%',
       trendVal: '2.1%', trendUp: true,
+      trendColor: '#2F80ED',
+      trendIcon: '↗',
       sub: 'efficiency up',
+      subColor: '#0F172A',
     },
     {
       label: 'Cost per Delivery',
       value: '$14.82',
       trendVal: '4.3%', trendUp: false,
+      trendColor: '#2F80ED',
+      trendIcon: '↘',
       sub: 'fuel optimization',
     },
   ];
@@ -214,20 +233,26 @@ export default function RevenuePage() {
             </h1>
 
             {/* Period tab group */}
-            <div style={{ display: 'flex', background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', background: '#B7DAF5', borderRadius: '12px', padding: '4px', width: 'fit-content' }}>
               {(['Last 30 Days', 'Quarterly', 'Yearly'] as Period[]).map((p) => (
                 <button
                   key={p}
                   suppressHydrationWarning
                   onClick={() => setPeriod(p)}
                   style={{
-                    padding: '6px 16px', border: 'none', cursor: 'pointer',
-                    fontFamily: 'Inter', fontSize: '13px', fontWeight: 600,
-                    background: period === p ? '#2563EB' : 'transparent',
-                    color: period === p ? '#fff' : '#64748B',
-                    borderRight: p !== 'Yearly' ? '1px solid #E2E8F0' : 'none',
+                    border: 'none', cursor: 'pointer',
+                    fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
+                    minWidth: '86px', height: '32px',
+                    borderRadius: '8px',
+                    background: period === p ? '#FFFFFF' : 'transparent',
+                    color: period === p ? '#2F80ED' : '#020617',
+                    marginRight: p !== 'Yearly' ? '4px' : '0',
                     transition: 'background 0.15s, color 0.15s',
                     whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '8px 16px',
                   }}
                 >
                   {p}
@@ -253,8 +278,8 @@ export default function RevenuePage() {
                 </div>
                 {/* Trend + sub */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <TrendBadge value={s.trendVal} up={s.trendUp} />
-                  <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8' }}>{s.sub}</span>
+                  <TrendBadge value={s.trendVal} up={s.trendUp} color={(s as any).trendColor} icon={(s as any).trendIcon} />
+                  <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#0F172A' }}>{s.sub}</span>
                 </div>
               </div>
             ))}
