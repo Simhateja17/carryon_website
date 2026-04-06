@@ -11,82 +11,103 @@
 ─────────────────────────────────────────────────────────────── */
 export default function Navbar() {
   return (
-    <div style={{ width: '100%', height: '64px', paddingLeft: '256px', boxSizing: 'border-box', flexShrink: 0, background: '#F8FAFC' }}>
+    <header style={{
+      display: 'flex',
+      height: '64px',
+      padding: '0 32px',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexShrink: 0,
+      alignSelf: 'stretch',
+      borderBottom: '1px solid #F1F5F9',
+      background: 'rgba(255, 255, 255, 0.80)',
+      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      backdropFilter: 'blur(6px)',
+      boxSizing: 'border-box',
+      position: 'relative',
+      zIndex: 10,
+    }}>
 
-      {/* Inner bar: full width content with screenshot style */}
-      <header
-        style={{
-          width: '100%',
-          maxWidth: '1136px',
-          height: '64px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-          background: '#FFFFFF',
-          border: '1px solid #E2E8F0',
-          borderRadius: '16px',
-          boxShadow: '0px 4px 16px rgba(15, 23, 42, 0.08)',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Search */}
-        <div style={{ position: 'relative', width: '754px', height: '36px', display: 'flex', alignItems: 'center', background: '#FFFFFF', borderRadius: '18px', border: '1px solid #E6E8EC' }}>
-          <div style={{ width: '384px', height: '36px', display: 'flex', alignItems: 'center', padding: '0 12px 0 10px', boxSizing: 'border-box' }}>
-            <svg
-              width="16"
-              height="20"
-              viewBox="0 0 16 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ marginRight: '10px', display: 'block' }}
-            >
-              <path d="M6.5 1C3.462 1 1 3.462 1 6.5S3.462 12 6.5 12c1.36 0 2.618-.51 3.57-1.35l4.55 4.55c.2.2.512.2.71 0s.2-.51 0-.71l-4.55-4.55A5.43 5.43 0 0012 6.5C12 3.462 9.538 1 6.5 1zm0 2c2.205 0 4 1.795 4 4s-1.795 4-4 4-4-1.795-4-4 1.795-4 4-4z" fill="#000" />
-            </svg>
-            <input
-              suppressHydrationWarning
-              type="text"
-              placeholder="Search fleet, jobs, or drivers..."
-              style={{
-                width: '100%',
-                height: '36px',
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontFamily: 'Inter',
-                fontWeight: 400,
-                fontSize: '14px',
-                lineHeight: '100%',
-                letterSpacing: '0px',
-                color: '#000000',
-                verticalAlign: 'middle',
-              }}
-            />
-          </div>
-        </div>
+      {/* Search — node 404-3222: background #E0E3E5, border-radius 8px, padding 8px 16px 9px 40px */}
+      <div style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        flex: 1,
+        maxWidth: '520px',
+      }}>
+        {/* Search icon */}
+        <svg
+          style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }}
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+        >
+          <circle cx="6.5" cy="6.5" r="5" stroke="#6B7280" strokeWidth="1.4" />
+          <path d="M10.5 10.5L14 14" stroke="#6B7280" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+        <input
+          suppressHydrationWarning
+          type="text"
+          placeholder="Search drivers, orders, or vehicles..."
+          style={{
+            display: 'flex',
+            padding: '8px 16px 9px 40px',
+            width: '100%',
+            borderRadius: '8px',
+            background: '#E0E3E5',
+            border: 'none',
+            outline: 'none',
+            fontFamily: 'Manrope, Inter, sans-serif',
+            fontSize: '14px',
+            fontWeight: 400,
+            color: '#6B7280',
+            lineHeight: 'normal',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
 
-        {/* Right bell + profile (screenshot1 style) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <img src="/nav-bell.png" alt="notifications" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-          </div>
+      {/* Right icons — node 404-3227: display flex; align-items center; gap 16px */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
 
-          <div style={{ width: '1px', height: '40px', background: '#E2E8F0' }} />
+        {/* Bell */}
+        <button suppressHydrationWarning style={{
+          width: '36px', height: '36px', borderRadius: '8px',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"
+              stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#FFFFFF' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, textAlign: 'right' }}>
-              <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '14px', color: '#0F172A' }}>Alex Rivera</span>
-              <span style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '12px', color: '#64748B' }}>aleet Admin</span>
-            </div>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden' }}>
-              <img src="/nav-user-profile.png" alt="user profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-          </div>
+        {/* Settings / gear */}
+        <button suppressHydrationWarning style={{
+          width: '36px', height: '36px', borderRadius: '8px',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="#6B7280" strokeWidth="1.6" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+              stroke="#6B7280" strokeWidth="1.6" />
+          </svg>
+        </button>
 
-        </div>
-      </header>
-    </div>
+        {/* Help / question mark */}
+        <button suppressHydrationWarning style={{
+          width: '36px', height: '36px', borderRadius: '8px',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#6B7280" strokeWidth="1.6" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"
+              stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+      </div>
+    </header>
   );
 }
