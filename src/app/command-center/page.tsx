@@ -43,15 +43,22 @@ function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '20px 20px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          width: '32px', height: '36px', borderRadius: '8px',
+          padding: '8px', background: '#B7DAF5',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
-            <rect x="0.75" y="3.5" width="13.5" height="10" rx="1.75" stroke="white" strokeWidth="1.6"/>
-            <path d="M14.25 6.5h4.5l2.75 4.5H14.25V6.5Z" stroke="white" strokeWidth="1.6" strokeLinejoin="round"/>
-            <circle cx="4.5" cy="15.25" r="1.75" fill="white"/>
-            <circle cx="14.75" cy="15.25" r="1.75" fill="white"/>
-          </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/command-center-icon.png"
+            alt="Carry On icon"
+            style={{
+              width: '16px', height: '20px',
+              background: '#2F80ED',
+              borderRadius: '2px',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
         </div>
         <span style={{ fontFamily: 'Inter', fontSize: '20px', fontWeight: 800, color: '#2563EB', letterSpacing: '-0.3px' }}>
           Carry On
@@ -124,11 +131,12 @@ function Sidebar() {
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
+  labelWidth: string;
   value: string;
   trend: string;
   trendUp: boolean | null; // null = stable
 }
-function StatCard({ icon, label, value, trend, trendUp }: StatCardProps) {
+function StatCard({ icon, label, labelWidth, value, trend, trendUp }: StatCardProps) {
   const trendColor = trendUp === null ? '#64748B' : trendUp ? '#10B981' : '#EF4444';
   return (
     <div style={{
@@ -193,7 +201,7 @@ function DriverRow({ name, status, detail, avatarSrc, dotColor }: {
             alt={name}
             style={{
               width: '48px', height: '48px', borderRadius: '50%',
-              objectFit: 'cover', display: 'block',
+              objectFit: 'contain', display: 'block',
               background: '#F1F5F9',
             }}
           />
@@ -209,7 +217,16 @@ function DriverRow({ name, status, detail, avatarSrc, dotColor }: {
           <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', lineHeight: '20px' }}>
             {name}
           </div>
-          <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '16px' }}>
+          <div style={{
+            height: '15px',
+            fontFamily: 'Inter',
+            fontSize: '10px',
+            fontWeight: 400,
+            lineHeight: '15px',
+            letterSpacing: '0px',
+            color: '#2F80ED',
+            whiteSpace: 'nowrap',
+          }}>
             {status} • {detail}
           </div>
         </div>
@@ -219,11 +236,23 @@ function DriverRow({ name, status, detail, avatarSrc, dotColor }: {
 }
 
 /* ── Progress Bar ────────────────────────────────────────────── */
-function ProgressBar({ label, pct }: { label: string; pct: number }) {
+function ProgressBar({ label, pct, labelWidth }: { label: string; pct: number; labelWidth?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</span>
+        <span style={{
+          width: labelWidth,
+          height: '15px',
+          display: 'inline-block',
+          fontFamily: 'Inter',
+          fontSize: '10px',
+          fontWeight: 700,
+          lineHeight: '15px',
+          letterSpacing: '0px',
+          color: '#191C1E',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+        }}>{label}</span>
         <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#2563EB' }}>{pct}%</span>
       </div>
       <div style={{ height: '6px', borderRadius: '9999px', background: '#E2E8F0', overflow: 'hidden' }}>
@@ -237,13 +266,30 @@ function ProgressBar({ label, pct }: { label: string; pct: number }) {
 function StatusBadge({ status }: { status: 'ACTIVE' | 'COMPLETED' | 'PENDING' }) {
   const styles = {
     ACTIVE:    { background: '#2563EB', color: '#fff' },
-    COMPLETED: { background: '#10B981', color: '#fff' },
-    PENDING:   { background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' },
+    COMPLETED: {
+      width: '82.33px',
+      height: '16px',
+      padding: '2px 10px',
+      borderRadius: '9999px',
+      background: '#B7DAF5',
+      color: '#0B2A5B',
+      boxSizing: 'border-box' as const,
+    },
+    PENDING: {
+      width: '65.17px',
+      height: '16px',
+      padding: '2px 10px',
+      borderRadius: '9999px',
+      background: '#B7DAF5',
+      color: '#0B2A5B',
+      boxSizing: 'border-box' as const,
+    },
   };
   const s = styles[status];
   return (
     <span style={{
-      display: 'inline-block', padding: '3px 10px', borderRadius: '9999px',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      padding: '3px 10px', borderRadius: '9999px',
       fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
       whiteSpace: 'nowrap', ...s,
     }}>
@@ -255,17 +301,17 @@ function StatusBadge({ status }: { status: 'ACTIVE' | 'COMPLETED' | 'PENDING' })
 /* ── Page ────────────────────────────────────────────────────── */
 export default function CommandCenterPage() {
   const jobs = [
-    { id: '#CR-9042', driver: 'David Chen',     avatarSrc: '/driver-avatar.png', from: 'ORD', to: 'DWT', routeType: 'Long Haul', dist: '420mi', status: 'ACTIVE'    as const, earnings: '$1,240.00' },
-    { id: '#CR-8991', driver: 'Sarah Miller',   avatarSrc: '/driver-sarah.png',  from: 'SFO', to: 'SJX', routeType: 'Local',     dist: '45mi',  status: 'COMPLETED' as const, earnings: '$320.00'   },
-    { id: '#CR-9102', driver: 'Marcus Johnson', avatarSrc: '/driver-james.png',  from: 'LGA', to: 'PHL', routeType: 'Express',   dist: '95mi',  status: 'PENDING'   as const, earnings: '$580.00'   },
+    { id: '#CR-9042', driver: 'David Chen',     avatarSrc: '/recent-driver-david.png',  from: 'ORD', to: 'DWT', routeType: 'Long Haul', dist: '420mi', status: 'ACTIVE'    as const, earnings: '$1,240.00' },
+    { id: '#CR-8991', driver: 'Sarah Miller',   avatarSrc: '/recent-driver-sarah.png',  from: 'SFO', to: 'SJX', routeType: 'Local',     dist: '45mi',  status: 'COMPLETED' as const, earnings: '$320.00'   },
+    { id: '#CR-9102', driver: 'Marcus Johnson', avatarSrc: '/recent-driver-marcus.png', from: 'LGA', to: 'PHL', routeType: 'Express',   dist: '95mi',  status: 'PENDING'   as const, earnings: '$580.00'   },
   ];
 
   const drivers = [
-    { name: 'Jordan P.', status: 'In Route',   detail: 'Truck #042',           avatarSrc: '/driver-avatar.png',   dotColor: '#22C55E' },
-    { name: 'Sarah L.',  status: 'Available',  detail: 'Truck #011',           avatarSrc: '/driver-sarah.png',    dotColor: '#22C55E' },
-    { name: 'Kevin H.',  status: 'Offline',    detail: 'Last seen 2h ago',     avatarSrc: '/driver-michael.png',  dotColor: '#94A3B8' },
-    { name: 'Emily R.',  status: 'In Route',   detail: 'Truck #088',           avatarSrc: '/driver-elena.png',    dotColor: '#22C55E' },
-    { name: 'Robert T.', status: 'Offline',    detail: 'Last seen 14m ago',    avatarSrc: '/driver-sam.png',      dotColor: '#94A3B8' },
+    { name: 'Jordan P.', status: 'In Route',   detail: 'Truck #042',           avatarSrc: '/driver-jordan-new.png', dotColor: '#22C55E' },
+    { name: 'Sarah L.',  status: 'Available',  detail: 'Truck #011',           avatarSrc: '/driver-sarah-new.png',  dotColor: '#22C55E' },
+    { name: 'Kevin H.',  status: 'Offline',    detail: 'Last seen 2h ago',     avatarSrc: '/driver-kevin-new.png',  dotColor: '#94A3B8' },
+    { name: 'Emily R.',  status: 'In Route',   detail: 'Truck #088',           avatarSrc: '/driver-emily-new.png',  dotColor: '#22C55E' },
+    { name: 'Robert T.', status: 'Offline',    detail: 'Last seen 14m ago',    avatarSrc: '/driver-robert-new.png', dotColor: '#94A3B8' },
   ];
 
   return (
@@ -328,19 +374,19 @@ export default function CommandCenterPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridTemplateRows: '160px', rowGap: '24px', columnGap: '24px', marginBottom: '20px' }}>
             <StatCard
               icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="#2563EB" strokeWidth="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-              label="Active Jobs" value="142" trend="+12%" trendUp={true}
+              label="Active Jobs" labelWidth="67.41px" value="142" trend="+12%" trendUp={true}
             />
             <StatCard
               icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="#2563EB" strokeWidth="1.5"/><path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-              label="Available Drivers" value="28" trend="Stable" trendUp={null}
+              label="Available Drivers" labelWidth="96.13px" value="28" trend="Stable" trendUp={null}
             />
             <StatCard
               icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="6" width="12" height="8" rx="1.5" stroke="#2563EB" strokeWidth="1.5"/><path d="M13 9h3l2.5 4H13V9Z" stroke="#2563EB" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="4.5" cy="16" r="1.8" fill="#2563EB"/><circle cx="13" cy="16" r="1.8" fill="#2563EB"/></svg>}
-              label="Fleet Utilization" value="94.2%" trend="-2%" trendUp={false}
+              label="Fleet Utilization" labelWidth="148px" value="94.2%" trend="-2%" trendUp={false}
             />
             <StatCard
               icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-5 3 3 4-6 3 2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="5" r="2" fill="#2563EB"/></svg>}
-              label="Today's Revenue" value="$14.2k" trend="+48%" trendUp={true}
+              label="Today's Revenue" labelWidth="98.13px" value="$14.2k" trend="+8%" trendUp={true}
             />
           </div>
 
@@ -454,7 +500,7 @@ export default function CommandCenterPage() {
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={job.avatarSrc} alt={job.driver} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                            <img src={job.avatarSrc} alt={job.driver} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'contain', background: '#F1F5F9', flexShrink: 0 }} />
                             <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#0F172A', whiteSpace: 'nowrap' }}>{job.driver}</span>
                           </div>
                         </td>
@@ -530,8 +576,8 @@ export default function CommandCenterPage() {
                   Efficiency Overview
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <ProgressBar label="On Time Rate" pct={98} />
-                  <ProgressBar label="Fuel Economy" pct={82} />
+                  <ProgressBar label="On Time Rate" pct={98} labelWidth="70.55px" />
+                  <ProgressBar label="Fuel Economy" pct={82} labelWidth="80.22px" />
                 </div>
               </div>
 
