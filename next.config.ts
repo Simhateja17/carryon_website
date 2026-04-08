@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     // Type-checking runs in your editor; skip it during compilation for faster dev
     ignoreBuildErrors: true,
   },
+  turbopack: {
+    root: process.cwd(),
+  },
 };
 
 export default nextConfig;

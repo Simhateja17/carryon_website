@@ -178,16 +178,16 @@ function Sidebar() {
 function Toggle({ on }: { on: boolean }) {
   return (
     <div style={{
-      width: '44px', height: '24px', borderRadius: '12px',
-      background: on ? '#2563EB' : '#CBD5E1',
+      width: '52px', height: '30px', borderRadius: '999px',
+      background: on ? '#2563EB' : '#DBEAFE',
       position: 'relative', flexShrink: 0, cursor: 'pointer',
     }}>
       <div style={{
         position: 'absolute', top: '3px',
-        left: on ? '23px' : '3px',
-        width: '18px', height: '18px', borderRadius: '50%',
-        background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        transition: 'left 0.15s',
+        left: on ? '27px' : '3px',
+        width: '24px', height: '24px', borderRadius: '50%',
+        background: '#fff', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.16)',
+        transition: 'left 0.15s ease',
       }} />
     </div>
   );
@@ -197,7 +197,7 @@ function Toggle({ on }: { on: boolean }) {
 export default function SettingsPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('General');
-  const [themeMode, setThemeMode] = useState<'Light' | 'Dark'>('Dark');
+  const [themeMode, setThemeMode] = useState<'Light' | 'Dark'>('Light');
   const [selectedAccent, setSelectedAccent] = useState('#2563EB');
 
   const accentColors = ['#2563EB', '#16A34A', '#7C3AED', '#DC2626', '#D97706', '#0F172A'];
@@ -270,7 +270,7 @@ export default function SettingsPage() {
     <div style={{
       display: 'flex', width: '100vw', minHeight: '100vh',
       maxWidth: '1280px', margin: '0 auto',
-      background: '#F8FAFC', fontFamily: 'Inter, sans-serif',
+      background: '#FFFFFF', fontFamily: 'Inter, sans-serif',
       overflow: 'hidden', overflowX: 'hidden', overflowY: 'hidden',
     }}>
       <Sidebar />
@@ -279,7 +279,7 @@ export default function SettingsPage() {
       <div style={{
         width: '1024px', minHeight: '1297px', flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: '#F8FAFC', overflow: 'hidden',
+        background: '#FFFFFF', overflow: 'hidden',
       }}>
 
         {/* ── Navbar — height 64px, top: 0 ── */}
@@ -463,7 +463,7 @@ export default function SettingsPage() {
                   {/* Dashed logo box */}
                   <div style={{
                     width: '100px', height: '100px', borderRadius: '10px',
-                    border: '1.5px dashed #CBD5E1', background: '#F8FAFC',
+                    border: '1.5px dashed #CBD5E1', background: '#FFFFFF',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <div style={{
@@ -629,10 +629,11 @@ export default function SettingsPage() {
 
               {/* Driver Payouts */}
               <section style={{
-                background: '#fff', borderRadius: '12px',
-                border: '1px solid #E2E8F0', padding: '22px',
+                width: '324px', height: '240px', background: '#FFFFFF', borderRadius: '12px',
+                borderLeft: '4px solid #2F80ED', boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
+                padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
               }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px', alignItems: 'start', marginBottom: '14px' }}>
                   <div style={{
                     width: '36px', height: '36px', borderRadius: '8px',
                     background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -642,23 +643,23 @@ export default function SettingsPage() {
                       <circle cx="9" cy="9" r="2" stroke="#2563EB" strokeWidth="1.5" />
                     </svg>
                   </div>
-                  <div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#1E3A5F', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                    <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
                       Driver Payouts
                     </div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#3B82F6', lineHeight: '1.5' }}>
+                    <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#475569', lineHeight: '1.5', whiteSpace: 'normal' }}>
                       Configure dynamic payout multipliers<br />and base rates per delivery mile.
                     </div>
                   </div>
                 </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '30px', fontWeight: 800, color: '#1E3A5F' }}>$2.45</span>
-                  <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B', marginLeft: '6px' }}>base / mile</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '20px' }}>
+                  <span style={{ fontFamily: 'Inter', fontSize: '30px', fontWeight: 800, color: '#0F172A', lineHeight: '1' }}>$2.45</span>
+                  <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#475569', lineHeight: '1.2' }}>base / mile</span>
                 </div>
                 <button suppressHydrationWarning style={{
-                  width: '100%', height: '36px', borderRadius: '7px',
+                  width: '100%', height: '44px', borderRadius: '12px',
                   background: '#2563EB', border: 'none',
-                  fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#fff',
+                  fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#fff',
                   cursor: 'pointer',
                 }}>
                   Adjust Rates
@@ -667,27 +668,28 @@ export default function SettingsPage() {
 
               {/* Quick Triggers */}
               <section style={{
-                background: '#fff', borderRadius: '12px',
-                border: '1px solid #E2E8F0', padding: '22px',
+                width: '324px', minHeight: '240px', background: '#FFFFFF', borderRadius: '12px',
+                borderLeft: '4px solid #2563EB', boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
+                padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M9 1L1 9h6l-1 6 8-8H8l1-6Z" fill="#F59E0B" stroke="#F59E0B" strokeWidth="0.4" strokeLinejoin="round" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M10 1.5L3.5 8.5h4l-1 6.5L14.5 7.5H10l1-6Z" fill="#2563EB" />
                   </svg>
-                  <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>Quick Triggers</span>
+                  <span style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Quick Triggers</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Critical Delays</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>+Mr • Pete</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', lineHeight: '1.1' }}>Critical Delays</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>+Mr • Pete</div>
                     </div>
                     <Toggle on={true} />
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>New Order Placement</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>EMAIL ONLY</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', lineHeight: '1.1' }}>New Order Placement</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>EMAIL ONLY</div>
                     </div>
                     <Toggle on={false} />
                   </div>
@@ -723,13 +725,14 @@ export default function SettingsPage() {
                       <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '3px' }}>
                         Active API Keys
                       </div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>
-                        4 Production keys generating traffic.
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', marginBottom: '8px', lineHeight: '1.5' }}>
+                        4 Production keys generating<br />
+                        traffic.
                       </div>
                       <div style={{
                         display: 'inline-block', padding: '3px 10px',
                         background: '#F1F5F9', borderRadius: '5px',
-                        fontFamily: 'monospace', fontSize: '12px', color: '#475569',
+                        fontFamily: 'monospace', fontSize: '12px', color: '#2563EB',
                       }}>
                         live_pk_51K...a79w
                       </div>
@@ -753,15 +756,25 @@ export default function SettingsPage() {
                       <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '3px' }}>
                         Role-Based Access
                       </div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', marginBottom: '6px' }}>
-                        Manage permissions for 12 staff members.
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', marginBottom: '6px', lineHeight: '1.5' }}>
+                        Manage permissions for 12 staff<br />
+                        members.
                       </div>
                       <button suppressHydrationWarning style={{
                         background: 'none', border: 'none', padding: 0,
-                        fontFamily: 'Inter', fontSize: '13px', fontWeight: 600,
-                        color: '#2563EB', cursor: 'pointer',
+                        cursor: 'pointer',
                       }}>
-                        Configure Permissions
+                        <span style={{
+                          fontFamily: 'Inter', fontSize: '13px', fontWeight: 600,
+                          color: '#2F80ED',
+                          textDecoration: 'underline',
+                          textDecorationColor: '#2F80ED',
+                          textDecorationThickness: '1px',
+                          textUnderlineOffset: '0.12em',
+                          textDecorationSkipInk: 'none',
+                        }}>
+                          Configure Permissions
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -769,20 +782,25 @@ export default function SettingsPage() {
 
                 {/* Right — Active Plan */}
                 <div style={{
-                  background: '#F8FAFC', borderRadius: '10px',
-                  border: '1px solid #E2E8F0', padding: '20px',
+                  background: '#FFFFFF', borderRadius: '10px',
+                  border: '1px solid #FFFFFF', padding: '20px',
+                  boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                     <span style={{
                       fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
-                      color: '#94A3B8', letterSpacing: '0.6px',
+                      color: '#727785', letterSpacing: '0.6px',
                     }}>
                       ACTIVE PLAN
                     </span>
                     <span style={{
-                      padding: '3px 8px', borderRadius: '5px',
-                      background: '#2563EB', color: '#fff',
-                      fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
+                      width: '93px', height: '19px', borderRadius: '9999px',
+                      background: '#B7DAF5', color: '#2F80ED',
+                      fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
+                      lineHeight: '15px', letterSpacing: '0px',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      verticalAlign: 'middle', textAlign: 'center',
+                      padding: '2px 8px',
                     }}>
                       Pro Enterprise
                     </span>
@@ -794,18 +812,25 @@ export default function SettingsPage() {
                     </span>
                     <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#64748B' }}>/mo</span>
                   </div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', marginBottom: '16px' }}>
+                  <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#475569', marginBottom: '16px' }}>
                     Next billing date: Oct 24, 2023
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
-                    {['Unlimited Driver Accounts', 'Real-time Map Integration', 'Full API Access'].map((feat) => (
+                    {['Unlimited Driver Accounts', 'Real-time Map Integration', 'Full API Access'].map((feat, index) => (
                       <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                          <circle cx="7.5" cy="7.5" r="6.5" fill="#16A34A" />
-                          <path d="M4 7.5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="7.5" cy="7.5" r="6.5" fill="#12B76A" />
+                          <path d="M4 7.5l2.5 2.5 4.5-4.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>{feat}</span>
+                        <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151', display: 'inline-flex', alignItems: 'center' }}>
+                          {index === 0 ? (
+                            <>
+                              <span style={{ display: 'inline-block', fontFamily: 'Inter', fontSize: '13px', marginRight: '3px', lineHeight: '15px' }}>И</span>
+                              nlimited Driver Accounts
+                            </>
+                          ) : feat}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -841,9 +866,16 @@ export default function SettingsPage() {
                     THEME MODE
                   </div>
                   <div style={{
-                    display: 'inline-flex', borderRadius: '8px',
-                    border: '1px solid #E2E8F0', overflow: 'hidden',
-                    background: '#F8FAFC',
+                    display: 'inline-flex',
+                    width: '181.3333282470703px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    background: '#B7DAF5',
+                    border: 'none',
+                    boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.08)',
+                    padding: '4px',
+                    gap: '8px',
                   }}>
                     {(['Light', 'Dark'] as const).map((mode) => (
                       <button
@@ -851,17 +883,20 @@ export default function SettingsPage() {
                         key={mode}
                         onClick={() => setThemeMode(mode)}
                         style={{
-                          padding: '8px 18px',
-                          background: themeMode === mode ? '#fff' : 'transparent',
-                          border: 'none',
-                          boxShadow: themeMode === mode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                          width: '86.66666412353516px',
+                          height: '36px',
+                          padding: '8px 0',
+                          background: themeMode === mode ? '#FFFFFF' : 'transparent',
+                          border: themeMode === mode ? '1px solid #93C5FD' : '1px solid transparent',
+                          boxShadow: themeMode === mode ? '0 1px 2px rgba(37,99,235,0.12)' : 'none',
                           cursor: 'pointer',
                           fontFamily: 'Inter', fontSize: '13px',
-                          fontWeight: themeMode === mode ? 600 : 400,
-                          color: themeMode === mode ? '#0F172A' : '#64748B',
-                          display: 'flex', alignItems: 'center', gap: '6px',
-                          margin: '3px',
-                          borderRadius: '6px',
+                          fontWeight: themeMode === mode ? 700 : 500,
+                          color: mode === 'Light' ? '#2F80ED' : '#0F172A',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                          margin: '0',
+                          borderRadius: '8px',
+                          transition: 'background 0.15s, box-shadow 0.15s, color 0.15s, border 0.15s',
                         }}
                       >
                         {mode === 'Light' ? (
@@ -888,36 +923,39 @@ export default function SettingsPage() {
                   }}>
                     BRAND ACCENTS
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {accentColors.map((color) => (
-                      <button
-                        suppressHydrationWarning
-                        key={color}
-                        onClick={() => setSelectedAccent(color)}
-                        style={{
-                          width: '32px', height: '32px', borderRadius: '50%',
-                          background: color, border: 'none', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          outline: selectedAccent === color ? '2.5px solid #0F172A' : '2.5px solid transparent',
-                          outlineOffset: '2px',
-                        }}
-                      >
-                        {selectedAccent === color && (
-                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <path d="M2 6.5l3 3 6-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {accentColors.map((color) => (
+                        <button
+                          suppressHydrationWarning
+                          key={color}
+                          onClick={() => setSelectedAccent(color)}
+                          style={{
+                            width: '38px', height: '38px', borderRadius: '50%',
+                            background: color, border: selectedAccent === color ? '2px solid #FFFFFF' : 'none',
+                            boxShadow: selectedAccent === color ? '0 0 0 4px rgba(37, 99, 235, 0.16)' : 'none',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'box-shadow 0.15s, border 0.15s',
+                          }}
+                        >
+                          {selectedAccent === color && (
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                              <path d="M2 6.5l3 3 6-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                     <button suppressHydrationWarning style={{
-                      padding: '6px 12px', borderRadius: '7px',
-                      background: '#fff', border: '1px solid #E2E8F0',
-                      fontFamily: 'Inter', fontSize: '12px', color: '#374151',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-                      marginLeft: '4px',
+                      padding: '8px 14px', borderRadius: '9999px',
+                      background: '#fff', border: '1px solid #C2C6D6',
+                      fontFamily: 'Inter', fontSize: '12px', color: '#000000',
+                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
+                      width: 'fit-content',
                     }}>
                       <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                        <path d="M8 1.5l1.5 1.5-6 6H2v-1.5l6-6Z" stroke="#374151" strokeWidth="1.2" strokeLinejoin="round" />
+                        <path d="M8 1.5l1.5 1.5-6 6H2v-1.5l6-6Z" stroke="#000000" strokeWidth="1.2" strokeLinejoin="round" />
                       </svg>
                       Custom Hex
                     </button>
