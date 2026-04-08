@@ -353,9 +353,8 @@ export default function OrdersPage() {
             }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M2 4h12M4 8h8M6 12h4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/global-logistics-filters-icon.png" alt="" style={{ width: '18px', height: '12px', display: 'block' }} />
                 <span style={{
                   fontFamily: 'Manrope', fontWeight: 700, fontSize: '14px',
                   lineHeight: '20px', letterSpacing: '0.7px',

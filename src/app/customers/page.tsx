@@ -181,14 +181,20 @@ const customers = [
     id: 'CO-8942',
     est: 'EST. 2021',
     initials: 'SV',
-    color: '#EFF6FF',
+    color: '#B7DAF5',
+    badgeWidth: '33.36px',
     textColor: '#2563EB',
     company: 'Swift Valley Retail',
     category: 'Retail & Consumer Goods',
+    categoryWidth: '104.06px',
+    categoryHeight: '32px',
     contact: 'Elena Rodriguez',
     role: 'Logistics Director',
     totalOrders: 1402,
     active: 12,
+    activeBadgeWidth: '41.31px',
+    activeBadgeHeight: '28px',
+    activeBadgePadding: '2px 6px',
     revenue: '$1.2M',
     status: 'ACTIVE',
   },
@@ -196,14 +202,24 @@ const customers = [
     id: 'CO-7712',
     est: 'EST. 2022',
     initials: 'AM',
-    color: '#F0FDF4',
-    textColor: '#16A34A',
+    color: '#B7DAF5',
+    badgeWidth: '31.13px',
+    textColor: '#2F80ED',
+    initialsFontSize: '16px',
+    initialsFontWeight: 600,
+    initialsWidth: '26.41px',
+    initialsHeight: '20px',
     company: 'Apex Manufacturing',
     category: 'Industrial Parts',
+    categoryWidth: '84.83px',
+    categoryHeight: '16px',
     contact: 'Marcus Chen',
     role: 'Operations Manager',
     totalOrders: 890,
     active: 0,
+    activeBadgeWidth: '50.44px',
+    activeBadgeHeight: '16px',
+    activeBadgePadding: '2px 6px',
     revenue: '$740K',
     status: 'INACTIVE',
   },
@@ -211,14 +227,20 @@ const customers = [
     id: 'CO-9011',
     est: 'EST. 2023',
     initials: 'NF',
-    color: '#EFF6FF',
+    color: '#B7DAF5',
+    badgeWidth: '29.58px',
     textColor: '#2563EB',
     company: 'Northern Fresh Foods',
     category: 'Perishables',
+    categoryWidth: '65.89px',
+    categoryHeight: '16px',
     contact: 'Sarah Jenkins',
     role: 'Cold Chain Lead',
     totalOrders: 2145,
     active: 45,
+    activeBadgeWidth: '43.22px',
+    activeBadgeHeight: '28px',
+    activeBadgePadding: '2px 7.91px 2px 6px',
     revenue: '$3.1M',
     status: 'ACTIVE',
   },
@@ -295,14 +317,20 @@ export default function CustomersPage() {
               background: '#fff', borderRadius: '12px', padding: '20px 24px',
               border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <circle cx="7" cy="7" r="3" stroke="#2563EB" strokeWidth="1.5" />
                   <path d="M1 17c0-3.314 2.686-6 6-6" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
                   <circle cx="14" cy="7" r="3" stroke="#2563EB" strokeWidth="1.5" />
                   <path d="M19 17c0-3.314-2.686-6-6-6" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                <span style={{
+                  width: '144.66px', height: '24px',
+                  display: 'inline-block',
+                  fontFamily: 'Inter', fontSize: '11px', fontWeight: 600,
+                  color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase',
+                  lineHeight: '24px',
+                }}>
                   Total Clients
                 </span>
               </div>
@@ -323,14 +351,20 @@ export default function CustomersPage() {
               background: '#fff', borderRadius: '12px', padding: '20px 24px',
               border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <rect x="1" y="6" width="12" height="9" rx="2" stroke="#2563EB" strokeWidth="1.5" />
                   <path d="M13 9.5h4l2 4H13V9.5Z" stroke="#2563EB" strokeWidth="1.5" strokeLinejoin="round" />
                   <circle cx="4.5" cy="17" r="1.5" fill="#2563EB" />
                   <circle cx="13.5" cy="17" r="1.5" fill="#2563EB" />
                 </svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                <span style={{
+                  width: '156px', height: '48px',
+                  display: 'inline-block',
+                  fontFamily: 'Inter', fontSize: '11px', fontWeight: 600,
+                  color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase',
+                  lineHeight: '24px',
+                }}>
                   Active Shipments
                 </span>
               </div>
@@ -346,13 +380,19 @@ export default function CustomersPage() {
               background: '#fff', borderRadius: '12px', padding: '20px 24px',
               border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <rect x="2" y="4" width="16" height="12" rx="2" stroke="#2563EB" strokeWidth="1.5" />
                   <path d="M10 8v4M8.5 9c0-.828.672-1.5 1.5-1.5h.5a1 1 0 1 1 0 2H10a1 1 0 0 0 0 2h.5c.828 0 1.5-.672 1.5-1.5"
                     stroke="#2563EB" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                <span style={{
+                  width: '144.67px', height: '24px',
+                  display: 'inline-block',
+                  fontFamily: 'Inter', fontSize: '11px', fontWeight: 600,
+                  color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase',
+                  lineHeight: '24px',
+                }}>
                   MRR Impact
                 </span>
               </div>
@@ -419,16 +459,31 @@ export default function CustomersPage() {
               />
             </div>
             {/* Filters */}
-            {['Industry: All', 'Status: Active', 'Region: All'].map((f) => (
-              <button suppressHydrationWarning key={f} style={{
+            {[
+              { label: 'Industry: All', width: '80.27px' },
+              { label: 'Status: Active', width: '98px' },
+              { label: 'Region: All', width: '71.14px' },
+            ].map((f) => (
+              <button suppressHydrationWarning key={f.label} style={{
                 height: '38px', padding: '0 14px', borderRadius: '8px',
                 background: '#fff', border: '1px solid #CBD5E1',
-                fontFamily: 'Inter', fontSize: '13px', color: '#374151',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
               }}>
-                {f}
+                <span style={{
+                  width: f.width,
+                  height: '20px',
+                  fontFamily: 'Inter',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  lineHeight: '20px',
+                  letterSpacing: '0px',
+                  color: '#2F80ED',
+                  display: 'inline-block',
+                }}>
+                  {f.label}
+                </span>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M3 4.5l3 3 3-3" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M3 4.5l3 3 3-3" stroke="#2F80ED" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             ))}
@@ -472,21 +527,53 @@ export default function CustomersPage() {
                 {/* Customer ID */}
                 <div>
                   <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.id}</div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>{c.est}</div>
+                  <div style={{
+                    width: '73.14px',
+                    height: '12px',
+                    marginTop: '2px',
+                    fontFamily: 'Inter',
+                    fontSize: '10px',
+                    fontWeight: 500,
+                    lineHeight: '100%',
+                    letterSpacing: '0px',
+                    color: '#2F80ED',
+                  }}>
+                    {c.est}
+                  </div>
                 </div>
 
                 {/* Company */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{
-                    width: '36px', height: '36px', borderRadius: '8px',
+                    width: (c as { badgeWidth?: string }).badgeWidth ?? '36px',
+                    height: '40px', borderRadius: '8px',
                     background: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}>
-                    <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: c.textColor }}>{c.initials}</span>
+                    <span style={{
+                      fontFamily: 'Inter',
+                      fontSize: (c as { initialsFontSize?: string }).initialsFontSize ?? '12px',
+                      fontWeight: (c as { initialsFontWeight?: number }).initialsFontWeight ?? 700,
+                      lineHeight: '100%',
+                      width: (c as { initialsWidth?: string }).initialsWidth,
+                      height: (c as { initialsHeight?: string }).initialsHeight,
+                      textAlign: 'center',
+                      color: c.textColor,
+                    }}>{c.initials}</span>
                   </div>
                   <div>
                     <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.company}</div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>{c.category}</div>
+                    <div style={{
+                      width: (c as { categoryWidth?: string }).categoryWidth,
+                      height: (c as { categoryHeight?: string }).categoryHeight,
+                      marginTop: '2px',
+                      fontFamily: 'Inter',
+                      fontSize: '12px',
+                      fontWeight: 400,
+                      lineHeight: '16px',
+                      letterSpacing: '0px',
+                      color: '#2F80ED',
+                    }}>{c.category}</div>
                   </div>
                 </div>
 
@@ -501,16 +588,32 @@ export default function CustomersPage() {
                   <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.totalOrders.toLocaleString()}</span>
                   {c.active > 0 && (
                     <span style={{
-                      padding: '2px 6px', borderRadius: '4px',
-                      background: '#EFF6FF', fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#2563EB',
+                      width: (c as { activeBadgeWidth?: string }).activeBadgeWidth,
+                      height: (c as { activeBadgeHeight?: string }).activeBadgeHeight,
+                      padding: (c as { activeBadgePadding?: string }).activeBadgePadding ?? '2px 6px',
+                      boxSizing: 'border-box',
+                      borderRadius: '4px',
+                      background: '#B7DAF5',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#2563EB',
                     }}>
                       +{c.active} active
                     </span>
                   )}
                   {c.active === 0 && (
                     <span style={{
-                      padding: '2px 6px', borderRadius: '4px',
-                      background: '#F1F5F9', fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#94A3B8',
+                      width: (c as { activeBadgeWidth?: string }).activeBadgeWidth,
+                      height: (c as { activeBadgeHeight?: string }).activeBadgeHeight,
+                      padding: (c as { activeBadgePadding?: string }).activeBadgePadding ?? '2px 6px',
+                      boxSizing: 'border-box',
+                      borderRadius: '4px',
+                      background: '#B7DAF5',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#94A3B8',
                     }}>
                       0 active
                     </span>
@@ -523,10 +626,17 @@ export default function CustomersPage() {
                 {/* Status */}
                 <div>
                   <span style={{
-                    padding: '4px 10px', borderRadius: '6px',
-                    background: c.status === 'ACTIVE' ? '#DCFCE7' : '#F1F5F9',
+                    width: c.status === 'ACTIVE' ? '61.36px' : '71.66px',
+                    height: '22px',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    boxSizing: 'border-box',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: c.status === 'ACTIVE' ? '#2F80ED' : '#B7DAF5',
                     fontFamily: 'Inter', fontSize: '11px', fontWeight: 700,
-                    color: c.status === 'ACTIVE' ? '#16A34A' : '#64748B',
+                    color: '#0F172A',
                     letterSpacing: '0.4px',
                   }}>
                     {c.status}
@@ -667,16 +777,29 @@ export default function CustomersPage() {
               display: 'flex', gap: '12px', alignItems: 'flex-start',
             }}>
               <div style={{
-                width: '36px', height: '36px', borderRadius: '8px', background: '#EFF6FF',
+                width: '48px', height: '48px', borderRadius: '8px', background: '#2F80ED',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M14 7A5 5 0 0 0 4 7c0 6.5-3 8-3 8h16s-3-1.5-3-8M10.73 15a2 2 0 0 1-3.46 0"
-                    stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/customers-alert-icon.png"
+                  alt=""
+                  style={{ width: '23.3333px', height: '23.3917px', display: 'block' }}
+                />
               </div>
               <div>
-                <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#EF4444', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                <div style={{
+                  width: '41.53px',
+                  height: '16px',
+                  fontFamily: 'Inter',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  lineHeight: '16px',
+                  letterSpacing: '0.6px',
+                  textTransform: 'uppercase',
+                  color: '#2F80ED',
+                  marginBottom: '4px',
+                }}>
                   ALERT
                 </div>
                 <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#0F172A', lineHeight: '1.5', marginBottom: '6px' }}>

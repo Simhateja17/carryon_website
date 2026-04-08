@@ -27,11 +27,7 @@ const shareItems = [
 
 /* ── Regional distribution ───────────────────────────────────── */
 const regions = [
-<<<<<<< HEAD
   { name: 'North America',  amount: '$842,300', pct: 100, fillWidth: 761.5970458984375 },
-=======
-  { name: 'North America',  amount: '$642,300', pct: 84 },
->>>>>>> 12a9d909b643e60ec4f8b117897a11772916cd40
   { name: 'European Union', amount: '$412,900', pct: 49  },
   { name: 'Asia Pacific',   amount: '$298,400', pct: 35  },
   { name: 'Latin America',  amount: '$75,350',  pct: 9   },
@@ -46,7 +42,7 @@ function DonutChart() {
 
   // Build segments from shareItems
   const segmentLengths = shareItems.map((item) => circ * (item.pct / 100));
-  const segmentOffsets = segmentLengths.map((_, idx) =>
+  const _segmentOffsets = segmentLengths.map((_, idx) =>
     segmentLengths.slice(0, idx).reduce((sum, len) => sum + len, 0)
   );
   const overlayItems = [shareItems[2], shareItems[1]];
@@ -59,6 +55,7 @@ function DonutChart() {
     len: overlayLengths[idx],
     offset: circ / 2 - overlayOffsets[idx],
   }));
+  void _segmentOffsets;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', width: '234.66px', paddingTop: '32px', boxSizing: 'border-box' }}>
@@ -109,24 +106,15 @@ function DonutChart() {
 
 /* ── Revenue bar chart ───────────────────────────────────────── */
 function RevenueBarChart() {
-<<<<<<< HEAD
   const maxHeight = Math.max(...barData.map((d) => d.height));
   const barWidth = 73.9047622680664;
   const chartHeight = 324;
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', width: '565.333px', height: `${chartHeight}px`, padding: '0', boxSizing: 'border-box' }}>
-=======
-  const maxVal = Math.max(...barData.map((d) => d.gross));
-  const chartH = 288;
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', height: `${chartH + 24}px` }}>
->>>>>>> 12a9d909b643e60ec4f8b117897a11772916cd40
       {barData.map((d) => {
         const barH = Math.round((d.height / maxHeight) * chartHeight);
         return (
-<<<<<<< HEAD
           <div key={d.day} style={{ width: `${barWidth}px`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <div style={{ width: '100%', height: `${barH}px`, position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
               <div style={{ position: 'absolute', inset: 0, background: '#B7DAF5', borderTopLeftRadius: '2px', borderTopRightRadius: '2px' }} />
@@ -135,15 +123,6 @@ function RevenueBarChart() {
             <div style={{ width: '100%', height: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ width: '24.520000457763672px', lineHeight: '15px', textAlign: 'center', fontFamily: 'Inter', fontWeight: 700, fontSize: '10px', color: '#0F172A', letterSpacing: '0px' }}>{d.day}</span>
             </div>
-=======
-          <div key={d.day} style={{ width: '73.9048px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-            {/* Stacked bar: gross (light) with net (dark) at the base */}
-            <div style={{ width: '73.9048px', height: `${grossH}px`, borderTopLeftRadius: '2px', borderTopRightRadius: '2px', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: '#B7DAF5' }}>
-              {/* Net (dark blue) — bottom segment */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${netH}px`, background: '#3364D8', borderRadius: '0' }} />
-            </div>
-            <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#111827', fontWeight: 700, letterSpacing: '0.2px', lineHeight: 1 }}>{d.day}</span>
->>>>>>> 12a9d909b643e60ec4f8b117897a11772916cd40
           </div>
         );
       })}
@@ -305,7 +284,7 @@ export default function RevenuePage() {
                 </div>
                 {/* Trend + sub */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <TrendBadge value={s.trendVal} up={s.trendUp} color={(s as any).trendColor} icon={(s as any).trendIcon} />
+                  <TrendBadge value={s.trendVal} up={s.trendUp} color={s.trendColor} icon={s.trendIcon} />
                   <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#0F172A' }}>{s.sub}</span>
                 </div>
               </div>
@@ -316,13 +295,8 @@ export default function RevenuePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '629.333px 298.667px', gap: '32px', marginBottom: '20px', alignItems: 'stretch' }}>
 
             {/* Revenue Performance Trend */}
-<<<<<<< HEAD
             <div style={{ width: '629.333px', height: '432px', background: '#fff', borderRadius: '12px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)', padding: '32px 32px 52px 32px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-=======
-            <div style={{ flex: 1, background: '#FFFFFF', borderRadius: '12px', boxShadow: '0px 1px 2px 0px #0000000D', padding: '32px 32px 52px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
->>>>>>> 12a9d909b643e60ec4f8b117897a11772916cd40
                 <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
                   Revenue Performance Trend
                 </span>
@@ -382,7 +356,6 @@ export default function RevenuePage() {
             {/* Rows */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '896px' }}>
               {regions.map((r) => (
-<<<<<<< HEAD
                 <div key={r.name} style={{ height: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '14px', lineHeight: '20px', letterSpacing: '0px', color: '#0F172A' }}>{r.name}</span>
@@ -392,17 +365,6 @@ export default function RevenuePage() {
                     <div style={{
                       height: '100%', width: r.fillWidth ? `${r.fillWidth}px` : `${(r.pct / 100) * 896}px`,
                       background: 'linear-gradient(90deg, #1E40AF 0%, #2563EB 50%, #60A5FA 100%)',
-=======
-                <div key={r.name} style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 500, color: '#374151' }}>{r.name}</span>
-                    <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>{r.amount}</span>
-                  </div>
-                  <div style={{ height: '12px', background: '#B7DAF5', borderRadius: '9999px', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${r.pct}%`,
-                      background: '#2F80ED',
->>>>>>> 12a9d909b643e60ec4f8b117897a11772916cd40
                       borderRadius: '9999px',
                       transition: 'width 0.6s ease',
                     }} />

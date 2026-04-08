@@ -489,10 +489,8 @@ export default function LiveMapPage() {
             color: '#FFFFFF',
             whiteSpace: 'nowrap',
           }}>
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="7.5" stroke="white" strokeWidth="1.5" />
-              <path d="M9 5v4l3 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/optimize-routes-icon.png" alt="" style={{ width: '20px', height: '20px', display: 'block' }} />
             Optimize All Routes
           </button>
 

@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-/* ── Navbar — node 404-3220 ─────────────────────────────────────
+/* â”€â”€ Navbar â€” node 404-3220 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    display: flex; height: 64px; padding: 0 32px;
    justify-content: space-between; align-items: center;
    flex-shrink: 0; align-self: stretch;
@@ -8,7 +8,7 @@
    background: rgba(255, 255, 255, 0.80);
    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
    backdrop-filter: blur(6px);
-─────────────────────────────────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default function Navbar() {
   return (
     <header style={{
@@ -28,7 +28,6 @@ export default function Navbar() {
       zIndex: 10,
     }}>
 
-<<<<<<< HEAD
       {/* Inner bar: full width content with screenshot style */}
       <header
         style={{
@@ -93,48 +92,6 @@ export default function Navbar() {
           <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <img src="/Button (1).png" alt="settings" style={{ width: '20.1px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
           </div>
-=======
-      {/* Search — node 404-3222: background #E0E3E5, border-radius 8px, padding 8px 16px 9px 40px */}
-      <div style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        flex: 1,
-        maxWidth: '520px',
-      }}>
-        {/* Search icon */}
-        <svg
-          style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }}
-          width="16" height="16" viewBox="0 0 16 16" fill="none"
-        >
-          <circle cx="6.5" cy="6.5" r="5" stroke="#6B7280" strokeWidth="1.4" />
-          <path d="M10.5 10.5L14 14" stroke="#6B7280" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-        <input
-          suppressHydrationWarning
-          type="text"
-          placeholder="Search drivers, orders, or vehicles..."
-          style={{
-            display: 'flex',
-            padding: '8px 16px 9px 40px',
-            width: '100%',
-            borderRadius: '8px',
-            background: '#E0E3E5',
-            border: 'none',
-            outline: 'none',
-            fontFamily: 'Manrope, Inter, sans-serif',
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#6B7280',
-            lineHeight: 'normal',
-            boxSizing: 'border-box',
-          }}
-        />
-      </div>
-
-      {/* Right icons — node 404-3227: display flex; align-items center; gap 16px */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
->>>>>>> 12a9d909b643e60ec4f8b117897a11772916cd40
 
         {/* Bell */}
         <button suppressHydrationWarning style={{
@@ -175,6 +132,7 @@ export default function Navbar() {
         </button>
 
       </div>
+      </header>
     </header>
   );
 }
