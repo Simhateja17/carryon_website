@@ -133,22 +133,35 @@ function StatCard({ icon, label, value, trend, trendUp }: StatCardProps) {
   return (
     <div style={{
       background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0',
-      padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: '14px',
+      padding: '20px 24px', display: 'flex', flexDirection: 'column',
+      alignItems: 'flex-start', gap: '8px',
+      height: '160px', boxSizing: 'border-box',
+      justifySelf: 'stretch',
     }}>
+      {/* Row 1: icon (left) + trend (right) */}
       <div style={{
-        width: '40px', height: '40px', borderRadius: '10px',
-        background: '#EFF6FF', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', flexShrink: 0, color: '#2563EB',
+        display: 'flex', width: '100%',
+        justifyContent: 'space-between', alignItems: 'flex-start',
       }}>
-        {icon}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 500, color: '#64748B' }}>{label}</span>
-          <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: trendColor }}>
-            {trendUp === true ? '↗' : trendUp === false ? '↘' : ''}{trend}
-          </span>
+        <div style={{
+          width: '40px', height: '40px', borderRadius: '10px',
+          background: '#EFF6FF', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', flexShrink: 0, color: '#2563EB',
+        }}>
+          {icon}
         </div>
+        <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: trendColor, lineHeight: '16px' }}>
+          {trendUp === true ? '↗ ' : trendUp === false ? '↘ ' : ''}{trend}
+        </span>
+      </div>
+
+      {/* Row 2: label */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#64748B' }}>{label}</span>
+      </div>
+
+      {/* Row 3: value */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         <div style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>
           {value}
         </div>
@@ -312,7 +325,7 @@ export default function CommandCenterPage() {
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', boxSizing: 'border-box' }}>
 
           {/* Stat cards row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridTemplateRows: '160px', rowGap: '24px', columnGap: '24px', marginBottom: '20px' }}>
             <StatCard
               icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="#2563EB" strokeWidth="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/></svg>}
               label="Active Jobs" value="142" trend="+12%" trendUp={true}
@@ -327,7 +340,7 @@ export default function CommandCenterPage() {
             />
             <StatCard
               icon={<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-5 3 3 4-6 3 2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="5" r="2" fill="#2563EB"/></svg>}
-              label="Today's Revenue" value="$14.2k" trend="+8%" trendUp={true}
+              label="Today's Revenue" value="$14.2k" trend="+48%" trendUp={true}
             />
           </div>
 
