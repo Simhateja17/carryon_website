@@ -123,7 +123,7 @@ function Sidebar() {
         })}
       </nav>
       <div style={{ padding: '16px 16px 24px', display: 'flex', flexDirection: 'column', gap: '14px', borderTop: '1px solid #F1F5F9' }}>
-        <button suppressHydrationWarning style={{
+        <button suppressHydrationWarning onClick={() => router.push('/orders/create')} style={{
           width: '100%', height: '42px', borderRadius: '8px',
           background: '#2F80ED', border: 'none', cursor: 'pointer',
           fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#fff',
