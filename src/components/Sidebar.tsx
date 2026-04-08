@@ -6,15 +6,17 @@ type NavItem = {
   label: string;
   href: string;
   imgSrc: string;
+  iconWidth?: string;
+  iconHeight?: string;
 };
 
 const navItems: NavItem[] = [
-  { label: 'Command Center', href: '/command-center', imgSrc: '/icon-command.png'   },
-  { label: 'Live Map',       href: '/live-map',       imgSrc: '/icon-livemap.png'   },
-  { label: 'Orders',         href: '/orders',         imgSrc: '/icon-orders.png'    },
-  { label: 'Drivers',        href: '/drivers',        imgSrc: '/icon-drivers.png'   },
-  { label: 'Customers',      href: '/customers',      imgSrc: '/icon-customers.png' },
-  { label: 'Revenue',        href: '/revenue',        imgSrc: '/icon-revenue.png'   },
+  { label: 'Command Center', href: '/command-center', imgSrc: '/icon-command.png', iconWidth: '22px', iconHeight: '16px' },
+  { label: 'Live Map',       href: '/live-map',       imgSrc: '/icon-livemap.png', iconWidth: '18px', iconHeight: '21px' },
+  { label: 'Orders',         href: '/orders',         imgSrc: '/icon-orders.png', iconWidth: '24px', iconHeight: '12px' },
+  { label: 'Drivers',        href: '/drivers',        imgSrc: '/icon-drivers.png', iconWidth: '18px', iconHeight: '18px' },
+  { label: 'Customers',      href: '/customers',      imgSrc: '/icon-customers.png', iconWidth: '18px', iconHeight: '18px' },
+  { label: 'Revenue',        href: '/revenue',        imgSrc: '/icon-revenue.png', iconWidth: '18px', iconHeight: '18px' },
 ];
 
 export default function Sidebar() {
@@ -24,7 +26,7 @@ export default function Sidebar() {
   return (
     <aside
       style={{
-        width: '220px',
+        width: '256px',
         height: '100vh',
         background: '#fff',
         borderRight: '1px solid #E2E8F0',
@@ -69,7 +71,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav items */}
-      <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
+      <div style={{ flex: 1, paddingTop: '24px', paddingRight: '16px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -80,12 +82,14 @@ export default function Sidebar() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '9px 12px',
-                width: '100%',
-                background: isActive ? 'rgba(37,99,235,0.08)' : 'transparent',
+                gap: '12px',
+                padding: '12px 16px',
+                width: '224px',
+                height: '44px',
+                background: isActive ? '#EFF6FF' : 'transparent',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '12px',
+                borderRight: isActive ? '4px solid #2F80ED' : 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
               }}
@@ -96,11 +100,11 @@ export default function Sidebar() {
                 src={item.imgSrc}
                 alt={item.label}
                 style={{
-                  width: '18px',
-                  height: '18px',
+                  width: item.iconWidth ?? '18px',
+                  height: item.iconHeight ?? '18px',
                   objectFit: 'contain',
                   flexShrink: 0,
-                  opacity: isActive ? 1 : 0.55,
+                  opacity: 1,
                 }}
               />
 
@@ -148,10 +152,10 @@ export default function Sidebar() {
         </button>
 
         {/* User profile */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 4px', maxWidth: '224px' }}>
           <div style={{
-            width: '32px', height: '32px', borderRadius: '50%',
-            background: '#DBEAFE', overflow: 'hidden', flexShrink: 0,
+            width: '40px', height: '40px', borderRadius: '9999px',
+            background: '#E2E8F0', overflow: 'hidden', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}

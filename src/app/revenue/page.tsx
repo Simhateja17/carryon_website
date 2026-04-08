@@ -9,25 +9,25 @@ type Period = 'Last 30 Days' | 'Quarterly' | 'Yearly';
 
 /* ── Bar chart data (MON–SUN) ────────────────────────────────── */
 const barData = [
-  { day: 'MON', gross: 52, net: 32 },
-  { day: 'TUE', gross: 68, net: 42 },
-  { day: 'WED', gross: 60, net: 36 },
-  { day: 'THU', gross: 78, net: 50 },
-  { day: 'FRI', gross: 95, net: 62 },
-  { day: 'SAT', gross: 70, net: 44 },
-  { day: 'SUN', gross: 56, net: 34 },
+  { day: 'MON', height: 115.19000244140625 },
+  { day: 'TUE', height: 158.38999938964844 },
+  { day: 'WED', height: 138.22999572753906 },
+  { day: 'THU', height: 216 },
+  { day: 'FRI', height: 259.19000244140625 },
+  { day: 'SAT', height: 172.8000030517578 },
+  { day: 'SUN', height: 129.58999633789062 },
 ];
 
 /* ── Revenue share ───────────────────────────────────────────── */
 const shareItems = [
-  { label: 'Heavy Trucks', pct: 62, color: '#1E3A8A' },
-  { label: 'Light Vans',   pct: 24, color: '#60A5FA' },
-  { label: 'Motorcycles',  pct: 14, color: '#93C5FD' },
+  { label: 'Heavy Trucks', pct: 62, color: '#B7DAF5' },
+  { label: 'Light Vans',   pct: 24, color: '#2563EB' },
+  { label: 'Motorcycles',  pct: 14, color: '#545F73' },
 ];
 
 /* ── Regional distribution ───────────────────────────────────── */
 const regions = [
-  { name: 'North America',  amount: '$842,300', pct: 100 },
+  { name: 'North America',  amount: '$842,300', pct: 100, fillWidth: 761.5970458984375 },
   { name: 'European Union', amount: '$412,900', pct: 49  },
   { name: 'Asia Pacific',   amount: '$298,400', pct: 35  },
   { name: 'Latin America',  amount: '$75,350',  pct: 9   },
@@ -35,38 +35,44 @@ const regions = [
 
 /* ── Donut chart ─────────────────────────────────────────────── */
 function DonutChart() {
-  const r = 58;
-  const cx = 80;
-  const cy = 80;
-  const circ = 2 * Math.PI * r;     // ≈ 364.4
+  const r = 72;
+  const cx = 94;
+  const cy = 94;
+  const circ = 2 * Math.PI * r;
 
   // Build segments from shareItems
   const segmentLengths = shareItems.map((item) => circ * (item.pct / 100));
   const segmentOffsets = segmentLengths.map((_, idx) =>
     segmentLengths.slice(0, idx).reduce((sum, len) => sum + len, 0)
   );
-  const segments = shareItems.map((item, idx) => ({
+  const overlayItems = [shareItems[2], shareItems[1]];
+  const overlayLengths = overlayItems.map((item) => circ * (item.pct / 100));
+  const overlayOffsets = overlayLengths.map((_, idx) =>
+    overlayLengths.slice(0, idx).reduce((sum, len) => sum + len, 0)
+  );
+  const overlaySegments = overlayItems.map((item, idx) => ({
     ...item,
-    len: segmentLengths[idx],
-    offset: circ / 4 - segmentOffsets[idx],
+    len: overlayLengths[idx],
+    offset: circ / 2 - overlayOffsets[idx],
   }));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-      <div style={{ position: 'relative', width: '160px', height: '160px' }}>
-        <svg width="160" height="160" viewBox="0 0 160 160">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', width: '234.66px', paddingTop: '32px', boxSizing: 'border-box' }}>
+      <div style={{ position: 'relative', width: '192px', height: '192px', borderRadius: '9999px' }}>
+        <svg width="192" height="192" viewBox="0 0 192 192">
           {/* Track */}
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#E2E8F0" strokeWidth="22" />
-          {/* Segments */}
-          {segments.map((s) => (
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#B7DAF5" strokeWidth="24" />
+          {/* Overlay segments */}
+          {overlaySegments.map((s) => (
             <circle
               key={s.label}
               cx={cx} cy={cy} r={r}
               fill="none"
               stroke={s.color}
-              strokeWidth="22"
+              strokeWidth="24"
               strokeDasharray={`${s.len} ${circ}`}
               strokeDashoffset={s.offset}
+              strokeLinecap="butt"
               style={{ transition: 'stroke-dasharray 0.6s ease' }}
             />
           ))}
@@ -76,13 +82,13 @@ function DonutChart() {
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ fontFamily: 'Inter', fontSize: '22px', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>100%</span>
-          <span style={{ fontFamily: 'Inter', fontSize: '8px', fontWeight: 600, color: '#64748B', letterSpacing: '0.6px', marginTop: '3px' }}>FLEET TOTAL</span>
+          <span style={{ fontFamily: 'Inter', fontSize: '24px', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>100%</span>
+          <span style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 600, color: '#64748B', letterSpacing: '0.7px', marginTop: '4px' }}>FLEET TOTAL</span>
         </div>
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '234.66px', paddingBottom: '32px', boxSizing: 'border-box' }}>
         {shareItems.map((item) => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
@@ -99,24 +105,23 @@ function DonutChart() {
 
 /* ── Revenue bar chart ───────────────────────────────────────── */
 function RevenueBarChart() {
-  const maxVal = Math.max(...barData.map((d) => d.gross));
-  const chartH = 130;
+  const maxHeight = Math.max(...barData.map((d) => d.height));
+  const barWidth = 73.9047622680664;
+  const chartHeight = 324;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', height: `${chartH + 24}px`, padding: '0 4px' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', width: '565.333px', height: `${chartHeight}px`, padding: '0', boxSizing: 'border-box' }}>
       {barData.map((d) => {
-        const grossH = Math.round((d.gross / maxVal) * chartH);
-        const netH   = Math.round((d.net   / maxVal) * chartH);
+        const barH = Math.round((d.height / maxHeight) * chartHeight);
         return (
-          <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            {/* Stacked bar: net (dark) at bottom, gross above */}
-            <div style={{ width: '100%', height: `${grossH}px`, borderRadius: '5px 5px 0 0', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-              {/* Gross (light blue) — full bar */}
-              <div style={{ position: 'absolute', inset: 0, background: '#BFDBFE', borderRadius: '5px 5px 0 0' }} />
-              {/* Net (dark blue) — bottom portion */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${netH}px`, background: '#2563EB', borderRadius: '0' }} />
+          <div key={d.day} style={{ width: `${barWidth}px`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '100%', height: `${barH}px`, position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
+              <div style={{ position: 'absolute', inset: 0, background: '#B7DAF5', borderTopLeftRadius: '2px', borderTopRightRadius: '2px' }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '8px', background: '#2563EB', borderTopLeftRadius: '2px', borderTopRightRadius: '2px' }} />
             </div>
-            <span style={{ fontFamily: 'Inter', fontSize: '9px', color: '#94A3B8', fontWeight: 500, letterSpacing: '0.2px' }}>{d.day}</span>
+            <div style={{ width: '100%', height: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ width: '24.520000457763672px', lineHeight: '15px', textAlign: 'center', fontFamily: 'Inter', fontWeight: 700, fontSize: '10px', color: '#0F172A', letterSpacing: '0px' }}>{d.day}</span>
+            </div>
           </div>
         );
       })}
@@ -286,11 +291,11 @@ export default function RevenuePage() {
           </div>
 
           {/* Chart row */}
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'stretch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '629.333px 298.667px', gap: '32px', marginBottom: '20px', alignItems: 'stretch' }}>
 
             {/* Revenue Performance Trend */}
-            <div style={{ flex: 1, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '22px 24px', minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ width: '629.333px', height: '432px', background: '#fff', borderRadius: '12px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)', padding: '32px 32px 52px 32px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
                   Revenue Performance Trend
                 </span>
@@ -305,15 +310,17 @@ export default function RevenuePage() {
                   </div>
                 </div>
               </div>
-              <RevenueBarChart />
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <RevenueBarChart />
+              </div>
             </div>
 
             {/* Revenue Share */}
-            <div style={{ width: '220px', flexShrink: 0, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '22px 20px', display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '20px', display: 'block' }}>
+            <div style={{ width: '298.667px', height: '432px', background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '32px 32px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '16px', display: 'block' }}>
                 Revenue Share
               </span>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <DonutChart />
               </div>
             </div>
@@ -321,7 +328,7 @@ export default function RevenuePage() {
           </div>
 
           {/* Regional Revenue Distribution */}
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '22px 24px', marginBottom: '20px' }}>
+          <div style={{ width: '960px', height: '356px', background: '#FFFFFF', borderRadius: '12px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)', padding: '32px', marginBottom: '20px', boxSizing: 'border-box' }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
@@ -346,18 +353,18 @@ export default function RevenuePage() {
             </div>
 
             {/* Rows */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '896px' }}>
               {regions.map((r) => (
-                <div key={r.name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                    <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 500, color: '#374151' }}>{r.name}</span>
+                <div key={r.name} style={{ height: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '14px', lineHeight: '20px', letterSpacing: '0px', color: '#0F172A' }}>{r.name}</span>
                     <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>{r.amount}</span>
                   </div>
-                  <div style={{ height: '7px', background: '#EFF6FF', borderRadius: '999px', overflow: 'hidden' }}>
+                  <div style={{ width: '896px', height: '12px', background: '#B7DAF5', borderRadius: '9999px', overflow: 'hidden' }}>
                     <div style={{
-                      height: '100%', width: `${r.pct}%`,
+                      height: '100%', width: r.fillWidth ? `${r.fillWidth}px` : `${(r.pct / 100) * 896}px`,
                       background: 'linear-gradient(90deg, #1E40AF 0%, #2563EB 50%, #60A5FA 100%)',
-                      borderRadius: '999px',
+                      borderRadius: '9999px',
                       transition: 'width 0.6s ease',
                     }} />
                   </div>
@@ -371,29 +378,39 @@ export default function RevenuePage() {
             {/* Generate CSV Report */}
             <button suppressHydrationWarning style={{
               display: 'flex', alignItems: 'center', gap: '8px',
-              height: '40px', padding: '0 20px', borderRadius: '8px',
-              background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer',
-              fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#374151',
+              width: '236.66000366210938px', height: '48px', padding: '12px 24px', borderRadius: '12px',
+              background: '#E6E8EA', border: 'none', cursor: 'pointer',
+              fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, lineHeight: '24px', color: '#191C1E',
+              whiteSpace: 'nowrap',
             }}>
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                <rect x="2" y="1.5" width="11" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-                <path d="M5 5.5h5M5 8h5M5 10.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-              Generate CSV Report
+              <div style={{ width: '16px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#191C1E', borderRadius: '6px', overflow: 'hidden' }}>
+                <svg width="12" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clipRule="evenodd" fill="#FFFFFF" fillRule="evenodd" />
+                </svg>
+              </div>
+              <div style={{ width: '164.66000366210938px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                Generate CSV Report
+              </div>
             </button>
 
             {/* Export Executive PDF */}
             <button suppressHydrationWarning style={{
               display: 'flex', alignItems: 'center', gap: '8px',
-              height: '40px', padding: '0 20px', borderRadius: '8px',
-              background: '#2563EB', border: 'none', cursor: 'pointer',
-              fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#fff',
+              width: '241.57000732421875px', height: '48px', padding: '12px 24px', borderRadius: '12px',
+              background: '#0058BE', border: 'none', cursor: 'pointer',
+              fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, lineHeight: '24px', color: '#FFFFFF',
+              whiteSpace: 'nowrap',
             }}>
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                <path d="M7.5 1.5v8M5 7l2.5 2.5L10 7" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M2 11v1.5A1.5 1.5 0 0 0 3.5 14h8a1.5 1.5 0 0 0 1.5-1.5V11" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
-              </svg>
-              Export Executive PDF
+              <div style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFFFF', borderRadius: '6px' }}>
+                <svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="1" width="12" height="10" rx="2" fill="#0058BE" />
+                  <path d="M4 4.5H10" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M4 7.5H10" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div style={{ width: '165.5800018310547px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                Export Executive PDF
+              </div>
             </button>
           </div>
 
