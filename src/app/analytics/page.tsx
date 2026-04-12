@@ -1,93 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-/* ── Sidebar nav items ───────────────────────────────────────── */
-const navItems = [
-  {
-    label: 'Command Center', href: '/command-center',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="10.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>,
-  },
-  {
-    label: 'Analytics', href: '/analytics',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14l4-5 3 3 4-6 3 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  },
-  {
-    label: 'Live Map', href: '/',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C6.515 1.5 4.5 3.515 4.5 6c0 3.75 4.5 10.5 4.5 10.5S13.5 9.75 13.5 6c0-2.485-2.015-4.5-4.5-4.5Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="9" cy="6" r="1.5" fill="currentColor"/></svg>,
-  },
-  {
-    label: 'Orders', href: '/orders',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="2.25" width="12" height="13.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6 6h6M6 9h6M6 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-  },
-  {
-    label: 'Drivers', href: '/drivers',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 15.75c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-  },
-  {
-    label: 'Customers', href: '/customers',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6.75" cy="5.25" r="2.25" stroke="currentColor" strokeWidth="1.5"/><path d="M2.25 14.25c0-2.485 2.015-4.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12.75" cy="7.5" r="2.25" stroke="currentColor" strokeWidth="1.5"/><path d="M8.25 15.75c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-  },
-  {
-    label: 'Revenue', href: '/revenue',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5"/><path d="M9 5.25v1.5M9 11.25v1.5M6.75 7.5a2.25 2.25 0 0 1 4.5 0c0 1.5-2.25 1.5-2.25 3h0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-  },
-  {
-    label: 'Settings', href: '/settings',
-    icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.25" stroke="currentColor" strokeWidth="1.5"/><path d="M9 1.5v1.5M9 15v1.5M1.5 9H3M15 9h1.5M3.697 3.697l1.06 1.06M13.243 13.243l1.06 1.06M3.697 14.303l1.06-1.06M13.243 4.757l1.06-1.06" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-  },
-];
-
-function AppSidebar({ activeLabel }: { activeLabel: string }) {
-  const router = useRouter();
-  return (
-    <aside style={{ width: '200px', flexShrink: 0, height: '100vh', background: '#fff', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
-      {/* Logo */}
-      <div style={{ padding: '18px 16px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #F1F5F9' }}>
-        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="22" height="17" viewBox="0 0 22 17" fill="none">
-            <rect x="0.75" y="3" width="12.5" height="9" rx="1.75" stroke="white" strokeWidth="1.6"/>
-            <path d="M13.25 5.5h4l2.75 4.5H13.25V5.5Z" stroke="white" strokeWidth="1.6" strokeLinejoin="round"/>
-            <circle cx="4.5" cy="14" r="1.75" fill="white"/>
-            <circle cx="14.25" cy="14" r="1.75" fill="white"/>
-          </svg>
-        </div>
-        <div>
-          <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 800, color: '#2563EB', lineHeight: '18px' }}>FleetAdmin</div>
-          <div style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.8px' }}>GLOBAL LOGISTICS</div>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: '1px', overflowY: 'auto' }}>
-        {navItems.map((item) => {
-          const isActive = item.label === activeLabel;
-          return (
-            <button key={item.label} suppressHydrationWarning onClick={() => router.push(item.href)}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', width: '100%', textAlign: 'left', background: isActive ? '#EFF6FF' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-              <span style={{ display: 'flex', flexShrink: 0, color: isActive ? '#2563EB' : '#64748B' }}>{item.icon}</span>
-              <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: isActive ? 600 : 400, color: isActive ? '#2563EB' : '#374151' }}>{item.label}</span>
-              {isActive && <span style={{ marginLeft: 'auto', width: '3px', height: '18px', background: '#2563EB', borderRadius: '2px' }} />}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Bottom */}
-      <div style={{ padding: '10px 10px 16px', borderTop: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-        <button suppressHydrationWarning style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', width: '100%', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="#64748B" strokeWidth="1.5"/><path d="M9 13v-1M9 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round"/></svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>Help Center</span>
-        </button>
-        <button suppressHydrationWarning style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', width: '100%', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 16H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round"/><path d="M12 13l4-4-4-4M16 9H7" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>Logout</span>
-        </button>
-      </div>
-    </aside>
-  );
-}
+import Sidebar from '@/components/Sidebar';
 
 /* ── Chart data ───────────────────────────────────────────────── */
 const weekData = [
@@ -191,7 +105,7 @@ export default function AnalyticsPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter' }}>
-      <AppSidebar activeLabel="Analytics" />
+      <Sidebar />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* ── Header ── */}

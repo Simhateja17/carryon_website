@@ -1,5 +1,7 @@
 ﻿'use client';
 
+import { usePathname, useRouter } from 'next/navigation';
+
 /* â”€â”€ Navbar â€” node 404-3220 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    display: flex; height: 64px; padding: 0 32px;
    justify-content: space-between; align-items: center;
@@ -10,6 +12,10 @@
    backdrop-filter: blur(6px);
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchPlaceholder =
+    pathname?.startsWith('/drivers') ? 'Search orders, drivers...' : 'Search analytics, invoices, or reports...';
   return (
     <header style={{
       display: 'flex',
@@ -65,7 +71,7 @@ export default function Navbar() {
             <input
               suppressHydrationWarning
               type="text"
-              placeholder="Search analytics, invoices, or reports..."
+              placeholder={searchPlaceholder}
               style={{
                 width: '392px',
                 height: '17px',
@@ -89,9 +95,15 @@ export default function Navbar() {
           <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <img src="/Button.png" alt="notifications" style={{ width: '16px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
           </div>
-          <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <img src="/Button (1).png" alt="settings" style={{ width: '20.1px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
-          </div>
+          <button
+            suppressHydrationWarning
+            type="button"
+            aria-label="Open settings"
+            onClick={() => router.push('/settings')}
+            style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+          >
+            <img src="/Button (1).png" alt="" style={{ width: '20.1px', height: '20px', objectFit: 'contain', opacity: 0.8 }} />
+          </button>
 
         {/* Bell */}
         <button suppressHydrationWarning style={{
@@ -106,7 +118,7 @@ export default function Navbar() {
         </button>
 
         {/* Settings / gear */}
-        <button suppressHydrationWarning style={{
+        <button suppressHydrationWarning type="button" aria-label="Open settings" onClick={() => router.push('/settings')} style={{
           width: '36px', height: '36px', borderRadius: '8px',
           background: 'transparent', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',

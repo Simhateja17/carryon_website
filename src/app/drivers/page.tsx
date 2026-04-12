@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
+import { useRouter } from 'next/navigation';
+import DriverAdvancedFiltersPanel from '@/components/DriverAdvancedFiltersPanel';
 
 /* ── Driver data ─────────────────────────────────────────────── */
 type DriverStatus = 'ACTIVE' | 'ON BREAK' | 'OFFLINE';
@@ -291,9 +291,19 @@ function DriverCard({ driver }: { driver: Driver }) {
 }
 
 /* ── Add New Driver card ─────────────────────────────────────── */
-function AddNewDriverCard() {
+function AddNewDriverCard({ onClick }: { onClick?: () => void }) {
   return (
-    <div style={{
+    <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      style={{
       width: '222px',
       height: '331px',
       borderRadius: '12px',
@@ -356,25 +366,13 @@ function FilterChip({ label }: { label: string }) {
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function DriversPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'All Drivers' | 'Favorites'>('All Drivers');
+  const [filterOpen, setFilterOpen] = useState(false);
 
   return (
-    <div style={{
-      display: 'flex',
-      width: '100vw',
-      height: '100vh',
-      background: '#F8FAFC',
-      fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden',
-    }}>
-      <Sidebar />
-
-      {/* Main area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-        <Navbar />
-
-        {/* ── Content ── */}
+        <>
+        <DriverAdvancedFiltersPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
         <main style={{
           flex: 1,
           padding: '32px',
@@ -470,7 +468,7 @@ export default function DriversPage() {
               </div>
 
               {/* Filter button — bg #B7DAF5, height 36, radius 8 */}
-              <button suppressHydrationWarning style={{
+              <button suppressHydrationWarning type="button" onClick={() => setFilterOpen(true)} style={{
                 display: 'flex', alignItems: 'center', gap: '7.99px',
                 height: '36px',
                 paddingTop: '8px', paddingRight: '16px',
@@ -491,7 +489,7 @@ export default function DriversPage() {
               </button>
 
               {/* Register Driver — bg #2F80ED, height 36, radius 8 */}
-              <button suppressHydrationWarning style={{
+              <button suppressHydrationWarning type="button" onClick={() => router.push('/drivers/register')} style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 height: '36px',
                 paddingTop: '8px', paddingRight: '16px',
@@ -551,11 +549,10 @@ export default function DriversPage() {
             {drivers.map((d) => (
               <DriverCard key={d.id} driver={d} />
             ))}
-            <AddNewDriverCard />
+            <AddNewDriverCard onClick={() => router.push('/drivers/register')} />
           </div>
 
         </main>
-      </div>
-    </div>
+        </>
   );
 }

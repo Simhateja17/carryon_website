@@ -2,153 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-/* ── Sidebar ─────────────────────────────────────────────────── */
-const sideNav = [
-  {
-    label: 'Command Center',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="1" y="1" width="7" height="7" rx="1.5" fill="currentColor" />
-        <rect x="10" y="1" width="7" height="7" rx="1.5" fill="currentColor" />
-        <rect x="1" y="10" width="7" height="7" rx="1.5" fill="currentColor" />
-        <rect x="10" y="10" width="7" height="7" rx="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Live Map',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M9 1C6.239 1 4 3.239 4 6c0 4.5 5 11 5 11s5-6.5 5-11c0-2.761-2.239-5-5-5Z"
-          stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="9" cy="6" r="2" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Orders',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="1" y="5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M13 7.5h2.5l2 4H13V7.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <circle cx="4.5" cy="15.5" r="1.5" fill="currentColor" />
-        <circle cx="12.5" cy="15.5" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Drivers',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Customers',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="6.5" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M1 15c0-3.038 2.462-5.5 5.5-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="12.5" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M17 15c0-3.038-2.462-5.5-5.5-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Revenue',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 7v4M7.5 8c0-.828.672-1.5 1.5-1.5h.5a1 1 0 1 1 0 2H9a1 1 0 0 0 0 2h.5c.828 0 1.5-.672 1.5-1.5"
-          stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-];
-
-function Sidebar() {
-  const router = useRouter();
-  return (
-    <aside style={{
-      width: '256px', height: '100vh', minHeight: '900px', flexShrink: 0,
-      background: '#fff', borderRight: '1px solid #E2E8F0',
-      display: 'flex', flexDirection: 'column',
-    }}>
-      <div style={{ padding: '24px 24px 20px' }}>
-        <span style={{ fontFamily: 'Inter', fontSize: '22px', fontWeight: 700 }}>
-          <span style={{ color: '#2F80ED' }}>Carry </span>
-          <span style={{ color: '#0F172A' }}>On</span>
-        </span>
-      </div>
-      <nav style={{ flex: 1, padding: '4px 12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        {sideNav.map((item) => {
-          const isActive = item.label === 'Orders';
-          return (
-            <button
-              suppressHydrationWarning
-              key={item.label}
-              onClick={() => {
-                if (item.label === 'Command Center') { router.push('/command-center'); return; }
-                if (item.label === 'Live Map') { router.push('/'); return; }
-                if (item.label === 'Drivers') { router.push('/drivers'); return; }
-                if (item.label === 'Customers') { router.push('/customers'); return; }
-                if (item.label === 'Settings') { router.push('/settings'); return; }
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 14px', width: '100%', textAlign: 'left',
-                background: isActive ? '#EFF6FF' : 'transparent',
-                border: 'none',
-                borderLeft: isActive ? '3px solid #2F80ED' : '3px solid transparent',
-                borderRadius: isActive ? '0 8px 8px 0' : '8px',
-                cursor: 'pointer',
-                color: isActive ? '#2F80ED' : '#64748B',
-              }}
-            >
-              <span style={{ display: 'flex', color: isActive ? '#2F80ED' : '#64748B', flexShrink: 0 }}>
-                {item.icon}
-              </span>
-              <span style={{
-                fontFamily: 'Inter', fontSize: '14px',
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? '#2F80ED' : '#374151',
-              }}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-      <div style={{ padding: '16px 16px 24px', display: 'flex', flexDirection: 'column', gap: '14px', borderTop: '1px solid #F1F5F9' }}>
-        <button suppressHydrationWarning onClick={() => router.push('/orders/create')} style={{
-          width: '100%', height: '42px', borderRadius: '8px',
-          background: '#2F80ED', border: 'none', cursor: 'pointer',
-          fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#fff',
-        }}>
-          + New Dispatch
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px' }}>
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '50%', background: '#FED7AA',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', flexShrink: 0,
-          }}>
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <circle cx="14" cy="9" r="5" fill="#F97316" />
-              <path d="M3 26c0-6.075 4.925-11 11-11s11 4.925 11 11" fill="#F97316" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>Alex Chen</div>
-            <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B' }}>Fleet Director</div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
+import Sidebar from '@/components/Sidebar';
 
 /* ── Orders data ─────────────────────────────────────────────── */
 const orders = [
@@ -206,6 +60,7 @@ const PER_PAGE = 10;
 const TOTAL_PAGES = Math.ceil(TOTAL_ORDERS / PER_PAGE);
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -315,7 +170,7 @@ export default function OrdersPage() {
                 </svg>
                 Export CSV
               </button>
-              <button suppressHydrationWarning style={{
+              <button suppressHydrationWarning type="button" onClick={() => router.push('/orders/create')} style={{
                 height: '40px', padding: '0 20px', borderRadius: '8px',
                 background: '#2F80ED', border: 'none',
                 fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#fff',
