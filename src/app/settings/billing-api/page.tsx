@@ -1,100 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-const settingsNav = [
-  {
-    label: 'Fleet Settings', href: '/settings/fleet-settings',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="0.5" y="3.5" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M9.5 5.5h3l2 3.5H9.5V5.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><circle cx="3.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="10.5" cy="12.5" r="1.3" fill="currentColor"/></svg>),
-  },
-  {
-    label: 'Notifications', href: '/settings/notifications',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 6.5A5 5 0 0 0 3 6.5c0 5-2 6.5-2 6.5h14s-2-1.5-2-6.5M9.2 14a1.5 1.5 0 0 1-2.4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
-  },
-  {
-    label: 'User Management', href: '/settings/user-management',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="4.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M1 13.5c0-2.485 2.015-4.5 4.5-4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M11 9.5v5M8.5 12h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
-  },
-  {
-    label: 'Billing & API', href: '/settings/billing-api',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="0.75" y="2.75" width="14.5" height="10.5" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M0.75 6.5h14.5" stroke="currentColor" strokeWidth="1.3"/></svg>),
-  },
-  {
-    label: 'Appearance', href: '/settings/appearance',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3"/><circle cx="5.5" cy="6" r="1" fill="currentColor"/><circle cx="10.5" cy="6" r="1" fill="currentColor"/><path d="M5 10.5s1 2 3 2 3-2 3-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
-  },
-];
-
-function SettingsSidebar() {
-  const router = useRouter();
-  return (
-    <aside style={{
-      width: '288px', flexShrink: 0, height: '100vh', background: '#fff',
-      borderRight: '1px solid rgba(25, 28, 30, 0.08)',
-      display: 'flex', flexDirection: 'column',
-    }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(25, 28, 30, 0.06)' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="22" height="18" viewBox="0 0 22 18" fill="none">
-            <rect x="0.5" y="3" width="13" height="10" rx="1.5" stroke="white" strokeWidth="1.5"/>
-            <path d="M13.5 5.5h4l2.5 4.5H13.5V5.5Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-            <circle cx="4.5" cy="14.5" r="1.8" fill="white"/>
-            <circle cx="14.5" cy="14.5" r="1.8" fill="white"/>
-          </svg>
-        </div>
-        <div>
-          <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#191C1E', lineHeight: '18px' }}>Command Center</div>
-          <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 500, color: 'rgba(66, 71, 84, 0.5)', lineHeight: '16px' }}>Logistics Admin</div>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: '12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        {settingsNav.map((item) => {
-          const isActive = item.label === 'Billing & API';
-          return (
-            <button key={item.label} suppressHydrationWarning onClick={() => router.push(item.href)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
-                width: '100%', textAlign: 'left', cursor: 'pointer',
-                background: isActive ? 'rgba(47, 128, 237, 0.08)' : 'transparent',
-                border: 'none', borderRadius: '8px',
-              }}>
-              <span style={{ display: 'flex', flexShrink: 0, color: isActive ? '#2F80ED' : 'rgba(66, 71, 84, 0.6)' }}>{item.icon}</span>
-              <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: isActive ? 600 : 400, color: isActive ? '#2F80ED' : '#424754' }}>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Support Portal */}
-      <div style={{ padding: '12px' }}>
-        <button style={{
-          width: '100%', padding: '10px', background: '#F7F9FB',
-          border: '1px solid rgba(25, 28, 30, 0.08)', borderRadius: '8px',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center',
-        }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2H2.5A1.5 1.5 0 0 0 1 3.5v8A1.5 1.5 0 0 0 2.5 13H5M9 10l3-3-3-3M13 7H5" stroke="rgba(66,71,84,0.6)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: 'rgba(66, 71, 84, 0.6)' }}>Support Portal</span>
-        </button>
-      </div>
-
-      {/* System Status + Logout */}
-      <div style={{ padding: '8px 12px 16px', display: 'flex', flexDirection: 'column', gap: '2px', borderTop: '1px solid rgba(25, 28, 30, 0.06)' }}>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '6px', width: '100%' }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="rgba(66,71,84,0.4)" strokeWidth="1.2"/><circle cx="6" cy="6" r="2.5" fill="rgba(66,71,84,0.4)"/></svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '12px', color: 'rgba(66, 71, 84, 0.5)' }}>System Status</span>
-        </button>
-        <button onClick={() => router.push('/')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '6px', width: '100%' }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 1.5H2A1.5 1.5 0 0 0 .5 3v6A1.5 1.5 0 0 0 2 10.5h2.5M8 8.5l2.5-2.5L8 3.5M11 6H4" stroke="rgba(66,71,84,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '12px', color: 'rgba(66, 71, 84, 0.5)' }}>+ Logout</span>
-        </button>
-      </div>
-    </aside>
-  );
-}
+import Sidebar from '@/components/Sidebar';
+import Navbar from '@/components/Navbar';
 
 const apiKeys = [
   {
@@ -152,42 +60,10 @@ export default function BillingAPIPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F7F9FB', fontFamily: 'Inter' }}>
-      <SettingsSidebar />
+      <Sidebar />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-
-        {/* Header */}
-        <header style={{
-          display: 'flex', height: '80px', padding: '0 48px',
-          justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
-          borderBottom: '1px solid rgba(25, 28, 30, 0.05)',
-          background: 'rgba(247, 249, 251, 0.80)',
-          backdropFilter: 'blur(12px)',
-          position: 'sticky', top: 0, zIndex: 5,
-        }}>
-          <span style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#191C1E', letterSpacing: '-0.3px' }}>
-            Platform Settings
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            {/* Search */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid rgba(25, 28, 30, 0.08)', borderRadius: '8px', padding: '8px 14px' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="rgba(66,71,84,0.4)" strokeWidth="1.3"/><path d="M9.5 9.5L13 13" stroke="rgba(66,71,84,0.4)" strokeWidth="1.3" strokeLinecap="round"/></svg>
-              <input placeholder="Search settings..." style={{ fontFamily: 'Inter', fontSize: '13px', color: '#424754', background: 'transparent', border: 'none', outline: 'none', width: '160px' }} />
-            </div>
-            {/* Help */}
-            <button style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'transparent', border: '1px solid rgba(25,28,30,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="rgba(66,71,84,0.5)" strokeWidth="1.3"/><path d="M5.5 5.5a1.5 1.5 0 0 1 3 .5c0 1-1.5 1.5-1.5 2.5" stroke="rgba(66,71,84,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="7" cy="10.5" r=".5" fill="rgba(66,71,84,0.5)"/></svg>
-            </button>
-            {/* Settings */}
-            <button style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'transparent', border: '1px solid rgba(25,28,30,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="rgba(66,71,84,0.5)" strokeWidth="1.3"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="rgba(66,71,84,0.5)" strokeWidth="1.3" strokeLinecap="round"/></svg>
-            </button>
-            {/* Avatar */}
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#B7DAF5', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="#2F80ED"/><path d="M2 18c0-4.418 3.582-8 8-8s8 3.582 8 8" fill="#2F80ED"/></svg>
-            </div>
-          </div>
-        </header>
+        <Navbar />
 
         {/* Main scrollable content */}
         <main style={{ flex: 1, overflowY: 'auto', padding: '32px 48px', display: 'flex', flexDirection: 'column', gap: '24px' }}>

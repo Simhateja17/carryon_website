@@ -1,312 +1,843 @@
 'use client';
 
-import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import Navbar from '@/components/Navbar';
 
-/* ── Chart data ───────────────────────────────────────────────── */
-const weekData = [
-  { orders: 62, deliveries: 48 },
-  { orders: 75, deliveries: 60 },
-  { orders: 70, deliveries: 55 },
-  { orders: 80, deliveries: 63 },
-  { orders: 95, deliveries: 75 },
-  { orders: 88, deliveries: 68 },
-  { orders: 72, deliveries: 56 },
+const manrope = "'Manrope', sans-serif";
+const inter = "'Inter', sans-serif";
+
+// ── Data ───────────────────────────────────────────────────────────────────────
+const stats = [
+  { label: 'TOTAL ORDERS', value: '12,482', trend: '+12.5%', trendLabel: 'vs last week', trendUp: true },
+  { label: 'TOTAL REVENUE', value: '$84.2k', trend: '+8.2%', trendLabel: 'vs last week', trendUp: true },
+  { label: 'ACTIVE DRIVERS', value: '1,204', trend: '-2.1%', trendLabel: 'vs prev. period', trendUp: false },
+  { label: 'AVG DELIVERY', value: '24m', trend: '-4s', trendLabel: 'vs prev. week', trendUp: true },
+  { label: 'CANCEL RATE', value: '1.8%', trend: 'Optimal', trendLabel: 'vs 2.4% avg', trendUp: true, isOptimal: true },
+  { label: 'AVG RATING', value: '4.8', trend: '+0.1', trendLabel: 'vs last month', trendUp: true },
 ];
-const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const weeks = ['WEEK 28', 'WEEK 29', 'WEEK 30', 'WEEK 31', 'WEEK 32', 'WEEK 33', 'WEEK 34', 'WEEK 35'];
 
-/* ── Donut Chart ─────────────────────────────────────────────── */
-function DonutChart() {
-  const cx = 80, cy = 80, r = 60, sw = 22;
-  const segments = [
-    { pct: 78.2, color: '#1E3A8A' },
-    { pct: 15.5, color: '#60A5FA' },
-    { pct: 4.1,  color: '#BFDBFE' },
-    { pct: 2.2,  color: '#1F2937' },
-  ];
-  let cumAngle = -90;
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const arcs = segments.map((s) => {
-    const startAngle = cumAngle;
-    const sweep = (s.pct / 100) * 360;
-    cumAngle += sweep;
-    const endAngle = cumAngle;
-    const x1 = cx + r * Math.cos(toRad(startAngle));
-    const y1 = cy + r * Math.sin(toRad(startAngle));
-    const x2 = cx + r * Math.cos(toRad(endAngle));
-    const y2 = cy + r * Math.sin(toRad(endAngle));
-    const largeArc = sweep > 180 ? 1 : 0;
-    return { ...s, d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}` };
-  });
+const trendData = [
+  { day: '01 May', orders: 35, revenue: 28 },
+  { day: '05 May', orders: 55, revenue: 42 },
+  { day: '10 May', orders: 48, revenue: 38 },
+  { day: '15 May', orders: 85, revenue: 72 },
+  { day: '20 May', orders: 42, revenue: 35 },
+  { day: '25 May', orders: 58, revenue: 48 },
+  { day: '30 May', orders: 38, revenue: 30 },
+];
 
+const insights = [
+  {
+    icon: 'alert',
+    title: 'Critical: Cancellation Spike',
+    desc: 'Zone A cancellations up 15% due to roadwork. Dynamic rerouting active.',
+    iconColor: '#EF4444',
+    bgColor: '#FEF2F2',
+  },
+  {
+    icon: 'info',
+    title: 'Peak Demand Forecast',
+    desc: 'Demand expected to hit 2.5x normal at 7 PM. 40 additional drivers recommended.',
+    iconColor: '#3B82F6',
+    bgColor: '#EFF6FF',
+  },
+  {
+    icon: 'check',
+    title: 'Efficiency Milestone',
+    desc: 'Jersey City drivers reached 98% on-time delivery rate this morning.',
+    iconColor: '#10B981',
+    bgColor: '#ECFDF5',
+  },
+];
+
+const supplyDemandData = [0.7, 0.3, 0.8, 0.4, 0.9, 0.6];
+
+const zoneData = [
+  { name: 'DOWNTOWN', value: '4,829', status: 'High', statusColor: '#10B981' },
+  { name: 'WEST SIDE', value: '2,105', status: 'Normal', statusColor: '#64748B' },
+  { name: 'EAST RIVER', value: '1,942', status: 'Normal', statusColor: '#64748B' },
+  { name: 'UPTOWN', value: '3,211', status: 'Hot', statusColor: '#3B82F6' },
+];
+
+const drivers = [
+  { name: 'Alex Thompson', id: '#DR-90210', avatar: '/driver-avatar.png', fleet: 'Pickup Truck', acceptance: '98.2%', cancel: '0.5%', cancelUp: false, ontime: '99.1%', rating: '4.9', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
+  { name: 'Sarah Jenkins', id: '#DR-90455', avatar: '/driver-sarah.png', fleet: 'Delivery Bike', acceptance: '94.5%', cancel: '1.2%', cancelUp: false, ontime: '95.8%', rating: '4.8', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
+  { name: 'Michael Ross', id: '#DR-88123', avatar: '/driver-michael.png', fleet: 'Heavy Truck', acceptance: '82.1%', cancel: '8.4%', cancelUp: true, ontime: '84.2%', rating: '4.2', status: 'ON BREAK', statusBg: '#FEF3C7', statusColor: '#D97706' },
+];
+
+const operationalLog = [
+  { date: 'May 24, 2024', volume: '1,402', grossRev: '$12,490', resources: '842 Units', avgTat: '22m 14s' },
+  { date: 'May 23, 2024', volume: '1,291', grossRev: '$11,842', resources: '790 Units', avgTat: '24m 05s' },
+  { date: 'May 22, 2024', volume: '1,510', grossRev: '$14,102', resources: '866 Units', avgTat: '21m 58s' },
+];
+
+// ── Components ─────────────────────────────────────────────────────────────────
+
+function FilterBar() {
   return (
-    <svg width="160" height="160" viewBox="0 0 160 160">
-      {arcs.map((a, i) => (
-        <path key={i} d={a.d} fill="none" stroke={a.color} strokeWidth={sw} strokeLinecap="butt"/>
-      ))}
-      <text x="80" y="74" textAnchor="middle" fontFamily="Inter" fontSize="20" fontWeight="800" fill="#0F172A">100%</text>
-      <text x="80" y="91" textAnchor="middle" fontFamily="Inter" fontSize="9" fontWeight="600" fill="#94A3B8" letterSpacing="0.5">FLEET TOTAL</text>
-    </svg>
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '12px',
+      padding: '16px 20px',
+      marginBottom: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Time tabs */}
+        <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: '8px', padding: '2px' }}>
+          {['Today', 'Weekly', 'Monthly'].map((tab, i) => (
+            <button key={tab} suppressHydrationWarning type="button" style={{
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: 'none',
+              background: i === 0 ? '#FFFFFF' : 'transparent',
+              fontFamily: inter,
+              fontSize: '12px',
+              fontWeight: i === 0 ? 700 : 500,
+              color: i === 0 ? '#2563EB' : '#64748B',
+              cursor: 'pointer',
+              boxShadow: i === 0 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+            }}>{tab}</button>
+          ))}
+          <button suppressHydrationWarning type="button" style={{
+            padding: '6px 14px',
+            borderRadius: '6px',
+            border: 'none',
+            background: 'transparent',
+            fontFamily: inter,
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#64748B',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}>
+            Custom
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1" stroke="#94A3B8" strokeWidth="1.2"/><path d="M1 5h10M4 1v2M8 1v2" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+
+        {/* Dropdowns */}
+        {[
+          { label: 'All Cities', icon: true },
+          { label: 'Driver Type: All', icon: true },
+          { label: 'Payment: All', icon: true },
+          { label: 'Status: All', icon: true },
+        ].map((dd) => (
+          <button key={dd.label} suppressHydrationWarning type="button" style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #E2E8F0',
+            background: '#FFFFFF',
+            fontFamily: inter,
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#374151',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            {dd.label}
+            {dd.icon && <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </button>
+        ))}
+      </div>
+
+      <button suppressHydrationWarning type="button" style={{
+        padding: '8px 16px',
+        borderRadius: '8px',
+        border: '1px solid #E2E8F0',
+        background: '#FFFFFF',
+        fontFamily: inter,
+        fontSize: '11px',
+        fontWeight: 700,
+        color: '#374151',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        letterSpacing: '0.5px',
+        textTransform: 'uppercase',
+      }}>
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 1h12M3 5h8M5 9h4" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round"/></svg>
+        More Filters
+      </button>
+    </div>
   );
 }
 
-/* ── Main Page ───────────────────────────────────────────────── */
-export default function AnalyticsPage() {
-  const [dateRange] = useState('Q3 2023: Jul 01 – Sep 30');
-
-  const statCards = [
-    {
-      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="18" height="14" rx="2" stroke="#2563EB" strokeWidth="1.5"/><path d="M6 8h10M6 12h6" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-      badge: '+12.4%', badgeUp: true,
-      label: 'TOTAL SHIPMENTS', value: '124,892',
-      sub: 'vs. 111,104 in Q2',
-    },
-    {
-      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#F59E0B" strokeWidth="1.5"/><path d="M11 6.5v4.5l3 2" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-      badge: '-2.1%', badgeUp: false,
-      label: 'AVG. DELIVERY TIME', value: '18.4 hrs',
-      sub: 'Improved by 24 mins avg.',
-    },
-    {
-      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#22C55E" strokeWidth="1.5"/><path d="M7 11.5l2.5 2.5 5.5-5" stroke="#22C55E" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      badge: '+0.8%', badgeUp: true,
-      label: 'ON-TIME DELIVERY %', value: '98.2%',
-      sub: 'Target: 97.5%',
-    },
-    {
-      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#64748B" strokeWidth="1.5"/><path d="M11 7v1.5M11 13.5V15M8.5 10a2.5 2.5 0 0 1 5 0c0 1.5-2.5 1.5-2.5 3" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-      badge: '+4.5%', badgeUp: true,
-      label: 'COST PER MILE', value: '$2.42',
-      sub: 'fuel surcharge impact: high',
-    },
-  ];
-
-  const regions = [
-    { name: 'North America', pct: 94.8 },
-    { name: 'Europe (EU)', pct: 88.2 },
-    { name: 'Asia Pacific', pct: 72.4 },
-    { name: 'South America', pct: 64.1 },
-    { name: 'Africa', pct: 58.9 },
-  ];
-
-  const drivers = [
-    { initials: 'MS', bg: '#DBEAFE', color: '#1D4ED8', name: 'Marcus Sterling', sub: 'Heavy Transport', rating: 4.95, trips: '1,204', onTime: '99.2%', onTimeBg: '#DCFCE7', onTimeColor: '#16A34A', fuel: 'A+' },
-    { initials: 'ER', bg: '#FCE7F3', color: '#9D174D', name: 'Elena Rodriguez', sub: 'Last Mile Delivery', rating: 4.92, trips: '985', onTime: '88.8%', onTimeBg: '#DBEAFE', onTimeColor: '#1D4ED8', fuel: 'A' },
-    { initials: 'JW', bg: '#E0E7FF', color: '#3730A3', name: 'James Whitaker', sub: 'Regional Haul', rating: 4.88, trips: '1,540', onTime: '87.4%', onTimeBg: '#DBEAFE', onTimeColor: '#1D4ED8', fuel: 'A-' },
-  ];
-
-  const donutLegend = [
-    { label: 'Completed', pct: '78.2%', color: '#1E3A8A' },
-    { label: 'In Transit', pct: '15.5%', color: '#60A5FA' },
-    { label: 'Delayed',    pct: '4.1%',  color: '#BFDBFE' },
-    { label: 'Cancelled',  pct: '2.2%',  color: '#1F2937' },
-  ];
-
+function StatsCards() {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter' }}>
-      <Sidebar />
-
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* ── Header ── */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '20px 28px 18px', flexShrink: 0 }}>
-          {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-            {['CARRY ON', 'INTELLIGENCE', 'PERFORMANCE ANALYTICS'].map((crumb, i) => (
-              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {i > 0 && <span style={{ color: '#94A3B8', fontSize: '11px' }}>›</span>}
-                <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: i === 2 ? 600 : 400, color: i === 2 ? '#2563EB' : '#94A3B8', letterSpacing: '0.3px' }}>{crumb}</span>
-              </span>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-            <div>
-              <h1 style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: '1.1' }}>Historical Insights</h1>
-              <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B', margin: '4px 0 0' }}>Deep dive into fleet performance and operational metrics.</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {/* Date range */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1.5px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', background: '#fff', cursor: 'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10.5" rx="1.5" stroke="#64748B" strokeWidth="1.3"/><path d="M1.5 5.5h11M4.5 1v2M9.5 1v2" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round"/></svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#374151' }}>
-                  <span style={{ fontSize: '10px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.4px', marginRight: '4px' }}>DATE RANGE</span>
-                  {dateRange}
-                </span>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </div>
-              {/* Export button */}
-              <button style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '9px 16px', background: '#2563EB', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1.5 11h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#fff', letterSpacing: '0.5px' }}>EXPORT DATA</span>
-              </button>
-            </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px', marginBottom: '16px' }}>
+      {stats.map((s, i) => (
+        <div key={i} style={{
+          background: '#FFFFFF',
+          borderRadius: '12px',
+          padding: '16px',
+          boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+        }}>
+          <div style={{
+            fontFamily: inter,
+            fontSize: '10px',
+            fontWeight: 700,
+            color: '#94A3B8',
+            letterSpacing: '0.8px',
+            textTransform: 'uppercase',
+            marginBottom: '8px',
+          }}>{s.label}</div>
+          <div style={{
+            fontFamily: manrope,
+            fontSize: '24px',
+            fontWeight: 800,
+            color: '#0F172A',
+            lineHeight: '28px',
+            marginBottom: '8px',
+          }}>{s.value}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {s.isOptimal ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#10B981" strokeWidth="1.5"/><path d="M4 6l1.5 1.5L8 5" stroke="#10B981" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#10B981' }}>{s.trend}</span>
+              </>
+            ) : (
+              <span style={{
+                fontFamily: inter,
+                fontSize: '11px',
+                fontWeight: 700,
+                color: s.trendUp ? '#10B981' : '#EF4444',
+              }}>{s.trendUp ? '↗' : '↘'} {s.trend}</span>
+            )}
+            <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#94A3B8' }}>{s.trendLabel}</span>
           </div>
         </div>
+      ))}
+    </div>
+  );
+}
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: '20px 28px 0' }}>
+function TrendChart() {
+  const maxVal = 100;
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      flex: 1,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div>
+          <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>Orders & Revenue Trend</div>
+          <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Daily performance comparison with hover insights</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
+            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Orders</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#E2E8F0' }} />
+            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8' }}>Revenue</span>
+          </div>
+        </div>
+      </div>
 
-          {/* ── 4 Stat Cards ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '18px' }}>
-            {statCards.map((card, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 18px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{card.icon}</div>
-                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: card.badgeUp ? '#16A34A' : '#DC2626', background: card.badgeUp ? '#DCFCE7' : '#FEE2E2', padding: '2px 7px', borderRadius: '999px' }}>{card.badge}</span>
+      {/* Chart */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px', paddingBottom: '30px' }}>
+        {trendData.map((d, i) => (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', width: '100%', justifyContent: 'center' }}>
+              {/* Orders bar - blue */}
+              <div style={{
+                width: '14px',
+                height: `${(d.orders / maxVal) * 160}px`,
+                background: '#3B82F6',
+                borderRadius: '3px 3px 0 0',
+                transition: 'height 0.3s ease',
+              }} />
+              {/* Revenue bar - light gray */}
+              <div style={{
+                width: '14px',
+                height: `${(d.revenue / maxVal) * 160}px`,
+                background: '#F1F5F9',
+                borderRadius: '3px 3px 0 0',
+                transition: 'height 0.3s ease',
+              }} />
+            </div>
+            <span style={{
+              fontFamily: inter,
+              fontSize: '10px',
+              fontWeight: 600,
+              color: '#94A3B8',
+              whiteSpace: 'nowrap',
+            }}>{d.day}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AISmartInsights() {
+  return (
+    <div style={{
+      width: '320px',
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+    }}>
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '12px',
+        padding: '20px',
+        boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 1l2.5 6.5L19 8l-5 4.5L15.5 19 10 15.5 4.5 19 6 12.5 1 8l6.5-.5L10 1Z" fill="#3B82F6" />
+          </svg>
+          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6' }}>AI Smart Insights</span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {insights.map((insight, i) => (
+            <div key={i} style={{
+              padding: '12px',
+              borderRadius: '10px',
+              background: insight.bgColor,
+              border: `1px solid ${insight.bgColor}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: insight.iconColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {insight.icon === 'alert' && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 3v3M6 8.5v.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round"/><circle cx="6" cy="6" r="5" stroke="#FFFFFF" strokeWidth="1.2"/></svg>
+                  )}
+                  {insight.icon === 'info' && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#FFFFFF" strokeWidth="1.2"/><path d="M6 5.5v3M6 3.5v1" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  )}
+                  {insight.icon === 'check' && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  )}
                 </div>
-                <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.7px', marginBottom: '4px' }}>{card.label}</div>
-                <div style={{ fontFamily: 'Inter', fontSize: '22px', fontWeight: 800, color: '#0F172A', lineHeight: '1.1', marginBottom: '4px' }}>{card.value}</div>
-                <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8' }}>{card.sub}</div>
+                <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{insight.title}</span>
               </div>
-            ))}
+              <p style={{
+                fontFamily: inter,
+                fontSize: '11px',
+                fontWeight: 500,
+                color: '#64748B',
+                lineHeight: '16px',
+                margin: 0,
+                paddingLeft: '28px',
+              }}>{insight.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <button suppressHydrationWarning type="button" style={{
+          marginTop: '16px',
+          width: '100%',
+          padding: '10px',
+          borderRadius: '8px',
+          border: 'none',
+          background: 'transparent',
+          fontFamily: inter,
+          fontSize: '12px',
+          fontWeight: 700,
+          color: '#3B82F6',
+          cursor: 'pointer',
+          textDecoration: 'underline',
+          textUnderlineOffset: '2px',
+        }}>
+          View Analytics Laboratory
+        </button>
+      </div>
+
+      {/* Supply vs Demand */}
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '12px',
+        padding: '16px 20px',
+        boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <span style={{ fontFamily: manrope, fontSize: '11px', fontWeight: 800, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase' }}>Supply vs Demand</span>
+          <span style={{
+            background: '#DBEAFE',
+            borderRadius: '4px',
+            padding: '2px 8px',
+            fontFamily: inter,
+            fontSize: '9px',
+            fontWeight: 800,
+            color: '#3B82F6',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+          }}>LIVE</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '40px' }}>
+          {supplyDemandData.map((v, i) => (
+            <div key={i} style={{
+              flex: 1,
+              height: `${v * 40}px`,
+              background: '#3B82F6',
+              borderRadius: '2px 2px 0 0',
+            }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderStatusMatrix() {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+    }}>
+      <div style={{
+        fontFamily: manrope,
+        fontSize: '14px',
+        fontWeight: 800,
+        color: '#0F172A',
+        marginBottom: '4px',
+        alignSelf: 'flex-start',
+      }}>Order Status Matrix</div>
+
+      {/* Circular progress */}
+      <div style={{ position: 'relative', width: '160px', height: '160px', margin: '16px 0' }}>
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          {/* Background circle */}
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#F1F5F9" strokeWidth="12" />
+          {/* Delivered - blue */}
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#3B82F6" strokeWidth="12"
+            strokeDasharray={`${0.824 * 377} ${377}`}
+            strokeDashoffset={-0.05 * 377}
+            strokeLinecap="round"
+            style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
+          />
+          {/* Pending - green */}
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#10B981" strokeWidth="12"
+            strokeDasharray={`${0.138 * 377} ${377}`}
+            strokeDashoffset={-(0.824 + 0.05) * 377}
+            strokeLinecap="round"
+            style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
+          />
+          {/* Cancelled - red */}
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#EF4444" strokeWidth="12"
+            strokeDasharray={`${0.038 * 377} ${377}`}
+            strokeDashoffset={-(0.824 + 0.138 + 0.05) * 377}
+            strokeLinecap="round"
+            style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
+          />
+        </svg>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase' }}>TOTAL</div>
+          <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#0F172A' }}>12.4k</div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: '20px', alignSelf: 'stretch', justifyContent: 'center' }}>
+        {[
+          { label: 'DELIVERED', pct: '82.4%', color: '#3B82F6' },
+          { label: 'PENDING', pct: '13.8%', color: '#10B981' },
+          { label: 'CANCELLED', pct: '3.8%', color: '#EF4444' },
+        ].map((item) => (
+          <div key={item.label} style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{item.label}</div>
+            <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, color: item.color }}>{item.pct}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ZoneOrderDensity() {
+  return (
+    <div style={{
+      flex: 1.5,
+      background: '#0F172A',
+      borderRadius: '12px',
+      padding: '20px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Gradient background effect */}
+      <div style={{
+        position: 'absolute',
+        top: '20%',
+        left: '30%',
+        width: '200px',
+        height: '200px',
+        background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(40px)',
+      }} />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{
+          fontFamily: manrope,
+          fontSize: '14px',
+          fontWeight: 800,
+          color: '#FFFFFF',
+          marginBottom: '2px',
+        }}>Zone Order Density</div>
+        <div style={{
+          fontFamily: inter,
+          fontSize: '11px',
+          fontWeight: 500,
+          color: '#64748B',
+          marginBottom: '16px',
+        }}>Real-time heatmap visualization</div>
+
+        {/* Map legend */}
+        <div style={{
+          position: 'absolute',
+          top: '0',
+          right: '0',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '8px',
+          padding: '10px 12px',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '0.5px', marginBottom: '8px', textTransform: 'uppercase' }}>MAP LEGEND</div>
+          {[
+            { label: 'Critical Demand', color: '#3B82F6' },
+            { label: 'Active Market', color: '#93C5FD' },
+            { label: 'Stable Activity', color: '#E2E8F0' },
+          ].map((l) => (
+            <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: l.color }} />
+              <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#CBD5E1' }}>{l.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Zone cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '10px',
+          marginTop: '80px',
+        }}>
+          {zoneData.map((zone) => (
+            <div key={zone.name} style={{
+              background: 'rgba(255,255,255,0.95)',
+              borderRadius: '10px',
+              padding: '12px',
+              backdropFilter: 'blur(8px)',
+            }}>
+              <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>{zone.name}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                <span style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#3B82F6' }}>{zone.value}</span>
+                <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: zone.statusColor }}>{zone.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DriverPerformanceMatrix() {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      marginBottom: '16px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+        <div>
+          <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, color: '#0F172A' }}>Driver Performance matrix</div>
+          <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Real-time status and efficiency tracking</div>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {['Top Performers', 'Attention Required'].map((tab, i) => (
+            <button key={tab} suppressHydrationWarning type="button" style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: i === 0 ? 'none' : '1px solid #E2E8F0',
+              background: i === 0 ? '#F1F5F9' : '#FFFFFF',
+              fontFamily: inter,
+              fontSize: '11px',
+              fontWeight: i === 0 ? 700 : 500,
+              color: i === 0 ? '#0F172A' : '#64748B',
+              cursor: 'pointer',
+            }}>{tab}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table header */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.8fr 0.8fr',
+        padding: '12px 0',
+        borderBottom: '1px solid #F1F5F9',
+        marginTop: '16px',
+      }}>
+        {['DRIVER IDENTITY', 'FLEET CLASS', 'ACCEPTANCE', 'CANCEL RATE', 'ON-TIME %', 'RATING', 'STATUS'].map((h) => (
+          <span key={h} style={{
+            fontFamily: inter,
+            fontSize: '9px',
+            fontWeight: 800,
+            color: '#94A3B8',
+            letterSpacing: '0.8px',
+            textTransform: 'uppercase',
+          }}>{h}</span>
+        ))}
+      </div>
+
+      {/* Driver rows */}
+      {drivers.map((d, i) => (
+        <div key={i} style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.8fr 0.8fr',
+          alignItems: 'center',
+          padding: '12px 0',
+          borderBottom: i < drivers.length - 1 ? '1px solid #F8FAFC' : 'none',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', background: '#E2E8F0' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={d.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div>
+              <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{d.name}</div>
+              <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#94A3B8' }}>{d.id}</div>
+            </div>
+          </div>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>{d.fleet}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{d.acceptance}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: d.cancelUp ? '#EF4444' : '#10B981' }}>{d.cancel}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{d.ontime}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#F59E0B' }}>★ {d.rating}</span>
+          <span style={{
+            display: 'inline-block',
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            background: d.statusBg,
+            fontFamily: inter,
+            fontSize: '10px',
+            fontWeight: 800,
+            color: d.statusColor,
+            letterSpacing: '0.5px',
+            textAlign: 'center',
+          }}>{d.status}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProfitabilityAudit() {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+    }}>
+      <div style={{
+        fontFamily: manrope,
+        fontSize: '14px',
+        fontWeight: 800,
+        color: '#0F172A',
+        marginBottom: '20px',
+      }}>Profitability Audit</div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {[
+          { label: 'Avg. Commission', value: '$12.45', trend: '+3%', trendUp: true },
+          { label: 'Discount Impact', value: '-$2.1k', trend: '+12%', trendUp: false, isNegative: true },
+          { label: 'Refund Ratio', value: '0.82%', trend: '-0.1%', trendUp: true },
+        ].map((item) => (
+          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>{item.label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{
+                fontFamily: manrope,
+                fontSize: '16px',
+                fontWeight: 800,
+                color: item.isNegative ? '#EF4444' : '#0F172A',
+              }}>{item.value}</span>
+              <span style={{
+                fontFamily: inter,
+                fontSize: '10px',
+                fontWeight: 700,
+                color: item.trendUp ? '#10B981' : '#EF4444',
+              }}>{item.trend}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        marginTop: '20px',
+        paddingTop: '16px',
+        borderTop: '1px solid #F1F5F9',
+      }}>
+        <div style={{
+          fontFamily: manrope,
+          fontSize: '24px',
+          fontWeight: 800,
+          color: '#3B82F6',
+          marginBottom: '4px',
+        }}>24.5%</div>
+        <div style={{
+          fontFamily: inter,
+          fontSize: '11px',
+          fontWeight: 500,
+          color: '#94A3B8',
+        }}>Net Profit Margin</div>
+        <div style={{
+          fontFamily: inter,
+          fontSize: '10px',
+          fontWeight: 500,
+          color: '#10B981',
+        }}>High Performance Zone</div>
+      </div>
+    </div>
+  );
+}
+
+function OperationalLog() {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      flex: 1,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div>
+          <div style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Operational Log</div>
+          <div style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase' }}>Past 72 Hours Performance</div>
+        </div>
+        <button suppressHydrationWarning type="button" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: inter,
+          fontSize: '11px',
+          fontWeight: 700,
+          color: '#3B82F6',
+        }}>
+          Detailed PDF Audit
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#3B82F6" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+
+      {/* Table header */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
+        padding: '8px 0',
+        borderBottom: '1px solid #F1F5F9',
+        marginBottom: '8px',
+      }}>
+        {['DATE INDEX', 'VOLUME', 'GROSS REV', 'RESOURCES', 'AVG TAT'].map((h) => (
+          <span key={h} style={{
+            fontFamily: inter,
+            fontSize: '9px',
+            fontWeight: 800,
+            color: '#94A3B8',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+          }}>{h}</span>
+        ))}
+      </div>
+
+      {/* Rows */}
+      {operationalLog.map((row, i) => (
+        <div key={i} style={{
+          display: 'grid',
+          gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
+          alignItems: 'center',
+          padding: '12px 0',
+          borderBottom: i < operationalLog.length - 1 ? '1px solid #F8FAFC' : 'none',
+        }}>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#374151' }}>{row.date}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{row.volume}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{row.grossRev}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>{row.resources}</span>
+          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{row.avgTat}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
+export default function ReportsAnalyticsPage() {
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
+      <Sidebar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <Navbar />
+        <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
+
+          {/* Filter Bar */}
+          <FilterBar />
+
+          {/* Stats Cards */}
+          <StatsCards />
+
+          {/* Orders & Revenue Trend + AI Smart Insights */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+            <TrendChart />
+            <AISmartInsights />
           </div>
 
-          {/* ── Volume Trend + Status Distribution ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '14px', marginBottom: '18px' }}>
-
-            {/* Volume Trend */}
-            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                <div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>Volume Trend</div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8' }}>Daily order volume vs. completed deliveries</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB', display: 'inline-block' }} />
-                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#374151', fontWeight: 500 }}>ORDERS</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', display: 'inline-block' }} />
-                    <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>DELIVERIES</span>
-                  </div>
-                </div>
-              </div>
-              {/* Bar chart */}
-              <div style={{ marginTop: '10px' }}>
-                <svg width="100%" viewBox="0 0 490 180" preserveAspectRatio="xMidYMid meet">
-                  {weekData.map((d, i) => {
-                    const maxVal = 100;
-                    const chartH = 130;
-                    const barW = 18;
-                    const groupW = 54;
-                    const x = 10 + i * groupW;
-                    const oh = (d.orders / maxVal) * chartH;
-                    const dh = (d.deliveries / maxVal) * chartH;
-                    return (
-                      <g key={i}>
-                        <rect x={x} y={chartH - oh} width={barW} height={oh} rx="3" fill="#2563EB" opacity="0.85"/>
-                        <rect x={x + barW + 2} y={chartH - dh} width={barW} height={dh} rx="3" fill="#BFDBFE"/>
-                        <text x={x + barW + 1} y={148} textAnchor="middle" fontFamily="Inter" fontSize="9" fill="#94A3B8">{days[i]}</text>
-                      </g>
-                    );
-                  })}
-                  {weeks.slice(0, 7).map((w, i) => (
-                    <text key={i} x={10 + i * 54 + 19} y={165} textAnchor="middle" fontFamily="Inter" fontSize="7.5" fill="#CBD5E1">{w}</text>
-                  ))}
-                </svg>
-              </div>
-            </div>
-
-            {/* Status Distribution */}
-            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
-              <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>Status Distribution</div>
-              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginBottom: '16px' }}>Performance breakdown by status</div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <DonutChart />
-                <div style={{ width: '100%', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {donutLegend.map((l, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: l.color, display: 'inline-block', flexShrink: 0 }} />
-                        <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151' }}>{l.label}</span>
-                      </div>
-                      <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>{l.pct}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* Order Status Matrix + Zone Order Density */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+            <OrderStatusMatrix />
+            <ZoneOrderDensity />
           </div>
 
-          {/* ── Regional Performance + Top Performers ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '14px', marginBottom: '0' }}>
+          {/* Driver Performance Matrix */}
+          <DriverPerformanceMatrix />
 
-            {/* Regional Performance */}
-            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
-              <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>Regional Performance</div>
-              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#2563EB', fontWeight: 500, marginBottom: '18px' }}>Efficiency by geographic sector</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {regions.map((r, i) => (
-                  <div key={i}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#374151', fontWeight: 500 }}>{r.name}</span>
-                      <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#2563EB' }}>{r.pct}%</span>
-                    </div>
-                    <div style={{ height: '7px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${r.pct}%`, background: 'linear-gradient(90deg, #1E40AF 0%, #3B82F6 100%)', borderRadius: '999px' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top Performers */}
-            <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>Top Performers</div>
-                <button style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>VIEW ALL DRIVERS</button>
-              </div>
-              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginBottom: '14px' }}>Driver efficiency & rating leaderboard</div>
-
-              {/* Table header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.7fr 1fr 1fr', padding: '0 0 8px', borderBottom: '1px solid #F1F5F9' }}>
-                {['DRIVER', 'RATING', 'TRIPS', 'ON-TIME', 'FUEL EFF.'].map((h) => (
-                  <span key={h} style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.5px' }}>{h}</span>
-                ))}
-              </div>
-
-              {/* Driver rows */}
-              {drivers.map((d, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.7fr 1fr 1fr', alignItems: 'center', padding: '10px 0', borderBottom: i < drivers.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
-                  {/* Driver */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: d.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: d.color }}>{d.initials}</span>
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>{d.name}</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '10px', color: '#94A3B8' }}>{d.sub}</div>
-                    </div>
-                  </div>
-                  {/* Rating */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <span style={{ color: '#F59E0B', fontSize: '12px' }}>★</span>
-                    <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#374151' }}>{d.rating}</span>
-                  </div>
-                  {/* Trips */}
-                  <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#374151' }}>{d.trips}</span>
-                  {/* On-time */}
-                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: d.onTimeColor, background: d.onTimeBg, padding: '2px 7px', borderRadius: '999px', display: 'inline-block' }}>{d.onTime}</span>
-                  {/* Fuel */}
-                  <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#374151' }}>{d.fuel}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Footer ── */}
-          <div style={{ borderTop: '1px solid #E2E8F0', marginTop: '20px', padding: '14px 0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.3px' }}>© 2023 CARRY ON GLOBAL LOGISTICS</span>
-              {['PRIVACY POLICY', 'DATA SECURITY'].map((link) => (
-                <button key={link} style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.3px' }}>{link}</button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.3px' }}>SERVER STATUS:</span>
-              <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#16A34A', letterSpacing: '0.5px' }}>OPERATIONAL</span>
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
-            </div>
+          {/* Profitability Audit + Operational Log */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <ProfitabilityAudit />
+            <OperationalLog />
           </div>
 
         </main>

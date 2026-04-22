@@ -1,18 +1,38 @@
 'use client';
 
 const stats = [
-  { label: 'Active Jobs', value: '142', trend: '+12%', trendUp: true, trendColor: '#2F80ED', iconType: 'activeJobs' },
-  { label: 'Available Drivers', value: '28', trend: 'Stable', trendUp: null, trendColor: '#2F80ED', iconType: 'availableDrivers' },
-  { label: 'Fleet Utilization', value: '94.2%', trend: '-2%', trendUp: false, trendColor: '#2F80ED', iconType: 'fleetUtilization' },
-  { label: "Today's Revenue", value: '$14.2k', trend: '+8%', trendUp: true, trendColor: '#2F80ED', iconType: 'todaysRevenue' },
-];
-
-const drivers = [
-  { name: 'Jordan P.', sub: 'In Route • Truck #042', subColor: '#2F80ED', dot: '#2F80ED', avatarBg: '#F1F5F9', light: false },
-  { name: 'Sarah L.', sub: 'Available • Truck #011', subColor: '#10B981', dot: '#10B981', avatarBg: '#F1F5F9', light: false },
-  { name: 'Kevin H.', sub: 'Offline • Last seen 2h ago', subColor: '#64748B', dot: '#64748B', avatarBg: '#F1F5F9', light: false },
-  { name: 'Emily R.', sub: 'In Route • Truck #088', subColor: '#2F80ED', dot: '#2F80ED', avatarBg: '#F1F5F9', light: false },
-  { name: 'Robert T.', sub: 'Offline • Last seen 14m ago', subColor: '#64748B', dot: '#64748B', avatarBg: '#F1F5F9', light: false },
+  {
+    label: 'TOTAL ORDERS\n(TODAY)',
+    value: '1,284',
+    trend: '+12.5%',
+    trendUp: true,
+    icon: 'orders' as const,
+    sparkline: 'M0 26 C8 20, 18 28, 28 18 C38 8, 48 22, 60 14 C72 6, 82 16, 96 6',
+  },
+  {
+    label: 'ACTIVE DELIVERIES',
+    value: '432',
+    trend: '+4.2%',
+    trendUp: true,
+    icon: 'deliveries' as const,
+    sparkline: 'M0 22 C10 26, 22 16, 34 20 C46 24, 56 12, 68 16 C78 20, 86 8, 96 4',
+  },
+  {
+    label: "TODAY'S REVENUE",
+    value: '$42.8k',
+    trend: '+18.7%',
+    trendUp: true,
+    icon: 'revenue' as const,
+    sparkline: 'M0 24 C12 18, 22 26, 34 16 C46 6, 58 20, 70 12 C80 4, 88 10, 96 6',
+  },
+  {
+    label: 'CANCELLED\nORDERS',
+    value: '12',
+    trend: '-2.1%',
+    trendUp: false,
+    icon: 'cancelled' as const,
+    sparkline: 'M0 6 C10 10, 22 4, 34 12 C46 20, 56 14, 68 20 C80 26, 88 18, 96 24',
+  },
 ];
 
 const jobs = [
@@ -36,68 +56,76 @@ const jobs = [
   },
 ];
 
-function StatCardIcon({ type }: { type: 'activeJobs' | 'availableDrivers' | 'fleetUtilization' | 'todaysRevenue' }) {
-  const iconRoot = {
-    width: '32px',
-    height: '36px',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    padding: '8px',
-  } as const;
-
-  const iconShapes: Record<typeof type, { bg: string; svg: JSX.Element }> = {
-    activeJobs: {
-      bg: '#E3F2FF',
-      svg: (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 2h8v12H4z" stroke="#2F80ED" strokeWidth="1.5" />
-          <path d="M4 4h8" stroke="#2F80ED" strokeWidth="1.5" />
-          <path d="M6 7l1.5 1.5L10 6" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M6 10l1.5 1.5L10 9" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-    availableDrivers: {
-      bg: '#EEF5FF',
-      svg: (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="8" cy="5" r="2.5" stroke="#2563EB" strokeWidth="1.5" />
-          <path d="M3 14c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke="#2563EB" strokeWidth="1.5" />
-        </svg>
-      ),
-    },
-    fleetUtilization: {
-      bg: '#ECFFF3',
-      svg: (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="9" width="2" height="5" fill="#10B981" />
-          <rect x="6" y="5" width="2" height="9" fill="#10B981" />
-          <rect x="10" y="7" width="2" height="7" fill="#10B981" />
-          <rect x="14" y="3" width="0" height="0" />
-          <path d="M1 14h14" stroke="#10B981" strokeWidth="1" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    todaysRevenue: {
-      bg: '#FFFBEB',
-      svg: (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 2h8v12H4z" stroke="#F59E0B" strokeWidth="1.5" />
-          <path d="M4 5h8" stroke="#F59E0B" strokeWidth="1.2" />
-          <path d="M8 4v8" stroke="#F59E0B" strokeWidth="1.5" />
-          <path d="M6.3 7.5c0-.92.74-1.6 1.7-1.6h0.6" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-    },
+function StatIcon({ type }: { type: 'orders' | 'deliveries' | 'revenue' | 'cancelled' }) {
+  const icons = {
+    orders: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="2" width="12" height="14" rx="2" stroke="#2563EB" strokeWidth="1.4" />
+        <path d="M6 6h6M6 9h6M6 12h4" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    ),
+    deliveries: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="6" width="11" height="8" rx="1.5" stroke="#2563EB" strokeWidth="1.4" />
+        <path d="M12 9h3l2 3v2h-5V9z" stroke="#2563EB" strokeWidth="1.4" strokeLinejoin="round" />
+        <circle cx="4.5" cy="14.5" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
+        <circle cx="13.5" cy="14.5" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
+      </svg>
+    ),
+    revenue: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="7" stroke="#2563EB" strokeWidth="1.4" />
+        <path d="M9 5v8" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M7 7.5c0-.83.67-1.5 2-1.5h.5c1 0 1.5.5 1.5 1.2 0 .8-.7 1.3-2 1.8-1.4.5-2 1-2 1.8C7 11.6 7.7 12.5 9 12.5h.5c1.2 0 1.5-.5 1.5-1" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" />
+      </svg>
+    ),
+    cancelled: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="7" stroke="#2563EB" strokeWidth="1.4" />
+        <path d="M6.5 6.5l5 5M11.5 6.5l-5 5" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    ),
   };
-
-  const selected = iconShapes[type];
   return (
-    <div style={{ ...iconRoot, background: selected.bg }}>
-      {selected.svg}
+    <div style={{
+      width: '36px',
+      height: '36px',
+      borderRadius: '10px',
+      background: '#DBEAFE',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      {icons[type]}
+    </div>
+  );
+}
+
+function Sparkline({ path, up, id }: { path: string; up: boolean; id: string }) {
+  const gradId = `sg-${id}`;
+  const bgColor = up ? '#a6d2f3' : '#2f80ed';
+  const lineColor = up ? '#2f80ed' : '#a6d2f3';
+  const fillColor = up ? '#2f80ed' : '#a6d2f3';
+  return (
+    <div style={{
+      width: '96px',
+      height: '32px',
+      borderRadius: '4px',
+      background: bgColor,
+      overflow: 'hidden',
+      flexShrink: 0,
+    }}>
+      <svg width="96" height="32" viewBox="0 0 96 32" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={fillColor} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={fillColor} stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+        <path d={`${path} L96 32 L0 32 Z`} fill={`url(#${gradId})`} />
+        <path d={path} stroke={lineColor} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     </div>
   );
 }
@@ -117,7 +145,7 @@ function TrendBadge({ trend, trendUp, color }: { trend: string; trendUp: boolean
     );
   }
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color }}>
       {trendUp ? (
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M1 4.2L3.5 1.3L5.2 2.8L8.5 0.2" stroke={color} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
@@ -133,6 +161,182 @@ function TrendBadge({ trend, trendUp, color }: { trend: string; trendUp: boolean
       )}
       {trend}
     </span>
+  );
+}
+
+function AlertsPanel() {
+  const secondaryAlerts = [
+    {
+      id: 'system-delay',
+      label: 'System Delay',
+      title: ['System Surge', 'Risk'],
+      detail: ['North Sector •', '+15m delay'],
+      resolved: false,
+    },
+    {
+      id: 'resolved',
+      label: 'Resolved',
+      title: ['Bulk Payment', 'Issue'],
+      detail: ['Stripe Webhook •', '12m ago'],
+      resolved: true,
+    },
+  ] as const;
+
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      border: '1px solid #E2E8F0',
+      borderRadius: '12px',
+      padding: '25px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 1.8L20 17.2H2L11 1.8Z" stroke="#2F80ED" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M11 7.2V11.2" stroke="#2F80ED" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="11" cy="14" r="1" fill="#2F80ED" />
+          </svg>
+          <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '16px', fontWeight: 800, lineHeight: '24px', color: '#191C1E' }}>
+            Alerts (4)
+          </span>
+        </div>
+        <span style={{
+          background: '#2F80ED',
+          borderRadius: '9999px',
+          padding: '2px 8px',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '10px',
+          fontWeight: 700,
+          lineHeight: '15px',
+          color: '#FFFFFF',
+          textTransform: 'uppercase',
+        }}>
+          Live
+        </span>
+      </div>
+
+      <div style={{
+        background: '#2F80ED',
+        borderBottom: '4px solid rgba(0, 0, 0, 0.1)',
+        borderRadius: '12px',
+        padding: '16px 16px 20px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '12px',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)',
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '8px',
+          background: 'rgba(255,255,255,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '18px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1', letterSpacing: '0.5px' }}>
+            SOS
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '16px', letterSpacing: '0.6px', color: '#FFFFFF', textTransform: 'uppercase' }}>
+            <div>CRITICAL</div>
+            <div>EMERGENCY</div>
+          </div>
+          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 500, lineHeight: '17.5px', color: '#FFFFFF' }}>
+            <div>Driver #9244</div>
+            <div>SOS Signal</div>
+          </div>
+          <div style={{ paddingTop: '2px', opacity: 0.7, fontFamily: 'Inter, sans-serif', fontSize: '10px', fontWeight: 700, lineHeight: '15px', color: '#FFFFFF' }}>
+            <div>Downtown • 2m</div>
+            <div>ago</div>
+          </div>
+        </div>
+      </div>
+
+      {secondaryAlerts.map((alert) => (
+        <div key={alert.id} style={{
+          background: 'rgba(166,210,243,0.2)',
+          border: '1px solid #A6D2F3',
+          borderRadius: '12px',
+          padding: '17px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px',
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '8px',
+            background: '#A6D2F3',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="8.5" stroke="#2F80ED" strokeWidth="2" />
+              <path d="M10 5.5V10.2L13 13" stroke="#2F80ED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '16px', color: '#2F80ED' }}>
+              {alert.label}
+            </div>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 600, lineHeight: '16px', color: '#2F80ED', textDecoration: alert.resolved ? 'line-through' : 'none' }}>
+              <div>{alert.title[0]}</div>
+              <div>{alert.title[1]}</div>
+            </div>
+            <div style={{ paddingTop: '4px', fontFamily: 'Inter, sans-serif', fontSize: '10px', fontWeight: alert.resolved ? 400 : 500, lineHeight: '15px', color: '#000000' }}>
+              <div>{alert.detail[0]}</div>
+              <div>{alert.detail[1]}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <div style={{ borderTop: '1px solid #A6D2F3', paddingTop: '25px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <button
+          suppressHydrationWarning
+          style={{
+            width: '100%',
+            border: 'none',
+            borderRadius: '12px',
+            background: '#2F80ED',
+            padding: '12px 0',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '10px',
+            fontWeight: 700,
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            color: '#FFFFFF',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+          }}
+        >
+          OPEN INCIDENT CENTER
+        </button>
+
+        <div style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '10px',
+          fontWeight: 500,
+          lineHeight: '15px',
+          letterSpacing: '-0.5px',
+          textTransform: 'uppercase',
+          color: '#000000',
+          textAlign: 'center',
+        }}>
+          SECURE PROTOCOL V2.4 ENABLED
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -165,44 +369,65 @@ function CityMap() {
 
 export default function DashboardContent() {
   return (
-    <main style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', background: '#F7F9FB' }}>
+    <main style={{ flex: 1, padding: '32px 26px 20px', overflowY: 'auto', background: '#F7F9FB' }}>
 
-      {/* Stats row — fixed 960x160 cards */}
+      {/* Stats row */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 222px)',
-        columnGap: '24px',
-        rowGap: '24px',
-        width: '960px',
-        minHeight: '160px',
-        margin: '0 auto 20px',
+        display: 'flex',
+        gap: '16px',
+        marginBottom: '20px',
+        width: '945px',
+        maxWidth: '100%',
       }}>
-        {stats.map((s) => (
+        {stats.map((s, i) => (
           <div key={s.label} style={{
-            width: '222px',
-            height: '160px',
+            flex: '1',
             background: '#FFFFFF',
             borderRadius: '12px',
-            padding: '24px 18px 16px',
+            padding: '24px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
             border: '1px solid #E2E8F0',
             boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            height: '168px',
+            position: 'relative',
           }}>
-            <div style={{
-              width: '174px',
-              height: '36px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '12px',
-            }}>
-              <StatCardIcon type={s.iconType} />
-              <TrendBadge trend={s.trend} trendUp={s.trendUp} color={s.trendColor} />
+            {/* Icon: absolute top-right */}
+            <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+              <StatIcon type={s.icon} />
             </div>
-            <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#2F80ED', marginBottom: '4px' }}>
-              {s.label}
+
+            {/* Top: label + value (left-aligned, icon does not affect layout) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingRight: '52px' }}>
+              <div style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#64748B',
+                letterSpacing: '0.6px',
+                lineHeight: '16px',
+                textTransform: 'uppercase',
+                whiteSpace: 'pre-line',
+              }}>
+                {s.label}
+              </div>
+              <div style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '30px',
+                fontWeight: 800,
+                color: '#191C1E',
+                lineHeight: '36px',
+              }}>
+                {s.value}
+              </div>
             </div>
-            <div style={{ fontFamily: 'Inter', fontSize: '26px', fontWeight: 700, color: '#0F172A', lineHeight: '1.2' }}>
-              {s.value}
+
+            {/* Bottom: trend left, sparkline right */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TrendBadge trend={s.trend} trendUp={s.trendUp} color="#2f80ed" />
+              <Sparkline path={s.sparkline} up={s.trendUp} id={String(i)} />
             </div>
           </div>
         ))}
@@ -352,66 +577,9 @@ export default function DashboardContent() {
           </div>
         </div>
 
-        {/* RIGHT: Driver Status + Efficiency */}
-        <div style={{ width: '272px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-
-          {/* Driver Status */}
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 18px' }}>
-            <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '14px' }}>
-              Driver Status
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {drivers.map((d) => (
-                <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ position: 'relative', flexShrink: 0, width: '48px', height: '48px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                      <circle cx="12" cy="8" r="4" fill="#94A3B8" />
-                      <path d="M4 22c0-4.418 3.582-8 8-8s8 3.582 8 8" fill="#94A3B8" />
-                    </svg>
-                    <div style={{
-                      position: 'absolute', bottom: '2px', right: '2px',
-                      width: '16px', height: '16px', borderRadius: '9999px',
-                      background: d.dot, border: '2px solid #FFFFFF',
-                    }} />
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>
-                      {d.name}
-                    </div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '13px', color: d.subColor }}>
-                      {d.sub}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Efficiency Overview */}
-          <div style={{
-            background: 'linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 100%)',
-            borderRadius: '12px', border: '1px solid #BFDBFE', padding: '16px 18px',
-          }}>
-            <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#1E40AF', marginBottom: '16px' }}>
-              Efficiency Overview
-            </div>
-            {[{ label: 'ON TIME RATE', value: 98 }, { label: 'FUEL ECONOMY', value: 82 }].map((item, i) => (
-              <div key={item.label} style={{ marginBottom: i === 0 ? '14px' : 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#1E40AF', letterSpacing: '0.4px' }}>
-                    {item.label}
-                  </span>
-                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#1E40AF' }}>
-                    {item.value}%
-                  </span>
-                </div>
-                <div style={{ height: '6px', background: '#BFDBFE', borderRadius: '999px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${item.value}%`, background: '#1D4ED8', borderRadius: '999px' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-
+        {/* RIGHT: Alerts Panel */}
+        <div style={{ width: '272px', flexShrink: 0 }}>
+          <AlertsPanel />
         </div>
       </div>
     </main>

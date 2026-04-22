@@ -1,992 +1,721 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/Sidebar';
+import Navbar from '@/components/Navbar';
 
-/* ── Sidebar ─────────────────────────────────────────────────── */
-const sideNav = [
-  {
-    label: 'Command Center',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="1" y="1" width="7" height="7" rx="1.5" fill="currentColor" />
-        <rect x="10" y="1" width="7" height="7" rx="1.5" fill="currentColor" />
-        <rect x="1" y="10" width="7" height="7" rx="1.5" fill="currentColor" />
-        <rect x="10" y="10" width="7" height="7" rx="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Live Map',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M9 1C6.239 1 4 3.239 4 6c0 4.5 5 11 5 11s5-6.5 5-11c0-2.761-2.239-5-5-5Z"
-          stroke="currentColor" strokeWidth="1.5" fill="none" />
-        <circle cx="9" cy="6" r="2" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Orders',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M5 7h8M5 10h8M5 13h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Drivers',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Customers',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="6.5" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M1 15c0-3.038 2.462-5.5 5.5-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="12.5" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M17 15c0-3.038-2.462-5.5-5.5-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Revenue',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <polyline points="2,14 6,8 10,11 16,3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <line x1="2" y1="16" x2="16" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Settings',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.22 3.22l1.41 1.41M13.36 13.36l1.42 1.42M3.22 14.78l1.41-1.41M13.36 4.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-];
+const inter = "'Inter', sans-serif";
+const manrope = "'Manrope', sans-serif";
 
-function Sidebar() {
-  const router = useRouter();
-
-  return (
-    <aside style={{
-      width: '256px', height: '100vh', flexShrink: 0,
-      background: '#fff', borderRight: '1px solid #E2E8F0',
-      display: 'flex', flexDirection: 'column',
-    }}>
-      <div style={{ padding: '20px 24px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{
-          width: '40px', height: '40px', borderRadius: '10px', background: '#2563EB',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <svg width="24" height="20" viewBox="0 0 24 20" fill="none">
-            <rect x="1" y="5" width="15" height="11" rx="2" stroke="white" strokeWidth="1.5" />
-            <path d="M16 8.5h4.5l2.5 5H16V8.5Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-            <circle cx="5.5" cy="17" r="2" fill="white" />
-            <circle cx="15.5" cy="17" r="2" fill="white" />
-          </svg>
-        </div>
-        <div>
-          <div style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#2563EB', lineHeight: '20px' }}>
-            Carry On
-          </div>
-          <div style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 600, color: '#94A3B8', letterSpacing: '1px', lineHeight: '14px' }}>
-            FLEET MANAGEMENT
-          </div>
-        </div>
-      </div>
-
-      <nav style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        {sideNav.map((item) => {
-          const isActive = item.label === 'Settings';
-          return (
-            <button
-              suppressHydrationWarning
-              key={item.label}
-              onClick={() => {
-                if (item.label === 'Command Center') { router.push('/command-center'); return; }
-                if (item.label === 'Live Map') { router.push('/'); return; }
-                if (item.label === 'Orders') { router.push('/orders'); return; }
-                if (item.label === 'Drivers') { router.push('/drivers'); return; }
-                if (item.label === 'Customers') { router.push('/customers'); return; }
-                if (item.label === 'Settings') { router.push('/settings'); return; }
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 14px', width: '100%', textAlign: 'left',
-                background: isActive ? '#EFF6FF' : 'transparent',
-                border: 'none',
-                borderLeft: isActive ? '3px solid #2563EB' : '3px solid transparent',
-                borderRadius: isActive ? '0 8px 8px 0' : '8px',
-                cursor: 'pointer',
-              }}
-            >
-              <span style={{ display: 'flex', color: isActive ? '#2563EB' : '#64748B', flexShrink: 0 }}>
-                {item.icon}
-              </span>
-              <span style={{
-                fontFamily: 'Inter', fontSize: '14px',
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? '#2563EB' : '#374151',
-              }}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-
-      <div style={{ padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #F1F5F9' }}>
-        <button suppressHydrationWarning style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '9px 12px', width: '100%', textAlign: 'left',
-          background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <circle cx="9" cy="9" r="7.5" stroke="#64748B" strokeWidth="1.5" />
-            <path d="M9 12.5v-1M9 6.5a2 2 0 1 1 0 4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151' }}>Support</span>
-        </button>
-        <button suppressHydrationWarning style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '9px 12px', width: '100%', textAlign: 'left',
-          background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M7 16H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M12 13l3-4-3-4M15 9H7" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151' }}>Logout</span>
-        </button>
-      </div>
-    </aside>
-  );
-}
-
-/* ── Toggle ──────────────────────────────────────────────────── */
+/* ── Toggle ─────────────────────────────────────────────────── */
 function Toggle({ on }: { on: boolean }) {
   return (
     <div style={{
-      width: '52px', height: '30px', borderRadius: '999px',
-      background: on ? '#2563EB' : '#DBEAFE',
+      width: '44px', height: '24px', borderRadius: '999px',
+      background: on ? '#2563EB' : '#E2E8F0',
       position: 'relative', flexShrink: 0, cursor: 'pointer',
     }}>
       <div style={{
-        position: 'absolute', top: '3px',
-        left: on ? '27px' : '3px',
-        width: '24px', height: '24px', borderRadius: '50%',
-        background: '#fff', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.16)',
+        position: 'absolute', top: '2px',
+        left: on ? '22px' : '2px',
+        width: '20px', height: '20px', borderRadius: '50%',
+        background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
         transition: 'left 0.15s ease',
       }} />
     </div>
   );
 }
 
-/* ── Page ────────────────────────────────────────────────────── */
-export default function SettingsPage() {
-  const router = useRouter();
-  const [activeSection, setActiveSection] = useState('General');
-  const [themeMode, setThemeMode] = useState<'Light' | 'Dark'>('Light');
-  const [selectedAccent, setSelectedAccent] = useState('#2563EB');
+/* ── Tab Switcher ───────────────────────────────────────────── */
+function TabSwitcher({ active, onChange }: { active: string; onChange: (t: string) => void }) {
+  const tabs = ['Alerts', 'Fraud', 'Safety', 'Logs'];
+  return (
+    <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+      {tabs.map((tab) => {
+        const isActive = active === tab;
+        return (
+          <button
+            suppressHydrationWarning
+            key={tab}
+            onClick={() => onChange(tab)}
+            style={{
+              background: 'none', border: 'none', borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
+              padding: '8px 0', cursor: 'pointer',
+              fontFamily: inter, fontSize: '14px', fontWeight: isActive ? 700 : 500,
+              color: isActive ? '#2563EB' : '#64748B',
+              lineHeight: '20px',
+            }}
+          >
+            {tab}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-  const accentColors = ['#2563EB', '#16A34A', '#7C3AED', '#DC2626', '#D97706', '#0F172A'];
+/* ── SOS Card ───────────────────────────────────────────────── */
+function SOSCard() {
+  return (
+    <div style={{
+      flex: 1.3, minWidth: 0,
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', gap: '12px',
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: '36px', height: '36px', borderRadius: '8px',
+          background: '#FEE2E2', color: '#DC2626',
+          fontFamily: inter, fontSize: '12px', fontWeight: 800,
+        }}>
+          SOS
+        </span>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>
+              SOS Triggered: #C-9011
+            </span>
+            <span style={{
+              padding: '3px 8px', borderRadius: '9999px',
+              background: '#DC2626', color: '#FFFFFF',
+              fontFamily: inter, fontSize: '9px', fontWeight: 700,
+              letterSpacing: '0.5px', textTransform: 'uppercase',
+            }}>
+              Active Emergency
+            </span>
+          </div>
+          <div style={{ fontFamily: inter, fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+            Driver: Marco Rossi • Vehicle: BX-901-LK
+          </div>
+        </div>
+      </div>
 
-  const prefSections = [
-    {
-      label: 'General',
-      icon: (
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <rect x="0.5" y="0.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-          <rect x="9" y="0.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-          <rect x="0.5" y="9" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-          <rect x="9" y="9" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      {/* Body: map + info */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        {/* Map thumbnail */}
+        <div style={{
+          width: '120px', height: '100px', borderRadius: '10px',
+          background: '#1F2937', overflow: 'hidden', position: 'relative', flexShrink: 0,
+        }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/dark_map.png" alt="SOS location" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '16px', height: '16px', borderRadius: '50%',
+            background: '#DC2626', border: '2px solid white',
+            boxShadow: '0 0 8px rgba(220,38,38,0.6)',
+          }} />
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+          <div>
+            <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Location</div>
+            <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>Lower Manhattan, 5th Ave</div>
+          </div>
+          <div>
+            <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Time Active</div>
+            <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>04m 22s</div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <button suppressHydrationWarning style={{
+              flex: 1, height: '32px', borderRadius: '8px',
+              background: '#1F2937', border: 'none',
+              fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#FFFFFF',
+              cursor: 'pointer',
+            }}>
+              Contact
+            </button>
+            <button suppressHydrationWarning style={{
+              flex: 1, height: '32px', borderRadius: '8px',
+              background: '#DC2626', border: 'none',
+              fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#FFFFFF',
+              cursor: 'pointer',
+            }}>
+              Notify Authorities
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Fraud Trend Card ───────────────────────────────────────── */
+function FraudTrendCard() {
+  const bars = [28, 42, 35, 58, 82];
+  return (
+    <div style={{
+      flex: 1, minWidth: 0,
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+    }}>
+      <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        Fraud Trend
+      </div>
+      <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#2563EB', lineHeight: '36px', marginTop: '8px' }}>
+        +12.4%
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '60px', marginTop: '12px' }}>
+        {bars.map((h, i) => (
+          <div key={i} style={{
+            flex: 1,
+            height: `${h}%`,
+            borderRadius: '3px 3px 0 0',
+            background: i === bars.length - 1 ? '#2563EB' : '#DBEAFE',
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── High Risk Zone Card ────────────────────────────────────── */
+function HighRiskZoneCard() {
+  return (
+    <div style={{
+      flex: 1, minWidth: 0,
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+    }}>
+      <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        High Risk Zone
+      </div>
+      <div style={{ marginTop: '8px' }}>
+        <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Brooklyn, NY</div>
+        <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#DC2626', lineHeight: '32px' }}>42%</div>
+      </div>
+      <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '12px', lineHeight: '16px' }}>
+        Concentration of coupon misuse and identity spoofing reported.
+      </div>
+    </div>
+  );
+}
+
+/* ── Prevention Rate Card ───────────────────────────────────── */
+function PreventionRateCard() {
+  return (
+    <div style={{
+      flex: 1, minWidth: 0,
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+    }}>
+      <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        Prevention Rate
+      </div>
+      <div style={{ marginTop: '8px' }}>
+        <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#059669', lineHeight: '36px' }}>94.8%</div>
+        <div style={{
+          height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden', marginTop: '8px',
+        }}>
+          <div style={{ width: '94.8%', height: '100%', borderRadius: '9999px', background: '#059669' }} />
+        </div>
+      </div>
+      <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '8px' }}>
+        Target: 98%
+      </div>
+    </div>
+  );
+}
+
+/* ── Severity Badge ─────────────────────────────────────────── */
+function SeverityBadge({ level }: { level: 'Critical' | 'Warning' | 'Info' }) {
+  const styles = {
+    Critical: { bg: '#FEE2E2', color: '#DC2626', dot: '#DC2626' },
+    Warning: { bg: '#FEF3C7', color: '#D97706', dot: '#F59E0B' },
+    Info: { bg: '#DBEAFE', color: '#2563EB', dot: '#3B82F6' },
+  };
+  const s = styles[level];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '6px',
+      padding: '4px 10px', borderRadius: '9999px',
+      background: s.bg,
+      fontFamily: inter, fontSize: '11px', fontWeight: 700, color: s.color,
+    }}>
+      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.dot }} />
+      {level}
+    </span>
+  );
+}
+
+/* ── Alert Icon ─────────────────────────────────────────────── */
+function AlertIcon({ type }: { type: 'sos' | 'suspicious' | 'payment' }) {
+  if (type === 'sos') {
+    return (
+      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 2l7 13H2L9 2z" stroke="#DC2626" strokeWidth="1.4" strokeLinejoin="round" />
+          <path d="M9 7v3.5M9 12.2v.1" stroke="#DC2626" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
-      ),
-    },
-    {
-      label: 'Fleet Settings',
-      icon: (
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <rect x="0.5" y="3.5" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-          <path d="M9.5 5.5h3l2 3.5H9.5V5.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-          <circle cx="3.5" cy="12.5" r="1.3" fill="currentColor" />
-          <circle cx="10.5" cy="12.5" r="1.3" fill="currentColor" />
+      </div>
+    );
+  }
+  if (type === 'suspicious') {
+    return (
+      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="6" stroke="#2563EB" strokeWidth="1.4" />
+          <path d="M9 6v4M9 12v.01" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
-      ),
-    },
-    {
-      label: 'Notifications',
-      icon: (
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <path d="M12 5.5A4.5 4.5 0 0 0 3 5.5c0 4.5-1.5 6-1.5 6h12s-1.5-1.5-1.5-6M8.7 13a1.3 1.3 0 0 1-2.4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      label: 'User Management',
-      icon: (
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <circle cx="5.5" cy="4.5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-          <path d="M1 13c0-2.485 2.015-4.5 4.5-4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M10 9.5v5M7.5 12h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Billing & API',
-      icon: (
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <rect x="0.75" y="2.75" width="13.5" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-          <path d="M0.75 6h13.5" stroke="currentColor" strokeWidth="1.3" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Appearance',
-      icon: (
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
-          <circle cx="5" cy="5.5" r="1" fill="currentColor" />
-          <circle cx="10" cy="5.5" r="1" fill="currentColor" />
-          <path d="M4.5 10c0 0 1 2 3 2s3-2 3-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-      ),
-    },
+      </div>
+    );
+  }
+  return (
+    <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="2" y="5" width="14" height="9" rx="1.5" stroke="#D97706" strokeWidth="1.3" />
+        <path d="M2 8h14" stroke="#D97706" strokeWidth="1" />
+        <circle cx="12" cy="11" r="1.5" fill="#D97706" />
+        <path d="M5 11h3" stroke="#D97706" strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+}
+
+/* ── Real-time Alerts Feed ──────────────────────────────────── */
+function RealTimeAlertsFeed() {
+  const alerts = [
+    { type: 'sos' as const, title: 'SOS Triggered', user: 'Marco Rossi', id: 'DR-9082', location: 'Manhattan, NY', time: '14:22:10', severity: 'Critical' as const },
+    { type: 'suspicious' as const, title: 'Suspicious booking', user: 'Elena Fisher', id: 'US-1142', location: 'Remote (API)', time: '14:19:45', severity: 'Warning' as const },
+    { type: 'payment' as const, title: 'Payment fraud', user: 'Victor Sullivan', id: 'US-9920', location: 'Los Angeles, CA', time: '14:15:02', severity: 'Critical' as const },
   ];
 
   return (
-    /* Outer shell — max 1280px, sidebar 256px + content 1024px */
     <div style={{
-      display: 'flex', width: '100vw', minHeight: '100vh',
-      maxWidth: '1280px', margin: '0 auto',
-      background: '#FFFFFF', fontFamily: 'Inter, sans-serif',
-      overflow: 'hidden', overflowX: 'hidden', overflowY: 'hidden',
+      flex: 1, minWidth: 0,
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', gap: '16px',
     }}>
-      <Sidebar />
-
-      {/* Content column — exactly 1024px wide, 1297px tall */}
-      <div style={{
-        width: '1024px', minHeight: '1297px', flexShrink: 0,
-        display: 'flex', flexDirection: 'column',
-        background: '#FFFFFF', overflow: 'hidden',
-      }}>
-
-        {/* ── Navbar — height 64px, top: 0 ── */}
-        <header style={{
-          width: '1024px', height: '64px', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 32px',
-          background: '#fff',
-          borderBottom: '1px solid #F1F5F9',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-          position: 'sticky', top: 0, zIndex: 20,
-          boxSizing: 'border-box',
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>Real-time Alerts Feed</span>
+        <span style={{
+          padding: '4px 10px', borderRadius: '9999px',
+          background: '#D1FAE5', color: '#059669',
+          fontFamily: inter, fontSize: '10px', fontWeight: 700,
+          letterSpacing: '0.5px', textTransform: 'uppercase',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>
-              Platform Configuration
-            </span>
-            <span style={{
-              padding: '2px 8px', borderRadius: '5px',
-              background: '#DBEAFE', border: '1px solid #93C5FD',
-              fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
-              color: '#1D4ED8', letterSpacing: '0.4px',
-            }}>
-              ENTERPRISE
-            </span>
-          </div>
+          Live Feed
+        </span>
+      </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {/* Bell */}
-            <button suppressHydrationWarning style={{
-              width: '36px', height: '36px', borderRadius: '8px', background: 'transparent',
-              border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              position: 'relative',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"
-                  stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            {/* Help */}
-            <button suppressHydrationWarning style={{
-              width: '36px', height: '36px', borderRadius: '8px', background: 'transparent',
-              border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="#64748B" strokeWidth="1.5" />
-                <path d="M12 17v-2M12 9a2 2 0 1 1 0 4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="12" cy="17" r="0.5" fill="#64748B" />
-              </svg>
-            </button>
-            {/* Admin User */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A', lineHeight: '18px' }}>Admin User</div>
-                <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', lineHeight: '15px' }}>Fleet Operations</div>
-              </div>
-              <div style={{
-                width: '36px', height: '36px', borderRadius: '50%', background: '#FCD34D',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                overflow: 'hidden',
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            {['Alert Type', 'User/Driver', 'Location', 'Time', 'Severity'].map((h) => (
+              <th key={h} style={{
+                padding: '10px 12px', textAlign: 'left',
+                fontFamily: inter, fontSize: '10px', fontWeight: 700,
+                color: '#94A3B8', letterSpacing: '0.8px', textTransform: 'uppercase',
+                borderBottom: '1px solid #F1F5F9',
               }}>
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                  <circle cx="11" cy="8" r="4" fill="#92400E" />
-                  <path d="M2 20c0-4.418 4.029-8 9-8s9 3.582 9 8" fill="#92400E" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </header>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {alerts.map((a, i) => (
+            <tr key={i}>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <AlertIcon type={a.type} />
+                  <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{a.title}</span>
+                </div>
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{a.user}</div>
+                <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>ID: {a.id}</div>
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', color: '#475569' }}>
+                {a.location}
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', color: '#475569' }}>
+                {a.time}
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <SeverityBadge level={a.severity} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-        {/* ── Body below navbar — top: 64px, flex row ── */}
-        <div style={{ display: 'flex', flex: 1 }}>
+/* ── Risk Score Bar ─────────────────────────────────────────── */
+function RiskScoreBar({ score }: { score: number }) {
+  const color = score >= 70 ? '#DC2626' : score >= 40 ? '#D97706' : '#059669';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+      <div style={{ flex: 1, height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden' }}>
+        <div style={{ width: `${score}%`, height: '100%', borderRadius: '9999px', background: color }} />
+      </div>
+      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color, minWidth: '24px' }}>{score}</span>
+    </div>
+  );
+}
 
-          {/* Preference sections panel */}
-          <div style={{
-            width: '176px', flexShrink: 0,
-            background: '#fff', borderRight: '1px solid #E2E8F0',
-            padding: '24px 10px 24px',
-            display: 'flex', flexDirection: 'column', gap: '2px',
+/* ── Top Risk Profiles ──────────────────────────────────────── */
+function TopRiskProfiles() {
+  const profiles = [
+    { name: 'Jack Drake', score: 92, max: 100, level: 'HIGH RISK', color: '#DC2626', detail: 'Cancellation: 88%', avatar: '#1F2937' },
+    { name: 'Sarah Chen', score: 54, max: 100, level: 'MID RISK', color: '#D97706', detail: 'Failed Pay: 3 in 30d', avatar: '#374151' },
+    { name: 'Liam Brown', score: 12, max: 100, level: 'LOW RISK', color: '#059669', detail: 'Reports: Clean', avatar: '#475569' },
+  ];
+
+  return (
+    <div style={{
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', gap: '16px',
+    }}>
+      <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>Top Risk Profiles</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {profiles.map((p, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: '12px',
+            padding: '12px', borderRadius: '10px', background: '#F8FAFC',
           }}>
             <div style={{
-              fontFamily: 'Inter', fontSize: '9px', fontWeight: 700,
-              color: '#94A3B8', letterSpacing: '1px',
-              marginBottom: '10px', paddingLeft: '10px',
+              width: '40px', height: '40px', borderRadius: '50%',
+              background: p.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
             }}>
-              PREFERENCE SECTIONS
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.3" />
+                <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
             </div>
-            {prefSections.map((sec) => {
-              const isActive = activeSection === sec.label;
-              return (
-                <button
-                  suppressHydrationWarning
-                  key={sec.label}
-                  onClick={() => {
-                    if (sec.label === 'Fleet Settings')   { router.push('/settings/fleet-settings'); return; }
-                    if (sec.label === 'Notifications')    { router.push('/settings/notifications'); return; }
-                    if (sec.label === 'User Management')  { router.push('/settings/user-management'); return; }
-                    if (sec.label === 'Appearance')       { router.push('/settings/appearance'); return; }
-                    if (sec.label === 'Billing & API')    { router.push('/settings/billing-api'); return; }
-                    setActiveSection(sec.label);
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '9px',
-                    padding: '8px 10px', width: '100%', textAlign: 'left',
-                    background: isActive ? '#EFF6FF' : 'transparent',
-                    border: 'none',
-                    borderLeft: isActive ? '3px solid #2563EB' : '3px solid transparent',
-                    borderRadius: isActive ? '0 6px 6px 0' : '6px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span style={{ display: 'flex', color: isActive ? '#2563EB' : '#64748B', flexShrink: 0 }}>
-                    {sec.icon}
-                  </span>
-                  <span style={{
-                    fontFamily: 'Inter', fontSize: '13px',
-                    fontWeight: isActive ? 600 : 400,
-                    color: isActive ? '#2563EB' : '#374151',
-                    lineHeight: '18px',
-                  }}>
-                    {sec.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* ── Main content — width: 848px, padding: 32px, gap: 32px ── */}
-          <div style={{
-            flex: 1,
-            padding: '32px',
-            display: 'flex', flexDirection: 'column', gap: '32px',
-            boxSizing: 'border-box',
-          }}>
-
-            {/* 1. General Platform */}
-            <section style={{
-              background: '#fff', borderRadius: '12px',
-              border: '1px solid #E2E8F0', padding: '24px',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
-                <div>
-                  <h2 style={{ margin: 0, fontFamily: 'Inter', fontSize: '17px', fontWeight: 700, color: '#0F172A' }}>
-                    General Platform
-                  </h2>
-                  <p style={{ margin: '4px 0 0', fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
-                    Manage your core brand identity and localization.
-                  </p>
-                </div>
-                <button suppressHydrationWarning style={{
-                  height: '36px', padding: '0 18px',
-                  background: '#2563EB', border: 'none', borderRadius: '7px',
-                  fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#fff',
-                  cursor: 'pointer', letterSpacing: '0.3px', flexShrink: 0,
-                }}>
-                  SAVE CHANGES
-                </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{p.name}</span>
+                <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: p.color }}>{p.score}/{p.max}</span>
               </div>
-
-              {/*
-                Outer grid — 608px total, 3 equal columns (181.33px each), column-gap 32px
-                  Col 1        : Platform Logo
-                  Col 2–3 span : Fields 2×2 sub-grid (394.67px), row-gap 16px, col-gap 16px
-              */}
+              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{p.detail}</div>
+              <div style={{ marginTop: '6px' }}>
+                <RiskScoreBar score={p.score} />
+              </div>
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 181.33px)',
-                columnGap: '32px',
-                alignItems: 'start',
+                marginTop: '4px',
+                fontFamily: inter, fontSize: '9px', fontWeight: 700,
+                color: p.color, letterSpacing: '0.5px', textTransform: 'uppercase',
               }}>
-
-                {/* ── Platform Logo — col 1 ── */}
-                <div style={{ gridColumn: '1' }}>
-                  <div style={{
-                    fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
-                    color: '#94A3B8', letterSpacing: '-0.6px', lineHeight: '16px',
-                    textTransform: 'uppercase', marginBottom: '8px',
-                  }}>
-                    Platform Logo
-                  </div>
-                  {/* Dashed logo box */}
-                  <div style={{
-                    width: '100px', height: '100px', borderRadius: '10px',
-                    border: '1.5px dashed #CBD5E1', background: '#FFFFFF',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <div style={{
-                      width: '76px', height: '76px', borderRadius: '8px',
-                      background: '#1E5A5A',
-                      display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', justifyContent: 'center', gap: '2px',
-                    }}>
-                      <span style={{
-                        fontFamily: 'Inter', fontSize: '11px', fontWeight: 800,
-                        color: '#fff', letterSpacing: '0.5px',
-                      }}>CARRY ON</span>
-                      <span style={{
-                        fontFamily: 'Inter', fontSize: '6px', fontWeight: 400,
-                        color: 'rgba(255,255,255,0.6)', letterSpacing: '0.3px',
-                      }}>FLEET PLATFORM</span>
-                    </div>
-                  </div>
-                  {/* Edit button below logo box */}
-                  <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'flex-end', width: '100px' }}>
-                    <button suppressHydrationWarning style={{
-                      width: '28px', height: '28px', borderRadius: '50%',
-                      background: '#2563EB', border: '2px solid #fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M8.5 1.5l2 2-6.5 6.5H2v-2L8.5 1.5Z" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/*
-                  ── Fields — col 2–3 (394.67px) ──
-                  2×2 sub-grid: Platform Name & System Language in row 1,
-                  Primary Timezone spanning both cols in row 2.
-                  Each field cell: height 66px = label(16) + gap(6) + input(44)
-                */}
-                <div style={{
-                  gridColumn: '2 / span 2',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 189.33px)',
-                  rowGap: '16px',
-                  columnGap: '16px',
-                }}>
-
-                  {/* Platform Name — row 1, col 1 */}
-                  <div style={{
-                    gridColumn: '1', gridRow: '1',
-                    display: 'flex', flexDirection: 'column', gap: '6px',
-                    height: '66px',
-                  }}>
-                    <label style={{
-                      fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
-                      color: '#374151', letterSpacing: '-0.6px', lineHeight: '16px',
-                      textTransform: 'uppercase', height: '16px',
-                    }}>
-                      Platform Name
-                    </label>
-                    <input
-                      suppressHydrationWarning
-                      defaultValue="Carry On Logistics"
-                      style={{
-                        width: '189.33px', height: '44px',
-                        padding: '12px 16px',
-                        border: 'none', borderRadius: '8px',
-                        fontFamily: 'Inter', fontSize: '14px', fontWeight: 400,
-                        lineHeight: '20px', color: '#1E293B',
-                        background: '#B7DAF5', outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  {/* System Language — row 1, col 2 */}
-                  <div style={{
-                    gridColumn: '2', gridRow: '1',
-                    display: 'flex', flexDirection: 'column', gap: '6px',
-                    height: '66px',
-                  }}>
-                    <label style={{
-                      fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
-                      color: '#374151', letterSpacing: '-0.6px', lineHeight: '16px',
-                      textTransform: 'uppercase', height: '16px',
-                    }}>
-                      System Language
-                    </label>
-                    <div style={{ position: 'relative', width: '189.33px', height: '44px' }}>
-                      <select suppressHydrationWarning style={{
-                        width: '100%', height: '44px',
-                        padding: '12px 36px 12px 16px',
-                        border: 'none', borderRadius: '8px',
-                        fontFamily: 'Inter', fontSize: '14px', fontWeight: 400,
-                        lineHeight: '20px', color: '#1E293B',
-                        background: '#B7DAF5', outline: 'none',
-                        cursor: 'pointer', appearance: 'none',
-                        boxSizing: 'border-box',
-                      }}>
-                        <option>English (US)</option>
-                        <option>Spanish</option>
-                        <option>French</option>
-                      </select>
-                      <svg style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                        width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 4l4 4 4-4" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Primary Timezone — row 2, col 1–2 */}
-                  <div style={{
-                    gridColumn: '1 / span 2', gridRow: '2',
-                    display: 'flex', flexDirection: 'column', gap: '6px',
-                    height: '66px',
-                  }}>
-                    <label style={{
-                      fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
-                      color: '#374151', letterSpacing: '-0.6px', lineHeight: '16px',
-                      textTransform: 'uppercase', height: '16px',
-                    }}>
-                      Primary Timezone
-                    </label>
-                    <div style={{ position: 'relative', width: '100%', height: '44px' }}>
-                      <span style={{
-                        position: 'absolute', left: '14px', top: '50%',
-                        transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex',
-                      }}>
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                          <circle cx="7.5" cy="7.5" r="6.5" stroke="#1E293B" strokeWidth="1.3" />
-                          <path d="M7.5 3v4.5l2.5 1.5" stroke="#1E293B" strokeWidth="1.3" strokeLinecap="round" />
-                        </svg>
-                      </span>
-                      <select suppressHydrationWarning style={{
-                        width: '100%', height: '44px',
-                        padding: '12px 36px 12px 36px',
-                        border: 'none', borderRadius: '8px',
-                        fontFamily: 'Inter', fontSize: '14px', fontWeight: 400,
-                        lineHeight: '20px', color: '#1E293B',
-                        background: '#B7DAF5', outline: 'none',
-                        cursor: 'pointer', appearance: 'none',
-                        boxSizing: 'border-box',
-                      }}>
-                        <option>(GMT-05:00) Eastern Time (US & Canada)</option>
-                        <option>(GMT-06:00) Central Time (US & Canada)</option>
-                        <option>(GMT-07:00) Mountain Time (US & Canada)</option>
-                        <option>(GMT-08:00) Pacific Time (US & Canada)</option>
-                      </select>
-                      <svg style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                        width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 4l4 4 4-4" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-
-                </div>{/* end fields sub-grid */}
-              </div>{/* end outer 3-col grid */}
-            </section>
-
-            {/* 2. Driver Payouts + Quick Triggers — 2 columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-
-              {/* Driver Payouts */}
-              <section style={{
-                width: '324px', height: '240px', background: '#FFFFFF', borderRadius: '12px',
-                borderLeft: '4px solid #2F80ED', boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
-                padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px', alignItems: 'start', marginBottom: '14px' }}>
-                  <div style={{
-                    width: '36px', height: '36px', borderRadius: '8px',
-                    background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <rect x="1" y="4" width="16" height="10" rx="2" stroke="#2563EB" strokeWidth="1.5" />
-                      <circle cx="9" cy="9" r="2" stroke="#2563EB" strokeWidth="1.5" />
-                    </svg>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
-                      Driver Payouts
-                    </div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#475569', lineHeight: '1.5', whiteSpace: 'normal' }}>
-                      Configure dynamic payout multipliers<br />and base rates per delivery mile.
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '20px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '30px', fontWeight: 800, color: '#0F172A', lineHeight: '1' }}>$2.45</span>
-                  <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#475569', lineHeight: '1.2' }}>base / mile</span>
-                </div>
-                <button suppressHydrationWarning style={{
-                  width: '100%', height: '44px', borderRadius: '12px',
-                  background: '#2563EB', border: 'none',
-                  fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#fff',
-                  cursor: 'pointer',
-                }}>
-                  Adjust Rates
-                </button>
-              </section>
-
-              {/* Quick Triggers */}
-              <section style={{
-                width: '324px', minHeight: '240px', background: '#FFFFFF', borderRadius: '12px',
-                borderLeft: '4px solid #2563EB', boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
-                padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M10 1.5L3.5 8.5h4l-1 6.5L14.5 7.5H10l1-6Z" fill="#2563EB" />
-                  </svg>
-                  <span style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Quick Triggers</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', lineHeight: '1.1' }}>Critical Delays</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>+Mr • Pete</div>
-                    </div>
-                    <Toggle on={true} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', lineHeight: '1.1' }}>New Order Placement</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>EMAIL ONLY</div>
-                    </div>
-                    <Toggle on={false} />
-                  </div>
-                </div>
-              </section>
+                {p.level}
+              </div>
             </div>
-
-            {/* 3. Infrastructure & Security */}
-            <section style={{
-              background: '#fff', borderRadius: '12px',
-              border: '1px solid #E2E8F0', padding: '24px',
-            }}>
-              <h3 style={{ margin: '0 0 22px', fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>
-                Infrastructure & Security
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-
-                {/* Left — API Keys + Role-Based Access */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-
-                  {/* Active API Keys */}
-                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                    <div style={{
-                      width: '40px', height: '40px', borderRadius: '10px', background: '#F1F5F9',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <circle cx="7" cy="10" r="4" stroke="#64748B" strokeWidth="1.4" />
-                        <path d="M11 7.5l7 7M15.5 11l2 2" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '3px' }}>
-                        Active API Keys
-                      </div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', marginBottom: '8px', lineHeight: '1.5' }}>
-                        4 Production keys generating<br />
-                        traffic.
-                      </div>
-                      <div style={{
-                        display: 'inline-block', padding: '3px 10px',
-                        background: '#F1F5F9', borderRadius: '5px',
-                        fontFamily: 'monospace', fontSize: '12px', color: '#2563EB',
-                      }}>
-                        live_pk_51K...a79w
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Role-Based Access */}
-                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                    <div style={{
-                      width: '40px', height: '40px', borderRadius: '10px', background: '#F1F5F9',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <circle cx="7" cy="6.5" r="3" stroke="#64748B" strokeWidth="1.4" />
-                        <path d="M1 17.5c0-3.038 2.686-5.5 6-5.5" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" />
-                        <circle cx="14" cy="6.5" r="3" stroke="#64748B" strokeWidth="1.4" />
-                        <path d="M19 17.5c0-3.038-2.686-5.5-6-5.5" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '3px' }}>
-                        Role-Based Access
-                      </div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', marginBottom: '6px', lineHeight: '1.5' }}>
-                        Manage permissions for 12 staff<br />
-                        members.
-                      </div>
-                      <button suppressHydrationWarning style={{
-                        background: 'none', border: 'none', padding: 0,
-                        cursor: 'pointer',
-                      }}>
-                        <span style={{
-                          fontFamily: 'Inter', fontSize: '13px', fontWeight: 600,
-                          color: '#2F80ED',
-                          textDecoration: 'underline',
-                          textDecorationColor: '#2F80ED',
-                          textDecorationThickness: '1px',
-                          textUnderlineOffset: '0.12em',
-                          textDecorationSkipInk: 'none',
-                        }}>
-                          Configure Permissions
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right — Active Plan */}
-                <div style={{
-                  background: '#FFFFFF', borderRadius: '10px',
-                  border: '1px solid #FFFFFF', padding: '20px',
-                  boxShadow: '0 1px 4px rgba(15, 23, 42, 0.08)',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                    <span style={{
-                      fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
-                      color: '#727785', letterSpacing: '0.6px',
-                    }}>
-                      ACTIVE PLAN
-                    </span>
-                    <span style={{
-                      width: '93px', height: '19px', borderRadius: '9999px',
-                      background: '#B7DAF5', color: '#2F80ED',
-                      fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
-                      lineHeight: '15px', letterSpacing: '0px',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      verticalAlign: 'middle', textAlign: 'center',
-                      padding: '2px 8px',
-                    }}>
-                      Pro Enterprise
-                    </span>
-                  </div>
-
-                  <div style={{ marginBottom: '4px' }}>
-                    <span style={{ fontFamily: 'Inter', fontSize: '34px', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>
-                      $899
-                    </span>
-                    <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#64748B' }}>/mo</span>
-                  </div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#475569', marginBottom: '16px' }}>
-                    Next billing date: Oct 24, 2023
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
-                    {['Unlimited Driver Accounts', 'Real-time Map Integration', 'Full API Access'].map((feat, index) => (
-                      <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                          <circle cx="7.5" cy="7.5" r="6.5" fill="#12B76A" />
-                          <path d="M4 7.5l2.5 2.5 4.5-4.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151', display: 'inline-flex', alignItems: 'center' }}>
-                          {index === 0 ? (
-                            <>
-                              <span style={{ display: 'inline-block', fontFamily: 'Inter', fontSize: '13px', marginRight: '3px', lineHeight: '15px' }}>И</span>
-                              nlimited Driver Accounts
-                            </>
-                          ) : feat}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button suppressHydrationWarning style={{
-                    width: '100%', height: '38px', borderRadius: '7px',
-                    background: '#2563EB', border: 'none',
-                    fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#fff',
-                    cursor: 'pointer', letterSpacing: '0.3px',
-                  }}>
-                    MANAGE BILLING
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* 4. Visual Environment */}
-            <section style={{
-              background: '#fff', borderRadius: '12px',
-              border: '1px solid #E2E8F0', padding: '24px',
-            }}>
-              <h3 style={{ margin: '0 0 22px', fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>
-                Visual Environment
-              </h3>
-
-              <div style={{ display: 'flex', gap: '56px', alignItems: 'flex-start' }}>
-                {/* Theme Mode */}
-                <div>
-                  <div style={{
-                    fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
-                    color: '#94A3B8', letterSpacing: '0.5px', marginBottom: '10px',
-                  }}>
-                    THEME MODE
-                  </div>
-                  <div style={{
-                    display: 'inline-flex',
-                    width: '181.3333282470703px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    background: '#B7DAF5',
-                    border: 'none',
-                    boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.08)',
-                    padding: '4px',
-                    gap: '8px',
-                  }}>
-                    {(['Light', 'Dark'] as const).map((mode) => (
-                      <button
-                        suppressHydrationWarning
-                        key={mode}
-                        onClick={() => setThemeMode(mode)}
-                        style={{
-                          width: '86.66666412353516px',
-                          height: '36px',
-                          padding: '8px 0',
-                          background: themeMode === mode ? '#FFFFFF' : 'transparent',
-                          border: themeMode === mode ? '1px solid #93C5FD' : '1px solid transparent',
-                          boxShadow: themeMode === mode ? '0 1px 2px rgba(37,99,235,0.12)' : 'none',
-                          cursor: 'pointer',
-                          fontFamily: 'Inter', fontSize: '13px',
-                          fontWeight: themeMode === mode ? 700 : 500,
-                          color: mode === 'Light' ? '#2F80ED' : '#0F172A',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                          margin: '0',
-                          borderRadius: '8px',
-                          transition: 'background 0.15s, box-shadow 0.15s, color 0.15s, border 0.15s',
-                        }}
-                      >
-                        {mode === 'Light' ? (
-                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <circle cx="6.5" cy="6.5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-                            <path d="M6.5 1v1.5M6.5 10.5V12M1 6.5h1.5M10.5 6.5H12M2.64 2.64l1.06 1.06M9.3 9.3l1.06 1.06M2.64 10.36l1.06-1.06M9.3 3.7l1.06-1.06" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                          </svg>
-                        ) : (
-                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <path d="M10.5 7.5A5 5 0 1 1 5.5 2.5c0 0 2.5.5 3.5 2.5s1.5 2.5 1.5 2.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                          </svg>
-                        )}
-                        {mode}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Brand Accents */}
-                <div>
-                  <div style={{
-                    fontFamily: 'Inter', fontSize: '10px', fontWeight: 600,
-                    color: '#94A3B8', letterSpacing: '0.5px', marginBottom: '10px',
-                  }}>
-                    BRAND ACCENTS
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {accentColors.map((color) => (
-                        <button
-                          suppressHydrationWarning
-                          key={color}
-                          onClick={() => setSelectedAccent(color)}
-                          style={{
-                            width: '38px', height: '38px', borderRadius: '50%',
-                            background: color, border: selectedAccent === color ? '2px solid #FFFFFF' : 'none',
-                            boxShadow: selectedAccent === color ? '0 0 0 4px rgba(37, 99, 235, 0.16)' : 'none',
-                            cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'box-shadow 0.15s, border 0.15s',
-                          }}
-                        >
-                          {selectedAccent === color && (
-                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                              <path d="M2 6.5l3 3 6-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <button suppressHydrationWarning style={{
-                      padding: '8px 14px', borderRadius: '9999px',
-                      background: '#fff', border: '1px solid #C2C6D6',
-                      fontFamily: 'Inter', fontSize: '12px', color: '#000000',
-                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                      width: 'fit-content',
-                    }}>
-                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                        <path d="M8 1.5l1.5 1.5-6 6H2v-1.5l6-6Z" stroke="#000000" strokeWidth="1.2" strokeLinejoin="round" />
-                      </svg>
-                      Custom Hex
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-          </div>{/* end main content */}
-        </div>{/* end body row */}
-
-        {/* ── Footer ── */}
-        <footer style={{
-          width: '1024px', height: '44px', flexShrink: 0,
-          borderTop: '1px solid #E2E8F0', background: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 32px', boxSizing: 'border-box',
-        }}>
-          <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8' }}>
-            © 2023 Carry On Logistics Platform. All rights reserved.
-          </span>
-          <div style={{ display: 'flex', gap: '20px' }}>
-            {['Documentation', 'Privacy Policy', 'r tatus: r ystem Operational'].map((link) => (
-              <span key={link} style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', cursor: 'pointer' }}>
-                {link}
-              </span>
-            ))}
           </div>
-        </footer>
+        ))}
+      </div>
+      <button suppressHydrationWarning style={{
+        width: '100%', height: '40px', borderRadius: '10px',
+        background: '#F1F5F9', border: '1px solid #E2E8F0',
+        fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#2563EB',
+        cursor: 'pointer',
+      }}>
+        View All Risk Scores
+      </button>
 
-      </div>{/* end content column */}
+      {/* Recent Actions */}
+      <div style={{ marginTop: '8px' }}>
+        <div style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '12px' }}>Recent Actions</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB', marginTop: '5px', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>Account Blocked</div>
+              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px', lineHeight: '16px' }}>
+                Admin-42 blocked US-8812 (Payment fraud)
+              </div>
+              <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '4px' }}>2 mins ago</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#059669', marginTop: '5px', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>SOS Resolved</div>
+              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px', lineHeight: '16px' }}>
+                Case #C-9011 marked as false alarm
+              </div>
+              <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '4px' }}>15 mins ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Fraud Status Badge ─────────────────────────────────────── */
+function FraudStatusBadge({ status }: { status: 'Pending Review' | 'Watchlist' | 'Resolved' }) {
+  const styles = {
+    'Pending Review': { bg: '#DBEAFE', color: '#2563EB' },
+    'Watchlist': { bg: '#D1FAE5', color: '#059669' },
+    'Resolved': { bg: '#F1F5F9', color: '#64748B' },
+  };
+  const s = styles[status];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '4px 12px', borderRadius: '9999px',
+      background: s.bg,
+      fontFamily: inter, fontSize: '11px', fontWeight: 600, color: s.color,
+    }}>
+      {status}
+    </span>
+  );
+}
+
+/* ── Fraud Detection Pipeline ───────────────────────────────── */
+function FraudDetectionPipeline() {
+  const cases = [
+    { id: 'FR-88029', user: 'Arthur Morgan', ip: '192.168.1.1', type: 'Coupon misuse', score: 82, status: 'Pending Review' as const },
+    { id: 'FR-88031', user: 'Sadie Adler', ip: '104.22.11.0', type: 'Fake booking', score: 45, status: 'Watchlist' as const },
+  ];
+
+  return (
+    <div style={{
+      background: '#FFFFFF', borderRadius: '12px',
+      border: '1px solid #E2E8F0', padding: '20px',
+      display: 'flex', flexDirection: 'column', gap: '16px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>Fraud Detection Pipeline</div>
+          <div style={{ fontFamily: inter, fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>Automated risk analysis of recent transactions</div>
+        </div>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          padding: '6px 12px', borderRadius: '9999px',
+          background: '#D1FAE5', color: '#059669',
+          fontFamily: inter, fontSize: '11px', fontWeight: 700,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="#059669" strokeWidth="1.3" />
+            <path d="M7 4.5v3l2 1.5" stroke="#059669" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          AI GUARD ACTIVE
+        </span>
+      </div>
+
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            {['Case ID', 'User/Driver', 'Fraud Type', 'Risk Score', 'Status'].map((h) => (
+              <th key={h} style={{
+                padding: '10px 12px', textAlign: 'left',
+                fontFamily: inter, fontSize: '10px', fontWeight: 700,
+                color: '#94A3B8', letterSpacing: '0.8px', textTransform: 'uppercase',
+                borderBottom: '1px solid #F1F5F9',
+              }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {cases.map((c, i) => (
+            <tr key={i}>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                {c.id}
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.user}</div>
+                <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>IP: {c.ip}</div>
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <span style={{
+                  padding: '4px 10px', borderRadius: '6px',
+                  background: '#F1F5F9',
+                  fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#475569',
+                }}>
+                  {c.type}
+                </span>
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '60px', height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${c.score}%`, height: '100%', borderRadius: '9999px',
+                      background: c.score >= 70 ? '#DC2626' : c.score >= 40 ? '#D97706' : '#059669',
+                    }} />
+                  </div>
+                  <span style={{
+                    fontFamily: inter, fontSize: '12px', fontWeight: 700,
+                    color: c.score >= 70 ? '#DC2626' : c.score >= 40 ? '#D97706' : '#059669',
+                  }}>
+                    {c.score}
+                  </span>
+                </div>
+              </td>
+              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
+                <FraudStatusBadge status={c.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ── Page ───────────────────────────────────────────────────── */
+export default function SafetyFraudPage() {
+  const [activeTab, setActiveTab] = useState('Alerts');
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
+      <Sidebar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <Navbar />
+        <main style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
+
+          {/* ── Header Row ─────────────────────────────────────────── */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+              <div>
+                <div style={{ fontFamily: manrope, fontSize: '22px', fontWeight: 800, color: '#2563EB', lineHeight: '28px' }}>
+                  Logistics Safety & Fraud
+                </div>
+                <div style={{ fontFamily: manrope, fontSize: '22px', fontWeight: 800, color: '#2563EB', lineHeight: '28px' }}>
+                  Pro
+                </div>
+              </div>
+              <TabSwitcher active={activeTab} onChange={setActiveTab} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button suppressHydrationWarning style={{
+                height: '40px', padding: '0 20px',
+                borderRadius: '9999px',
+                background: '#DC2626', border: 'none',
+                display: 'flex', alignItems: 'center', gap: '8px',
+                fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#FFFFFF',
+                cursor: 'pointer',
+              }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 1l1.8 4.2L14 6l-3.5 2.8L11.5 13 8 10.5 4.5 13l1-4.2L2 6l4.2-.8L8 1z" fill="white" />
+                </svg>
+                Emergency SOS
+              </button>
+            </div>
+          </div>
+
+          {/* ── KPI Cards Row ──────────────────────────────────────── */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <SOSCard />
+            <FraudTrendCard />
+            <HighRiskZoneCard />
+            <PreventionRateCard />
+          </div>
+
+          {/* ── Filters Bar ────────────────────────────────────────── */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '12px',
+            marginBottom: '24px', flexWrap: 'wrap',
+          }}>
+            {[
+              { label: 'Risk Level: All', icon: 'filter' },
+              { label: 'Alert Type: All', icon: 'filter' },
+              { label: 'Oct 20, 2023 - Today', icon: 'calendar' },
+            ].map((f) => (
+              <button
+                suppressHydrationWarning
+                key={f.label}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  height: '40px', padding: '0 14px',
+                  borderRadius: '8px',
+                  background: '#FFFFFF', border: '1px solid #E2E8F0',
+                  fontFamily: inter, fontSize: '13px', fontWeight: 500, color: '#475569',
+                  cursor: 'pointer',
+                }}
+              >
+                {f.icon === 'calendar' ? (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="#94A3B8" strokeWidth="1.2" />
+                    <path d="M1.5 5.5h11M4 1v2.5M9 1v2.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M1 3.5h12M3 7h8M5 10.5h4" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" />
+                  </svg>
+                )}
+                {f.label}
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                  <path d="M1 1.5l4 3 4-3" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            ))}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button suppressHydrationWarning style={{
+                width: '40px', height: '40px', borderRadius: '8px',
+                background: '#FFFFFF', border: '1px solid #E2E8F0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 1v10M4 7l4 4 4-4M2 15h12" stroke="#475569" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button suppressHydrationWarning style={{
+                height: '40px', padding: '0 20px',
+                borderRadius: '8px',
+                background: '#2563EB', border: 'none',
+                fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#FFFFFF',
+                cursor: 'pointer',
+              }}>
+                Search Database
+              </button>
+            </div>
+          </div>
+
+          {/* ── Two Column: Alerts Feed + Risk Profiles ──────────── */}
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1.5 1 0', minWidth: '500px' }}>
+              <RealTimeAlertsFeed />
+            </div>
+            <div style={{ flex: '1 1 0', minWidth: '280px' }}>
+              <TopRiskProfiles />
+            </div>
+          </div>
+
+          {/* ── Fraud Detection Pipeline ──────────────────────────── */}
+          <FraudDetectionPipeline />
+
+          {/* ── Footer ────────────────────────────────────────────── */}
+          <div style={{
+            marginTop: '24px', paddingTop: '16px',
+            borderTop: '1px solid #E2E8F0',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: '12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                Carry On Logistics Admin V4.2.0
+              </span>
+              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                System Uptime: 99.98%
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#059669', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                Server Node: NYC-PROD-01
+              </span>
+              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                Security Token Expires in 4h 12m
+              </span>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

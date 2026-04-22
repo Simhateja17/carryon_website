@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__figma__get_design_context",
+      "Bash(claude mcp:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

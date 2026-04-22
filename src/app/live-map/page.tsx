@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 
@@ -412,6 +413,7 @@ function MapControls() {
 
 /* ── Page ───────────────────────────────────────────────────── */
 export default function LiveMapPage() {
+  const router = useRouter();
   return (
     /* 404-3218: display flex; flex-direction column; background #F7F9FB */
     <div style={{
@@ -468,27 +470,31 @@ export default function LiveMapPage() {
           <MapControls />
 
           {/* Optimize All Routes */}
-          <button suppressHydrationWarning style={{
-            position: 'absolute',
-            bottom: '24px',
-            right: '24px',
-            height: '56px',
-            paddingLeft: '24px',
-            paddingRight: '24px',
-            borderRadius: '9999px',
-            background: '#2563EB',
-            border: 'none',
-            boxShadow: '0 25px 50px -12px rgba(0, 88, 190, 0.40)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontFamily: 'Inter',
-            fontSize: '14px',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            whiteSpace: 'nowrap',
-          }}>
+          <button
+            suppressHydrationWarning
+            onClick={() => router.push('/live-map/optimize')}
+            style={{
+              position: 'absolute',
+              bottom: '24px',
+              right: '24px',
+              height: '56px',
+              paddingLeft: '24px',
+              paddingRight: '24px',
+              borderRadius: '9999px',
+              background: '#2563EB',
+              border: 'none',
+              boxShadow: '0 25px 50px -12px rgba(0, 88, 190, 0.40)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontFamily: 'Inter',
+              fontSize: '14px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/optimize-routes-icon.png" alt="" style={{ width: '20px', height: '20px', display: 'block' }} />
             Optimize All Routes
