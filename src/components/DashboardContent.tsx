@@ -104,9 +104,9 @@ function StatIcon({ type }: { type: 'orders' | 'deliveries' | 'revenue' | 'cance
 
 function Sparkline({ path, up, id }: { path: string; up: boolean; id: string }) {
   const gradId = `sg-${id}`;
-  const bgColor = up ? '#a6d2f3' : '#2f80ed';
-  const lineColor = up ? '#2f80ed' : '#a6d2f3';
-  const fillColor = up ? '#2f80ed' : '#a6d2f3';
+  const bgColor = '#a6d2f3';
+  const lineColor = '#2f80ed';
+  const fillColor = '#2f80ed';
   return (
     <div style={{
       width: '96px',

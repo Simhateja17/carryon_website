@@ -208,7 +208,7 @@ function ActiveAlertsCard() {
 }
 
 /* ── Driver Popup ───────────────────────────────────────────── */
-function DriverPopup() {
+function DriverPopup({ onMessage }: { onMessage: () => void }) {
   return (
     <div style={{
       position: 'absolute',
@@ -328,7 +328,7 @@ function DriverPopup() {
         }}>
           View Log
         </button>
-        <button suppressHydrationWarning style={{
+        <button suppressHydrationWarning onClick={onMessage} style={{
           flex: '1 0 0', height: '40px', borderRadius: '10px',
           background: '#2F80ED', border: 'none',
           fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#FFFFFF',
@@ -478,7 +478,7 @@ export default function LiveMapPage() {
           </div>
 
           {/* Driver Popup */}
-          <DriverPopup />
+          <DriverPopup onMessage={() => router.push('/fleet-messenger')} />
 
           {/* Vehicle markers */}
           <VehicleMarker top="38%" left="52%" color="#22C55E" icon="truck" />

@@ -15,7 +15,6 @@ function getSectionForPath(p: string): string | null {
   if (p.startsWith('/orders')) return 'orders';
   if (p.startsWith('/drivers')) return 'drivers';
   if (p.startsWith('/customers')) return 'customers';
-  if (p.startsWith('/fleet-messenger')) return 'fleet-messenger';
   if (p.startsWith('/settings') || p === '/revenue' || p.startsWith('/settings/pricing')) return 'settings';
   return null;
 }
@@ -222,7 +221,6 @@ const settingsSubItems = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-
   // Which section is expanded (null = all collapsed)
   const [openSection, setOpenSection] = useState<string | null>(() => getSectionForPath(pathname));
 
@@ -248,7 +246,6 @@ export default function Sidebar() {
   const ordersActive = pathname.startsWith('/orders');
   const driversActive = pathname.startsWith('/drivers');
   const customersActive = pathname.startsWith('/customers');
-  const messengerActive = pathname.startsWith('/fleet-messenger');
 
   return (
     <aside style={{ width: '255px', height: '100vh', minHeight: '1047px', flexShrink: 0, background: '#F1F4F9', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -379,33 +376,6 @@ export default function Sidebar() {
             </div>
           )}
 
-          {/* ── FLEET MESSENGER (simple link) ── */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <button
-              suppressHydrationWarning
-              type="button"
-              onClick={() => router.push('/fleet-messenger')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '239px',
-                padding: messengerActive ? '20px 16px 16px' : '16px',
-                borderRadius: '4px',
-                border: 'none',
-                cursor: 'pointer',
-                textAlign: 'left',
-                background: messengerActive ? 'rgba(219, 234, 254, 0.5)' : 'transparent',
-                boxSizing: 'border-box',
-              }}
-            >
-              <span style={{ display: 'flex', width: '34px', justifyContent: 'flex-start', flexShrink: 0 }}>
-                <IconMessenger active={messengerActive} />
-              </span>
-              <span style={{ flex: 1, fontFamily: manrope, fontSize: '14px', fontWeight: 500, lineHeight: '20px', letterSpacing: '0.35px', color: messengerActive ? '#1E40AF' : '#475569', textTransform: 'uppercase' }}>
-                FLEET MESSENGER
-              </span>
-            </button>
-          </div>
 
           {/* ── SETTINGS (expandable) ── */}
           <div style={{ borderTop: '1px solid #E2E8F0', marginTop: '4px', paddingTop: '16px', paddingBottom: '8px' }}>
