@@ -647,7 +647,7 @@ export default function DriversPage() {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '16px 24px',
+            padding: '20px 28px',
             borderTop: '1px solid #F1F5F9',
           }}>
             <div style={{
@@ -661,15 +661,15 @@ export default function DriversPage() {
             }}>
               SHOWING 1-10 OF 1,248 DRIVERS
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '300px', justifyContent: 'flex-end' }}>
               <button
                 suppressHydrationWarning
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
                   border: '1px solid #E2E8F0',
                   background: '#fff',
                   cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
@@ -690,9 +690,9 @@ export default function DriversPage() {
                   key={p}
                   onClick={() => setCurrentPage(p)}
                   style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '6px',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
                     border: 'none',
                     background: currentPage === p ? '#2F80ED' : 'transparent',
                     cursor: 'pointer',
@@ -712,7 +712,7 @@ export default function DriversPage() {
                 fontSize: '12px',
                 fontWeight: 700,
                 color: '#64748B',
-                padding: '0 4px',
+                padding: '0 6px',
               }}>
                 ...
               </span>
@@ -721,9 +721,9 @@ export default function DriversPage() {
                 suppressHydrationWarning
                 onClick={() => setCurrentPage(totalPages)}
                 style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
                   border: 'none',
                   background: currentPage === totalPages ? '#2F80ED' : 'transparent',
                   cursor: 'pointer',
@@ -742,9 +742,9 @@ export default function DriversPage() {
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
                   border: '1px solid #E2E8F0',
                   background: '#fff',
                   cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',

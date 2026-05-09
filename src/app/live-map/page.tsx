@@ -214,18 +214,23 @@ function DriverPopup() {
       position: 'absolute',
       top: '24px',
       right: '24px',
-      width: '320px',
-      height: '267px',
-      borderRadius: '16px',
-      background: '#FFFFFFB2',
-      border: '1px solid #FFFFFF66',
-      backdropFilter: 'blur(20px)',
-      padding: '20px',
-      boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px',
+      width: '320px',
+      gap: '16px',
     }}>
+      <div style={{
+        height: '267px',
+        borderRadius: '16px',
+        background: '#9BAFC5',
+        border: '1px solid #FFFFFF66',
+        backdropFilter: 'blur(20px)',
+        padding: '20px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+      }}>
 
       {/* Header row: avatar + name/id + ON DUTY badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', alignSelf: 'stretch' }}>
@@ -335,6 +340,20 @@ function DriverPopup() {
           Message
         </button>
       </div>
+      </div>
+
+      {/* + New Dispatch button */}
+      <button suppressHydrationWarning style={{
+        width: '100%', height: '48px', borderRadius: '16px',
+        background: '#2F80ED', border: 'none',
+        fontFamily: 'Inter', fontSize: '16px', fontWeight: 600, color: '#FFFFFF',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+      }}>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 4v12M4 10h12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        New Dispatch
+      </button>
     </div>
   );
 }

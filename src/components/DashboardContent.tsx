@@ -374,17 +374,18 @@ export default function DashboardContent() {
       {/* Stats row */}
       <div style={{
         display: 'flex',
-        gap: '16px',
+        gap: '8px',
         marginBottom: '20px',
         width: '945px',
         maxWidth: '100%',
       }}>
         {stats.map((s, i) => (
           <div key={s.label} style={{
-            flex: '1',
+            flex: '0 0 auto',
+            width: '200px',
             background: '#FFFFFF',
             borderRadius: '12px',
-            padding: '24px',
+            padding: '12px',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
             border: '1px solid #E2E8F0',
             boxSizing: 'border-box',
@@ -394,13 +395,15 @@ export default function DashboardContent() {
             height: '168px',
             position: 'relative',
           }}>
-            {/* Icon: absolute top-right */}
-            <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
-              <StatIcon type={s.icon} />
-            </div>
+            {/* Icon: absolute top-right (not for cancelled card — icon moved to right column) */}
+            {i !== 3 && (
+              <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                <StatIcon type={s.icon} />
+              </div>
+            )}
 
-            {/* Top: label + value (left-aligned, icon does not affect layout) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingRight: '52px' }}>
+            {/* Top: label + value */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: '12px',
@@ -427,10 +430,26 @@ export default function DashboardContent() {
             {/* Bottom: trend left, sparkline right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <TrendBadge trend={s.trend} trendUp={s.trendUp} color="#2f80ed" />
-              <Sparkline path={s.sparkline} up={s.trendUp} id={String(i)} />
+              {i !== 3 && <Sparkline path={s.sparkline} up={s.trendUp} id={String(i)} />}
             </div>
           </div>
         ))}
+
+        {/* Rightmost column: cancelled icon + sparkline moved out of the last card */}
+        <div style={{
+          flex: '0 0 auto',
+          width: '108px',
+          height: '168px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          paddingTop: '12px',
+          paddingBottom: '12px',
+        }}>
+          <StatIcon type="cancelled" />
+          <Sparkline path={stats[3].sparkline} up={stats[3].trendUp} id="3" />
+        </div>
       </div>
 
       {/* Two-column body */}

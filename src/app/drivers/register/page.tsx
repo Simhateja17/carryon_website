@@ -4,23 +4,20 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 /** Map texture from Figma MCP (`get_design_context` node 105:9466) — replace with a static asset if the URL expires. */
-const MAP_PREVIEW =
-  'https://www.figma.com/api/mcp/asset/508e6e6c-e26b-4299-90ed-5274437b00e3';
+const MAP_PREVIEW = '/map-preview-route-assignment.png';
 
 const manrope = "'Manrope', Inter, sans-serif";
 
 function IconPersonPlus() {
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect width="40" height="40" rx="10" fill="#DBEAFE" />
-      <circle cx="16" cy="17" r="4" stroke="#2F80ED" strokeWidth="1.5" />
-      <path
-        d="M9 28c0-3.866 3.134-7 7-7M25 19v6M22 22h6"
-        stroke="#2F80ED"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
+    <img
+      src="/register-personnel-icon.png"
+      alt=""
+      aria-hidden
+      width={32}
+      height={32}
+      style={{ width: '32px', height: '32px', display: 'block' }}
+    />
   );
 }
 
@@ -128,18 +125,6 @@ export default function DriverRegisterPage() {
       >
         {/* Header — Figma 105:9488–105:9498 */}
         <header style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '11px',
-              fontWeight: 600,
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase',
-              color: '#2F80ED',
-            }}
-          >
-            Fleet Expansion
-          </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <IconPersonPlus />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -494,70 +479,71 @@ export default function DriverRegisterPage() {
                 background: '#FFF',
                 borderRadius: '12px',
                 boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                borderTop: '4px solid #2F80ED',
-                padding: '28px 24px 24px',
+                padding: '22px 24px 20px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '24px',
+                gap: '18px',
               }}
             >
               <div style={{ textAlign: 'center' }}>
                 <div
                   style={{
-                    width: '96px',
-                    height: '96px',
-                    margin: '0 auto 12px',
+                    width: '84px',
+                    height: '84px',
+                    margin: '0 auto 10px',
                     borderRadius: '9999px',
-                    background: '#E6E8EA',
-                    border: '4px solid #fff',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)',
+                    background: '#DADDE1',
+                    border: '2px solid #ECEEF0',
+                    boxShadow: '0 2px 0 rgba(255,255,255,0.85) inset, 0 1px 2px rgba(0,0,0,0.08)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <svg width="32" height="28" viewBox="0 0 24 20" fill="none" aria-hidden>
+                  <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
                     <path
-                      d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
-                      stroke="#94A3B8"
-                      strokeWidth="1.5"
+                      d="M10.4 11.2h2.2l1-1.8h2.8l1 1.8h2.2c1 0 1.8.8 1.8 1.8v7.2c0 1-.8 1.8-1.8 1.8H10.4c-1 0-1.8-.8-1.8-1.8V13c0-1 .8-1.8 1.8-1.8Z"
+                      stroke="#6B7280"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
                     />
-                    <path d="M4 18h16" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="15" cy="16.6" r="3" stroke="#6B7280" strokeWidth="1.8" />
+                    <path d="M21.8 7.8v4.4M19.6 10h4.4" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
                 </div>
                 <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 700, color: '#191C1E', lineHeight: '28px' }}>
                   Unsaved Profile
                 </div>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#424754', lineHeight: '16px', marginTop: '4px' }}>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#5A6270', lineHeight: '16px', marginTop: '2px' }}>
                   Draft registration in progress
                 </div>
               </div>
-              <div style={{ borderTop: '1px solid #ECEEF0', paddingTop: '17px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ borderTop: '1px solid #ECEEF0', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      letterSpacing: '1px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      letterSpacing: '1.1px',
                       textTransform: 'uppercase',
-                      color: '#424754',
+                      color: '#4B5563',
                     }}
                   >
                     Verification Status
                   </span>
                   <span
                     style={{
-                      background: '#A6D2F3',
+                      background: '#A7D3F6',
                       color: '#2F80ED',
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '9px',
-                      fontWeight: 600,
-                      letterSpacing: '-0.45px',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      letterSpacing: '0.2px',
                       textTransform: 'uppercase',
-                      padding: '2px 8px',
+                      padding: '2px 9px',
                       borderRadius: '4px',
-                      lineHeight: '13.5px',
+                      lineHeight: '15px',
                     }}
                   >
                     Drafting
@@ -567,11 +553,11 @@ export default function DriverRegisterPage() {
                   <span
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      letterSpacing: '1px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      letterSpacing: '1.1px',
                       textTransform: 'uppercase',
-                      color: '#424754',
+                      color: '#4B5563',
                     }}
                   >
                     Background Check
@@ -579,9 +565,8 @@ export default function DriverRegisterPage() {
                   <span
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      fontStyle: 'italic',
+                      fontSize: '12px',
+                      fontWeight: 700,
                       color: '#191C1E',
                     }}
                   >
@@ -595,39 +580,40 @@ export default function DriverRegisterPage() {
             <div
               style={{
                 position: 'relative',
-                background: '#2F80ED',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                background: '#3B82E0',
+                borderRadius: '20px',
+                padding: '34px 34px 36px',
+                boxShadow: '0 16px 28px rgba(0, 0, 0, 0.14)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-                  <path d="M9 1.5L3 4v4.5c0 4.15 2.57 8.04 6 9 3.43-.96 6-4.85 6-9V4l-6-2.5Z" stroke="#FEFCFF" strokeWidth="1.4" strokeLinejoin="round" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '22px' }}>
+                <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
+                  <path d="M15 4.5 6.5 8v6.4c0 5.88 3.64 11.4 8.5 12.76 4.86-1.36 8.5-6.88 8.5-12.76V8L15 4.5Z" stroke="#BFD9F8" strokeWidth="2.2" strokeLinejoin="round" />
+                  <path d="m11.6 14.8 2.5 2.5 4.9-4.9" stroke="#BFD9F8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 700, color: '#FEFCFF', lineHeight: '20px' }}>
                   Compliance Requirements
                 </span>
               </div>
-              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {[
                   'All applicants must be 21+ years of age for interstate commerce.',
                   'SSN is required for immediate background screening.',
                   'CDL Class A/B must be verified against DMV database.',
                 ].map((text, i) => (
-                  <li key={text} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <li key={text} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                     {i < 2 ? (
-                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '2px' }} aria-hidden>
-                        <circle cx="7.5" cy="7.5" r="7" fill="#4EDEA3" />
-                        <path d="M4.5 7.5l2 2 4-4" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" style={{ flexShrink: 0, marginTop: '2px' }} aria-hidden>
+                        <circle cx="13" cy="13" r="11.5" stroke="#BCD7F8" strokeWidth="3" />
+                        <path d="m8.6 13.4 2.8 2.8 6-6" stroke="#BCD7F8" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     ) : (
                       <span
                         style={{
-                          width: '15px',
-                          height: '15px',
+                          width: '26px',
+                          height: '26px',
                           borderRadius: '9999px',
-                          border: '2px solid rgba(254,252,255,0.5)',
+                          border: '3px solid rgba(191,217,248,0.9)',
                           flexShrink: 0,
                           marginTop: '2px',
                         }}
@@ -638,8 +624,9 @@ export default function DriverRegisterPage() {
                         fontFamily: 'Inter, sans-serif',
                         fontSize: '12px',
                         lineHeight: '19.5px',
-                        color: '#FEFCFF',
-                        opacity: i < 2 ? 0.9 : 0.7,
+                        color: i < 2 ? '#EAF3FF' : '#B5CCEA',
+                        fontWeight: 400,
+                        maxWidth: '420px',
                       }}
                     >
                       {text}

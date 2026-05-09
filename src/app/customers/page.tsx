@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 
 /* ── Data ─────────────────────────────────────────────────────── */
@@ -77,6 +78,7 @@ const customers = [
 /* ── Page ─────────────────────────────────────────────────────── */
 export default function CustomersPage() {
   const [searchVal, setSearchVal] = useState('');
+  const router = useRouter();
 
   return (
     <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter, sans-serif' }}>
@@ -116,7 +118,7 @@ export default function CustomersPage() {
               background: '#2563EB', border: 'none',
               fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#fff',
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-            }}>
+            }} onClick={() => router.push('/customers/new')}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <circle cx="9" cy="5" r="3" stroke="white" strokeWidth="1.3" />
                 <path d="M1 13c0-2.761 2.239-5 5-5" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
@@ -131,7 +133,8 @@ export default function CustomersPage() {
 
           {/* Stats Row — 12-col grid: 960×194px, 24px column-gap */}
           <div style={{
-            width: '960px',
+            width: '100%',
+            maxWidth: '1280px',
             height: '194px',
             display: 'grid',
             gridTemplateColumns: 'repeat(12, 1fr)',
@@ -238,22 +241,38 @@ export default function CustomersPage() {
             {/* Premium Tier Review — span 3 cols */}
             <div style={{
               gridColumn: 'span 3',
-              background: '#2563EB', borderRadius: '12px', padding: '20px 24px',
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              height: '188px',
+              width: '100%',
+              justifySelf: 'stretch',
+              background: 'linear-gradient(90deg, #2F80ED 0%, #3B82F6 100%)',
+              borderRadius: '12px',
+              padding: '22px 18px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.24)',
             }}>
               <div>
-                <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+                <div style={{ fontFamily: 'Inter', fontSize: '30px', fontWeight: 700, color: '#fff', marginBottom: '8px', lineHeight: '32px', transform: 'scale(0.5)', transformOrigin: 'left top', width: '200%' }}>
                   Premium Tier Review
                 </div>
-                <div style={{ fontFamily: 'Inter', fontSize: '12px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
+                <div style={{ fontFamily: 'Inter', fontSize: '12px', color: 'rgba(255,255,255,0.9)', lineHeight: '20px', maxWidth: '252px' }}>
                   4 High-value manufacturing clients are due for quarterly performance review.
                 </div>
               </div>
               <button suppressHydrationWarning style={{
-                width: '100%', height: '32px', borderRadius: '6px',
-                background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
-                fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#fff',
-                cursor: 'pointer', letterSpacing: '0.3px',
+                width: '100%',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.18)',
+                border: 'none',
+                fontFamily: 'Inter',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: '#fff',
+                cursor: 'pointer',
+                lineHeight: '16px',
+                textTransform: 'uppercase',
               }}>
                 Start Audit
               </button>
@@ -331,7 +350,8 @@ export default function CustomersPage() {
             {/* Table Header */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '130px 1fr 140px 130px 100px 110px 80px',
+              gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+              columnGap: '20px',
               padding: '12px 20px',
               borderBottom: '1px solid #E2E8F0',
               background: '#F8FAFC',
@@ -347,7 +367,8 @@ export default function CustomersPage() {
             {customers.map((c, i) => (
               <div key={c.id} style={{
                 display: 'grid',
-                gridTemplateColumns: '130px 1fr 140px 130px 100px 110px 80px',
+                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                columnGap: '20px',
                 padding: '18px 20px',
                 borderBottom: i < customers.length - 1 ? '1px solid #F1F5F9' : 'none',
                 alignItems: 'center',
@@ -542,7 +563,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Bottom Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', alignItems: 'start' }}>
 
             {/* Satisfaction Ratings */}
             <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 24px' }}>
@@ -563,8 +584,8 @@ export default function CustomersPage() {
                     {[1, 2, 3, 4, 5].map((s) => (
                       <svg key={s} width="14" height="14" viewBox="0 0 14 14" fill="none">
                         <path d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.437L7 8.635l-3.09 1.872.59-3.437L2 4.635l3.455-.505L7 1Z"
-                          fill={s <= Math.floor(r.stars) ? '#FBBF24' : s - 0.5 <= r.stars ? '#FBBF24' : '#E2E8F0'}
-                          stroke={s <= Math.ceil(r.stars) ? '#FBBF24' : '#E2E8F0'}
+                          fill={s <= Math.floor(r.stars) ? '#2F80ED' : s - 0.5 <= r.stars ? '#2F80ED' : '#E2E8F0'}
+                          stroke={s <= Math.ceil(r.stars) ? '#2F80ED' : '#E2E8F0'}
                           strokeWidth="0.5"
                         />
                       </svg>
@@ -584,7 +605,7 @@ export default function CustomersPage() {
                 <div style={{ width: '30%', background: '#60A5FA' }} />
                 <div style={{ width: '25%', background: '#BFDBFE' }} />
               </div>
-              <div style={{ display: 'flex', gap: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', columnGap: '24px', alignItems: 'start' }}>
                 {[
                   { label: 'NA', pct: '45%', color: '#2563EB' },
                   { label: 'EU', pct: '30%', color: '#60A5FA' },
@@ -601,7 +622,7 @@ export default function CustomersPage() {
             {/* Alert */}
             <div style={{
               background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0',
-              padding: '16px 20px', minWidth: '220px',
+              padding: '20px 24px',
               display: 'flex', gap: '12px', alignItems: 'flex-start',
             }}>
               <div style={{

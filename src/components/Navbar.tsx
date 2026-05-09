@@ -23,19 +23,8 @@ export default function Navbar() {
       zIndex: 10,
     }}>
 
-      {/* Logo */}
-      <button
-        suppressHydrationWarning
-        type="button"
-        onClick={() => router.push('/command-center')}
-        style={{ display: 'flex', alignItems: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/carryon-logo.svg" alt="CarryOn" style={{ height: '32px', width: 'auto', objectFit: 'contain', display: 'block' }} />
-      </button>
-
       {/* Search */}
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '320px', height: '36px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '320px', height: '36px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', marginLeft: '48px' }}>
         <div style={{ position: 'absolute', left: '12px', display: 'flex', alignItems: 'center' }}>
           <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
             <path d="M7.3 1.5C4 1.5 1.25 4.24 1.25 7.56c0 3.32 2.75 6.06 6.06 6.06 1.5 0 2.88-.56 3.9-1.63l4.74 4.74a.71.71 0 0 0 1 0 .71.71 0 0 0 0-1L12.26 11a6.06 6.06 0 0 0 1.74-4.19A6.06 6.06 0 0 0 7.94 1.5H7.3Z" fill="#9CA3AF" />

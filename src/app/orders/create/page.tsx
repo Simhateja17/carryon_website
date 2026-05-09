@@ -150,8 +150,6 @@ function OrderSummary() {
       borderRadius: '12px',
       padding: '24px',
       boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      position: 'sticky',
-      top: '20px',
     }}>
       <div style={{
         fontFamily: manrope,
@@ -384,21 +382,21 @@ function RouteDistanceCard() {
 // ── Pickup / Delivery Cards ────────────────────────────────────────────────────
 function PickupDeliveryCards() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
       {/* Pickup Window */}
       <div style={{
         background: '#EFF6FF',
-        borderRadius: '12px',
-        padding: '24px',
+        borderRadius: '16px',
+        padding: '28px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="7" stroke="#3B82F6" strokeWidth="1.5" />
             <path d="M9 5v4l3 2" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6' }}>Pickup Window</span>
+          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6', lineHeight: '1.2' }}>Pickup Window</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <FormInput placeholder="mm/dd/yyyy" type="date" />
           <FormSelect placeholder="Morning (08:00 - 12:00)" options={['Afternoon (12:00 - 17:00)', 'Evening (17:00 - 21:00)']} />
         </div>
@@ -407,22 +405,22 @@ function PickupDeliveryCards() {
       {/* Expected Delivery */}
       <div style={{
         background: '#EFF6FF',
-        borderRadius: '12px',
-        padding: '24px',
+        borderRadius: '16px',
+        padding: '28px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="7" stroke="#3B82F6" strokeWidth="1.5" />
             <path d="M6 9l2 2 4-4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6' }}>Expected Delivery</span>
+          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6', lineHeight: '1.2' }}>Expected Delivery</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <FormInput placeholder="mm/dd/yyyy" type="date" />
           <div style={{
             background: '#DBEAFE',
-            borderRadius: '8px',
-            padding: '12px 14px',
+            borderRadius: '12px',
+            padding: '14px 14px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -431,7 +429,7 @@ function PickupDeliveryCards() {
               <circle cx="7" cy="7" r="6" stroke="#3B82F6" strokeWidth="1.2" />
               <path d="M7 4v3l2 1.5" stroke="#3B82F6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#3B82F6' }}>Standard Transit: 2-3 Business Days</span>
+            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6', lineHeight: '18px' }}>Standard Transit: 2-3 Business Days</span>
           </div>
         </div>
       </div>
@@ -480,19 +478,20 @@ function ServiceLevelAgreement() {
   return (
     <div style={{
       background: '#EFF6FF',
-      borderRadius: '12px',
-      padding: '24px',
-      marginBottom: '16px',
+      borderRadius: '16px',
+      padding: '30px 28px',
+      marginBottom: '24px',
     }}>
       <div style={{
         fontFamily: manrope,
         fontSize: '14px',
         fontWeight: 800,
         color: '#3B82F6',
-        marginBottom: '16px',
+        marginBottom: '24px',
+        lineHeight: '1.2',
       }}>Service Level Agreement</div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
         {tiers.map((tier, i) => (
           <button
             key={i}
@@ -502,22 +501,23 @@ function ServiceLevelAgreement() {
             style={{
               background: selected === i ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
               border: selected === i ? '2px solid #3B82F6' : '2px solid transparent',
-              borderRadius: '12px',
-              padding: '16px',
+              borderRadius: '16px',
+              padding: '22px 20px',
               cursor: 'pointer',
               textAlign: 'left',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
+              gap: '10px',
               transition: 'all 0.2s ease',
+              minHeight: '218px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {tier.icon}
-              <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{tier.price}</span>
+              <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6', lineHeight: '1.2' }}>{tier.price}</span>
             </div>
-            <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>{tier.name}</span>
-            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#64748B', lineHeight: '16px' }}>{tier.desc}</span>
+            <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A', lineHeight: '1.25' }}>{tier.name}</span>
+            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#1E293B', lineHeight: '18px' }}>{tier.desc}</span>
           </button>
         ))}
       </div>
@@ -675,22 +675,22 @@ export default function CreateOrderPage() {
               <ContactEntities />
               <CargoSpecifications />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                 <div>
                   <PickupDeliveryCards />
                   <ServiceLevelAgreement />
                   <SpecializedHandling />
                 </div>
-                <div>
-                  <RouteDistanceCard />
-                  <NeedAssistance />
-                </div>
               </div>
             </div>
 
             {/* Right: Order Summary */}
-            <div style={{ width: '300px', flexShrink: 0 }}>
+            <div style={{ width: '300px', flexShrink: 0, position: 'sticky', top: '20px', alignSelf: 'flex-start' }}>
               <OrderSummary />
+              <div style={{ marginTop: '16px' }}>
+                <RouteDistanceCard />
+                <NeedAssistance />
+              </div>
             </div>
           </div>
 

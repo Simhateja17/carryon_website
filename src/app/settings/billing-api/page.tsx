@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
@@ -56,6 +57,7 @@ const apiKeys = [
 
 
 export default function BillingAPIPage() {
+  const router = useRouter();
   const [openMenu, setOpenMenu] = useState<number | null>(null);
 
   return (
@@ -91,10 +93,10 @@ export default function BillingAPIPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button style={{ padding: '10px 20px', background: '#fff', border: '1px solid rgba(25,28,30,0.15)', borderRadius: '8px', color: '#424754', fontFamily: 'Inter', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                <button onClick={() => router.push('/settings/billing-api/billing-management')} style={{ padding: '10px 20px', background: '#fff', border: '1px solid rgba(25,28,30,0.15)', borderRadius: '8px', color: '#424754', fontFamily: 'Inter', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                   View Invoices
                 </button>
-                <button style={{ padding: '10px 22px', background: '#2F80ED', border: 'none', borderRadius: '8px', color: '#fff', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}>
+                <button onClick={() => router.push('/settings/billing-api/billing-subscription')} style={{ padding: '10px 22px', background: '#2F80ED', border: 'none', borderRadius: '8px', color: '#fff', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}>
                   MANAGE BILLING
                 </button>
               </div>
@@ -170,7 +172,7 @@ export default function BillingAPIPage() {
 
               {/* Upgrade link row */}
               <div style={{ display: 'flex', padding: '24px', flexDirection: 'column', alignItems: 'flex-start', alignSelf: 'stretch', borderTop: '1px solid rgba(194, 198, 214, 0.10)' }}>
-                <button style={{ background: 'none', border: 'none', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#2F80ED', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button onClick={() => router.push('/settings/billing-api/billing-subscription')} style={{ background: 'none', border: 'none', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#2F80ED', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   Upgrade Quota Limits
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
@@ -190,7 +192,7 @@ export default function BillingAPIPage() {
                   <div style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#191C1E', marginBottom: '4px' }}>Active API Keys</div>
                   <div style={{ fontFamily: 'Inter', fontSize: '12px', color: 'rgba(66,71,84,0.5)' }}>Manage secure access for your integrations</div>
                 </div>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#B7DAF5', border: 'none', borderRadius: '9999px', color: '#2F80ED', fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <button onClick={() => router.push('/settings/billing-api/api-management')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#B7DAF5', border: 'none', borderRadius: '9999px', color: '#2F80ED', fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="#2F80ED" strokeWidth="1.8" strokeLinecap="round"/></svg>
                   Generate New Key
                 </button>
@@ -245,7 +247,7 @@ export default function BillingAPIPage() {
           <div style={{ display: 'inline-grid', rowGap: '24px', columnGap: '24px', gridTemplateRows: '98px', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignSelf: 'stretch' }}>
 
             {/* Payment Method */}
-            <div style={{ display: 'flex', height: '98px', padding: '24px', alignItems: 'center', gap: '16px', borderRadius: '12px', border: '1px solid rgba(194, 198, 214, 0.10)', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
+            <div onClick={() => router.push('/settings/billing-api/payment-tax')} style={{ display: 'flex', height: '98px', padding: '24px', alignItems: 'center', gap: '16px', borderRadius: '12px', border: '1px solid rgba(194, 198, 214, 0.10)', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}>
               <div style={{ width: '48px', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '9999px', background: '#B7DAF5', flexShrink: 0 }}>
                 <svg width="22" height="18" viewBox="0 0 22 18" fill="none">
                   <rect x="1" y="2" width="20" height="14" rx="2.5" stroke="white" strokeWidth="1.5"/>
@@ -260,7 +262,7 @@ export default function BillingAPIPage() {
             </div>
 
             {/* Last Payment */}
-            <div style={{ display: 'flex', height: '98px', padding: '24px', alignItems: 'center', gap: '16px', borderRadius: '12px', border: '1px solid rgba(194, 198, 214, 0.10)', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
+            <div onClick={() => router.push('/settings/billing-api/payment-tax')} style={{ display: 'flex', height: '98px', padding: '24px', alignItems: 'center', gap: '16px', borderRadius: '12px', border: '1px solid rgba(194, 198, 214, 0.10)', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}>
               <div style={{ width: '48px', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '9999px', background: '#B7DAF5', flexShrink: 0 }}>
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                   <circle cx="11" cy="11" r="9" stroke="white" strokeWidth="1.5"/>
@@ -274,7 +276,7 @@ export default function BillingAPIPage() {
             </div>
 
             {/* Tax ID / VAT */}
-            <div style={{ display: 'flex', height: '98px', padding: '24px', alignItems: 'center', gap: '16px', borderRadius: '12px', border: '1px solid #B7DAF5', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
+            <div onClick={() => router.push('/settings/billing-api/payment-tax')} style={{ display: 'flex', height: '98px', padding: '24px', alignItems: 'center', gap: '16px', borderRadius: '12px', border: '1px solid #B7DAF5', background: '#FFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}>
               <div style={{ width: '48px', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '9999px', background: '#B7DAF5', flexShrink: 0 }}>
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                   <rect x="3" y="8" width="16" height="12" rx="1.5" stroke="white" strokeWidth="1.5"/>

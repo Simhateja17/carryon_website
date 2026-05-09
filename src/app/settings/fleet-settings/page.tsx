@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
@@ -55,8 +54,8 @@ function VehicleIcon({ type }: { type: 'bike' | 'car' | 'van' | 'truck' }) {
 /* ── Toggle switch ───────────────────────────────────────────── */
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button suppressHydrationWarning onClick={() => onChange(!on)} style={{ width: '44px', height: '24px', borderRadius: '12px', background: on ? '#2563EB' : '#CBD5E1', border: 'none', cursor: 'pointer', position: 'relative', padding: 0, flexShrink: 0 }}>
-      <div style={{ position: 'absolute', top: '3px', left: on ? '23px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', transition: 'left 0.15s' }} />
+    <button suppressHydrationWarning onClick={() => onChange(!on)} style={{ width: '44px', height: '24px', borderRadius: '12px', background: on ? '#337ADF' : '#A7CBE8', border: 'none', cursor: 'pointer', position: 'relative', padding: 0, flexShrink: 0 }}>
+      <div style={{ position: 'absolute', top: '3px', left: on ? '23px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#F1F5F9', boxShadow: '0 1px 2px rgba(15, 23, 42, 0.18)', transition: 'left 0.15s' }} />
     </button>
   );
 }
@@ -158,14 +157,14 @@ export default function FleetSettingsPage() {
             </div>
 
             {/* RIGHT column */}
-            <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
               {/* Payout Rates */}
               <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 20px' }}>
                 <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '16px' }}>Payout Rates</div>
 
                 <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.6px', marginBottom: '8px' }}>BASE RATE / MILE</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '44px', padding: '0 14px', background: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '44px', padding: '0 14px', background: '#B7DAF5', border: '1.5px solid #BFDBFE', borderRadius: '8px', marginBottom: '16px' }}>
                   <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#94A3B8' }}>£</span>
                   <input
                     suppressHydrationWarning
@@ -184,8 +183,8 @@ export default function FleetSettingsPage() {
               </div>
 
               {/* Maintenance Logic */}
-              <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 20px' }}>
-                <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '18px' }}>Maintenance Logic</div>
+              <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '28px 28px' }}>
+                <div style={{ fontFamily: 'Inter', fontSize: '31px', fontWeight: 700, color: '#0F172A', marginBottom: '30px', lineHeight: 1.08, letterSpacing: '-0.4px' }}>Maintenance Logic</div>
 
                 {/* Toggle rows */}
                 {[
@@ -193,26 +192,26 @@ export default function FleetSettingsPage() {
                   { label: 'Emission Check',    sub: 'Annual regulatory alert',   on: emission,   set: setEmission   },
                   { label: 'Telematics Faults', sub: 'Real-time engine alerts',   on: telematics, set: setTelematics },
                 ].map((item, i) => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingBottom: i < 2 ? '14px' : '0', marginBottom: i < 2 ? '14px' : '0', borderBottom: i < 2 ? '1px solid #F1F5F9' : 'none' }}>
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingBottom: i < 2 ? '22px' : '0', marginBottom: i < 2 ? '22px' : '0', borderBottom: i < 2 ? '1px solid #EFF3F8' : 'none' }}>
                     <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '2px' }}>{item.label}</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B' }}>{item.sub}</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '4px', lineHeight: 1.18 }}>{item.label}</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#2E74D7', lineHeight: 1.2 }}>{item.sub}</div>
                     </div>
                     <Toggle on={item.on} onChange={item.set} />
                   </div>
                 ))}
 
                 {/* Critical Notification */}
-                <div style={{ marginTop: '18px' }}>
-                  <div style={{ fontFamily: 'Inter', fontSize: '9px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.6px', marginBottom: '8px' }}>CRITICAL NOTIFICATION</div>
-                  <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '12px 12px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}>
-                      <path d="M8 2L14.5 13H1.5L8 2Z" stroke="#F59E0B" strokeWidth="1.4" strokeLinejoin="round"/>
-                      <path d="M8 6.5v3M8 11v.5" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round"/>
+                <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: '2px solid #ECEFF4' }}>
+                  <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#111827', letterSpacing: '0.8px', marginBottom: '14px' }}>CRITICAL NOTIFICATION</div>
+                  <div style={{ background: '#A5C8E4', borderRadius: '16px', padding: '22px 22px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                    <svg width="34" height="34" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: '3px' }}>
+                      <path d="M8 2L14.5 13H1.5L8 2Z" stroke="#2C79DE" strokeWidth="1.4" strokeLinejoin="round"/>
+                      <path d="M8 6.5v3M8 11v.5" stroke="#2C79DE" strokeWidth="1.4" strokeLinecap="round"/>
                     </svg>
                     <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#1D4ED8', marginBottom: '2px' }}>Fleet Sync Pending</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', lineHeight: '1.4' }}>4 trucks missed the weekly scan.</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#2C79DE', marginBottom: '4px', lineHeight: 1.15 }}>Fleet Sync Pending</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#2C79DE', lineHeight: '1.3' }}>4 trucks missed the weekly scan.</div>
                     </div>
                   </div>
                 </div>

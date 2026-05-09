@@ -15,6 +15,7 @@ function getSectionForPath(p: string): string | null {
   if (p.startsWith('/orders')) return 'orders';
   if (p.startsWith('/drivers')) return 'drivers';
   if (p.startsWith('/customers')) return 'customers';
+  if (p.startsWith('/fleet-messenger')) return 'fleet-messenger';
   if (p.startsWith('/settings') || p === '/revenue' || p.startsWith('/settings/pricing')) return 'settings';
   return null;
 }
@@ -95,6 +96,15 @@ function IconCustomers({ active }: { active?: boolean }) {
       <path d="M1 15c0-2.5 2.5-4.5 5.5-4.5S12 12.5 12 15" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
       <circle cx="13" cy="5.5" r="2" stroke={c} strokeWidth="1.3" />
       <path d="M16 14.5c0-1.8-1.3-3.3-3-4" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconMessenger({ active }: { active?: boolean }) {
+  const c = active ? '#1E40AF' : '#475569';
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path d="M2 3h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H5l-4 3V4a1 1 0 0 1 1-1Z" stroke={c} strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -238,27 +248,28 @@ export default function Sidebar() {
   const ordersActive = pathname.startsWith('/orders');
   const driversActive = pathname.startsWith('/drivers');
   const customersActive = pathname.startsWith('/customers');
+  const messengerActive = pathname.startsWith('/fleet-messenger');
 
   return (
     <aside style={{ width: '255px', height: '100vh', minHeight: '1047px', flexShrink: 0, background: '#F1F4F9', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxSizing: 'border-box' }}>
 
       {/* Scrollable nav area */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', width: '100%', paddingLeft: '8px', paddingRight: '8px', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '4px', paddingTop: '8px', paddingBottom: '24px' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', width: '100%', paddingLeft: '8px', paddingRight: '8px', paddingTop: '24px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '4px', paddingBottom: '24px' }}>
 
           {/* Logo */}
           <button
             suppressHydrationWarning
             type="button"
             onClick={() => router.push('/command-center')}
-            style={{ display: 'flex', alignItems: 'center', padding: '0 8px 0 16px', border: 'none', background: 'transparent', cursor: 'pointer', width: 'fit-content' }}
+            style={{ display: 'flex', alignItems: 'center', padding: '0 8px 0 16px', border: 'none', background: 'transparent', cursor: 'pointer', width: 'fit-content', marginBottom: '8px' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/carryon-logo.svg" alt="CarryOn" style={{ height: '32px', width: 'auto', objectFit: 'contain', display: 'block' }} />
           </button>
 
           {/* MAIN MENU label */}
-          <div style={{ width: '100%', paddingLeft: '24px', paddingRight: '24px', marginTop: '2px', boxSizing: 'border-box' }}>
+          <div style={{ width: '100%', paddingLeft: '24px', paddingRight: '24px', marginTop: '8px', marginBottom: '4px', boxSizing: 'border-box' }}>
             <div style={{ fontFamily: manrope, fontSize: '10px', fontWeight: 700, lineHeight: '15px', letterSpacing: '1px', color: '#94A3B8', textTransform: 'uppercase' }}>
               MAIN MENU
             </div>
@@ -364,9 +375,37 @@ export default function Sidebar() {
           </div>
           {openSection === 'customers' && (
             <div style={{ paddingLeft: '48px', paddingRight: '16px' }}>
-              <SubLink label="ADD NEW CUSTOMER" onClick={() => router.push('/customers')} />
+              <SubLink label="ADD NEW CUSTOMER" onClick={() => router.push('/customers/new')} active={pathname === '/customers/new'} />
             </div>
           )}
+
+          {/* ── FLEET MESSENGER (simple link) ── */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+              suppressHydrationWarning
+              type="button"
+              onClick={() => router.push('/fleet-messenger')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                width: '239px',
+                padding: messengerActive ? '20px 16px 16px' : '16px',
+                borderRadius: '4px',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+                background: messengerActive ? 'rgba(219, 234, 254, 0.5)' : 'transparent',
+                boxSizing: 'border-box',
+              }}
+            >
+              <span style={{ display: 'flex', width: '34px', justifyContent: 'flex-start', flexShrink: 0 }}>
+                <IconMessenger active={messengerActive} />
+              </span>
+              <span style={{ flex: 1, fontFamily: manrope, fontSize: '14px', fontWeight: 500, lineHeight: '20px', letterSpacing: '0.35px', color: messengerActive ? '#1E40AF' : '#475569', textTransform: 'uppercase' }}>
+                FLEET MESSENGER
+              </span>
+            </button>
+          </div>
 
           {/* ── SETTINGS (expandable) ── */}
           <div style={{ borderTop: '1px solid #E2E8F0', marginTop: '4px', paddingTop: '16px', paddingBottom: '8px' }}>

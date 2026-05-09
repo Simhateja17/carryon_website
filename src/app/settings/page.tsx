@@ -351,40 +351,29 @@ function RealTimeAlertsFeed() {
   );
 }
 
-/* ── Risk Score Bar ─────────────────────────────────────────── */
-function RiskScoreBar({ score }: { score: number }) {
-  const color = score >= 70 ? '#DC2626' : score >= 40 ? '#D97706' : '#059669';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-      <div style={{ flex: 1, height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden' }}>
-        <div style={{ width: `${score}%`, height: '100%', borderRadius: '9999px', background: color }} />
-      </div>
-      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color, minWidth: '24px' }}>{score}</span>
-    </div>
-  );
-}
-
 /* ── Top Risk Profiles ──────────────────────────────────────── */
 function TopRiskProfiles() {
   const profiles = [
     { name: 'Jack Drake', score: 92, max: 100, level: 'HIGH RISK', color: '#DC2626', detail: 'Cancellation: 88%', avatar: '#1F2937' },
-    { name: 'Sarah Chen', score: 54, max: 100, level: 'MID RISK', color: '#D97706', detail: 'Failed Pay: 3 in 30d', avatar: '#374151' },
-    { name: 'Liam Brown', score: 12, max: 100, level: 'LOW RISK', color: '#059669', detail: 'Reports: Clean', avatar: '#475569' },
+    { name: 'Sarah Chen', score: 54, max: 100, level: 'MED RISK', color: '#475569', detail: 'Failed Pay: 3 in 30d', avatar: '#334155' },
+    { name: 'Liam Brown', score: 12, max: 100, level: 'LOW RISK', color: '#059669', detail: 'Reports: Clean', avatar: '#1E293B' },
   ];
 
   return (
     <div style={{
       background: '#FFFFFF', borderRadius: '12px',
       border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', gap: '16px',
+      display: 'flex', flexDirection: 'column', gap: '14px',
     }}>
-      <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>Top Risk Profiles</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ fontFamily: manrope, fontSize: '20px', fontWeight: 700, color: '#0F172A' }}>Top Risk Profiles</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {profiles.map((p, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '12px', borderRadius: '10px', background: '#F8FAFC',
+            padding: '12px 14px 12px 0', borderRadius: '10px', background: '#F8FAFC',
+            overflow: 'hidden',
           }}>
+            <div style={{ width: '3px', alignSelf: 'stretch', borderRadius: '0 2px 2px 0', background: p.color, flexShrink: 0 }} />
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',
               background: p.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -401,9 +390,6 @@ function TopRiskProfiles() {
                 <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: p.color }}>{p.score}/{p.max}</span>
               </div>
               <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{p.detail}</div>
-              <div style={{ marginTop: '6px' }}>
-                <RiskScoreBar score={p.score} />
-              </div>
               <div style={{
                 marginTop: '4px',
                 fontFamily: inter, fontSize: '9px', fontWeight: 700,
@@ -416,40 +402,13 @@ function TopRiskProfiles() {
         ))}
       </div>
       <button suppressHydrationWarning style={{
-        width: '100%', height: '40px', borderRadius: '10px',
+        width: '100%', height: '34px', borderRadius: '8px',
         background: '#F1F5F9', border: '1px solid #E2E8F0',
-        fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#2563EB',
+        fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#2563EB',
         cursor: 'pointer',
       }}>
         View All Risk Scores
       </button>
-
-      {/* Recent Actions */}
-      <div style={{ marginTop: '8px' }}>
-        <div style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '12px' }}>Recent Actions</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB', marginTop: '5px', flexShrink: 0 }} />
-            <div>
-              <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>Account Blocked</div>
-              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px', lineHeight: '16px' }}>
-                Admin-42 blocked US-8812 (Payment fraud)
-              </div>
-              <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '4px' }}>2 mins ago</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#059669', marginTop: '5px', flexShrink: 0 }} />
-            <div>
-              <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>SOS Resolved</div>
-              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px', lineHeight: '16px' }}>
-                Case #C-9011 marked as false alarm
-              </div>
-              <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '4px' }}>15 mins ago</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

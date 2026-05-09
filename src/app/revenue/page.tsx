@@ -49,20 +49,20 @@ function StatusBadge({ status }: { status: 'SUCCESS' | 'FAILED' | 'PENDING' }) {
 /* ── Revenue bar chart ───────────────────────────────────────── */
 function RevenueBarChart() {
   const max = Math.max(...barData.map((d) => d.value));
-  const chartH = 280;
+  const chartH = 170;
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', height: `${chartH}px`, padding: '0' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '28px', height: `${chartH}px`, padding: '0 14px' }}>
       {barData.map((d) => {
         const h = Math.round((d.value / max) * chartH);
         const isThu = d.day === 'THU';
         return (
           <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '100%', height: `${h}px`, position: 'relative', borderRadius: '4px 4px 0 0', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', inset: 0, background: isThu ? '#2563EB' : '#DBEAFE' }} />
+            <div style={{ width: '100%', maxWidth: '58px', height: `${h}px`, position: 'relative', borderRadius: '2px 2px 0 0', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, background: isThu ? '#0F5CC0' : '#BFD0E4' }} />
             </div>
             <span style={{
               fontFamily: 'Inter', fontWeight: isThu ? 700 : 500, fontSize: '10px',
-              color: isThu ? '#2563EB' : '#94A3B8', letterSpacing: '0.5px',
+              color: isThu ? '#0F5CC0' : '#8EA2BE', letterSpacing: '0.5px',
               textTransform: 'uppercase',
             }}>
               {d.day}
@@ -180,7 +180,7 @@ export default function RevenuePage() {
             boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
             padding: '24px', marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div>
                 <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
                   Daily Revenue Trends
@@ -234,55 +234,54 @@ export default function RevenuePage() {
 
           {/* Filters */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            marginBottom: '20px', flexWrap: 'wrap',
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: '14px',
+            marginBottom: '0',
+            padding: '14px 20px 12px',
+            background: '#fff',
+            border: '1px solid #E5EAF1',
+            borderBottom: 'none',
+            borderRadius: '12px 12px 0 0',
+            flexWrap: 'nowrap',
           }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '8px 14px', borderRadius: '8px', background: '#fff',
-              border: '1px solid #E2E8F0', fontFamily: 'Inter', fontSize: '12px', color: '#64748B',
-            }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="#94A3B8" strokeWidth="1.2"/>
-                <path d="M1 5h12M4 1v3M10 1v3" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-              Oct 12 - Oct 19, 2023
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#64748B' }}>Date Range</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '34px', padding: '0 12px', borderRadius: '9px', background: '#fff', border: '1px solid #D6DEE8', fontFamily: 'Inter', fontSize: '14px', color: '#374151' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="#94A3B8" strokeWidth="1.2"/>
+                  <path d="M1 5h12M4 1v3M10 1v3" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Oct 12 - Oct 19, 2023
+              </div>
             </div>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '8px 14px', borderRadius: '8px', background: '#fff',
-              border: '1px solid #E2E8F0', fontFamily: 'Inter', fontSize: '12px', color: '#64748B', cursor: 'pointer',
-            }}>
-              All Methods
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M2.5 3.5L5 6L7.5 3.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#64748B' }}>Payment Method</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', height: '34px', minWidth: '132px', padding: '0 12px', borderRadius: '9px', background: '#fff', border: '1px solid #D6DEE8', fontFamily: 'Inter', fontSize: '14px', color: '#374151', cursor: 'pointer' }}>
+                All Methods
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2.5 3.5L5 6L7.5 3.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </div>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '8px 14px', borderRadius: '8px', background: '#fff',
-              border: '1px solid #E2E8F0', fontFamily: 'Inter', fontSize: '12px', color: '#64748B', cursor: 'pointer',
-            }}>
-              All Status
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M2.5 3.5L5 6L7.5 3.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#64748B' }}>Status</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', height: '34px', minWidth: '116px', padding: '0 12px', borderRadius: '9px', background: '#fff', border: '1px solid #D6DEE8', fontFamily: 'Inter', fontSize: '14px', color: '#374151', cursor: 'pointer' }}>
+                All Status
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2.5 3.5L5 6L7.5 3.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input placeholder="Min" style={{
-                width: '70px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0',
-                fontFamily: 'Inter', fontSize: '12px', color: '#64748B', outline: 'none',
-              }} />
-              <span style={{ color: '#94A3B8', fontSize: '12px' }}>-</span>
-              <input placeholder="Max" style={{
-                width: '70px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0',
-                fontFamily: 'Inter', fontSize: '12px', color: '#64748B', outline: 'none',
-              }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#64748B' }}>Amount Range</span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input placeholder="Min" style={{ width: '66px', height: '34px', padding: '0 12px', borderRadius: '9px', border: '1px solid #D6DEE8', fontFamily: 'Inter', fontSize: '14px', color: '#64748B', outline: 'none' }} />
+                <span style={{ color: '#94A3B8', fontSize: '14px' }}>-</span>
+                <input placeholder="Max" style={{ width: '66px', height: '34px', padding: '0 12px', borderRadius: '9px', border: '1px solid #D6DEE8', fontFamily: 'Inter', fontSize: '14px', color: '#64748B', outline: 'none' }} />
+              </div>
             </div>
-            <button suppressHydrationWarning style={{
-              padding: '8px 20px', borderRadius: '8px', background: '#2563EB', border: 'none',
-              fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#fff', cursor: 'pointer',
-            }}>
+            <button suppressHydrationWarning style={{ height: '36px', padding: '0 22px', borderRadius: '9px', background: '#0F5CC0', border: 'none', boxShadow: '0 8px 14px rgba(15,92,192,0.25)', fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
               Apply Filters
             </button>
           </div>
@@ -295,14 +294,14 @@ export default function RevenuePage() {
           }}>
             {/* Table header */}
             <div style={{
-              display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.2fr 1fr 1fr 0.8fr',
-              padding: '14px 24px', background: '#F8FAFC',
+              display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1.1fr 0.8fr 0.7fr',
+              padding: '16px 20px', background: '#F8FAFC',
               borderBottom: '1px solid #F1F5F9',
             }}>
-              {['TRANSACTION ID', 'ORDER ID', 'CUSTOMER', 'AMOUNT', 'STATUS', 'ACTIONS'].map((h) => (
+              {['TRANSACTION ID', 'ORDER ID', 'CUSTOMER', 'AMOUNT', 'STATUS'].map((h) => (
                 <span key={h} style={{
                   fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
-                  color: '#94A3B8', letterSpacing: '0.8px', textTransform: 'uppercase',
+                  color: '#64748B', letterSpacing: '0.8px', textTransform: 'uppercase',
                 }}>
                   {h}
                 </span>
@@ -311,8 +310,8 @@ export default function RevenuePage() {
             {/* Rows */}
             {transactions.map((t, i) => (
               <div key={t.id} style={{
-                display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.2fr 1fr 1fr 0.8fr',
-                padding: '16px 24px',
+                display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1.1fr 0.8fr 0.7fr',
+                padding: '14px 20px',
                 borderBottom: i < transactions.length - 1 ? '1px solid #F1F5F9' : 'none',
                 alignItems: 'center',
               }}>
@@ -321,13 +320,6 @@ export default function RevenuePage() {
                 <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#0F172A' }}>{t.customer}</span>
                 <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{t.amount}</span>
                 <div><StatusBadge status={t.status} /></div>
-                <button suppressHydrationWarning style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#2563EB',
-                  padding: 0, textTransform: 'uppercase', letterSpacing: '0.5px',
-                }}>
-                  {t.status === 'FAILED' ? 'RETRY' : 'VIEW'}
-                </button>
               </div>
             ))}
           </div>
@@ -453,9 +445,9 @@ export default function RevenuePage() {
           <div style={{
             background: '#fff', borderRadius: '12px',
             boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
-            padding: '28px', marginBottom: '24px',
+            padding: '0', marginBottom: '24px', overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', borderBottom: '1px solid #EEF2F7', gap: '14px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <circle cx="9" cy="9" r="7" stroke="#DC2626" strokeWidth="1.4"/>
@@ -465,12 +457,12 @@ export default function RevenuePage() {
                   <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>
                     Payment Issues
                   </div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8' }}>
+                  <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#667085' }}>
                     Pending alerts requiring manual action
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                 <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B' }}>
                   Success Rate: <strong style={{ color: '#16A34A' }}>98.2%</strong>
                 </span>
@@ -480,11 +472,12 @@ export default function RevenuePage() {
                 <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B' }}>
                   Chargebacks: <strong style={{ color: '#DC2626' }}>0.05%</strong>
                 </span>
+                <span style={{ width: '1px', height: '20px', background: '#E2E8F0' }} />
                 <button suppressHydrationWarning style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 16px', borderRadius: '8px',
+                  height: '34px', padding: '0 14px', borderRadius: '8px',
                   background: '#fff', border: '1px solid #E2E8F0',
-                  fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A',
+                  fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#374151',
                   cursor: 'pointer',
                 }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -496,7 +489,7 @@ export default function RevenuePage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '22px', padding: '24px' }}>
               {/* Gateway Timeout */}
               <div style={{
                 borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA',

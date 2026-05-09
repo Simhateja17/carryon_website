@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
@@ -145,6 +146,7 @@ type AlertRow = {
 };
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [alerts, setAlerts] = useState<AlertRow[]>([
     {
       type: 'delay',
@@ -265,7 +267,7 @@ export default function NotificationsPage() {
           </p>
 
           {/* Two-column layout */}
-          <div style={{ display: 'flex', gap: '24px', flex: 1, minHeight: 0 }}>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
             {/* ── LEFT COLUMN ── */}
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Active Alerts card */}
@@ -387,6 +389,7 @@ export default function NotificationsPage() {
                   <span style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Recipient Groups</span>
                   <button
                     suppressHydrationWarning
+                    onClick={() => router.push('/settings/notifications/new-group')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -411,10 +414,12 @@ export default function NotificationsPage() {
                   {groups.map((g) => (
                     <div
                       key={g.label}
+                      onClick={() => router.push(`/settings/notifications/group/${g.label.toLowerCase()}`)}
                       style={{
                         borderRadius: '12px',
                         background: '#F8FAFC',
                         padding: '20px',
+                        cursor: 'pointer',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
@@ -515,6 +520,7 @@ export default function NotificationsPage() {
                   </div>
                   <button
                     suppressHydrationWarning
+                    onClick={() => router.push('/settings/notifications/logs')}
                     style={{
                       width: '100%',
                       height: '40px',

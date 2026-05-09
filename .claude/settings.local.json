@@ -4,7 +4,13 @@
       "mcp__figma__get_design_context",
       "Bash(claude mcp:*)",
       "Bash(powershell.exe:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "mcp__figma__get_metadata",
+      "Bash(python3 *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/fleet-messenger)",
+      "Bash(curl *)",
+      "mcp__figma__get_screenshot"
     ]
   }
 }

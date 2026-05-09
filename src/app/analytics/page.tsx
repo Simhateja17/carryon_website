@@ -283,6 +283,185 @@ function TrendChart() {
   );
 }
 
+function OrdersAnalytics() {
+  const data = [
+    { day: 'MON', value: 35 },
+    { day: 'TUE', value: 50 },
+    { day: 'WED', value: 40 },
+    { day: 'THU', value: 70 },
+    { day: 'FRI', value: 85 },
+    { day: 'SAT', value: 60 },
+    { day: 'SUN', value: 45 },
+  ];
+
+  const colors = [
+    '#E8F0FE',
+    '#D2E3FC',
+    '#A8C7FA',
+    '#669DF6',
+    '#1A73E8',
+    '#669DF6',
+    '#A8C7FA',
+  ];
+
+  const maxValue = 100;
+
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '16px',
+      padding: '24px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      border: '1px solid #E2E8F0',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{
+          fontFamily: manrope,
+          fontSize: '18px',
+          fontWeight: 800,
+          color: '#64748B',
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+          lineHeight: '1.3',
+        }}>
+          ORDERS<br />ANALYTICS
+        </div>
+        <button suppressHydrationWarning type="button" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          border: '1px solid #E2E8F0',
+          background: '#F8FAFC',
+          fontFamily: inter,
+          fontSize: '13px',
+          fontWeight: 600,
+          color: '#1E293B',
+          cursor: 'pointer',
+        }}>
+          Last 7 Days
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5l3 3 3-3" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px', paddingBottom: '32px' }}>
+        {data.map((d, i) => (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', height: '100%', justifyContent: 'flex-end' }}>
+            <div style={{
+              width: '100%',
+              maxWidth: '48px',
+              height: `${(d.value / maxValue) * 160}px`,
+              background: colors[i],
+              borderRadius: '4px 4px 0 0',
+              transition: 'height 0.3s ease',
+            }} />
+            <span style={{
+              fontFamily: inter,
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#94A3B8',
+              letterSpacing: '0.5px',
+            }}>{d.day}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OrderBreakdown() {
+  const data = [
+    { label: 'Completed', value: 65, color: '#1A73E8' },
+    { label: 'In Transit', value: 20, color: '#4285F4' },
+    { label: 'Cancelled', value: 5, color: '#A8C7FA' },
+    { label: 'Pending', value: 10, color: '#E8F0FE' },
+  ];
+
+  const radius = 80;
+  const strokeWidth = 24;
+  const normalizedRadius = radius - strokeWidth / 2;
+  const circumference = 2 * Math.PI * normalizedRadius;
+
+  let accumulatedOffset = 0;
+
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '16px',
+      padding: '24px',
+      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      border: '1px solid #E2E8F0',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <div style={{
+        fontFamily: manrope,
+        fontSize: '18px',
+        fontWeight: 800,
+        color: '#64748B',
+        letterSpacing: '1px',
+        textTransform: 'uppercase',
+        marginBottom: '24px',
+      }}>
+        ORDER BREAKDOWN
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+        <div style={{ position: 'relative', width: '200px', height: '200px', flexShrink: 0 }}>
+          <svg width="200" height="200" viewBox="0 0 200 200">
+            {data.map((item, i) => {
+              const strokeDasharray = `${(item.value / 100) * circumference} ${circumference}`;
+              const strokeDashoffset = -accumulatedOffset;
+              accumulatedOffset += (item.value / 100) * circumference;
+
+              return (
+                <circle
+                  key={i}
+                  cx="100"
+                  cy="100"
+                  r={normalizedRadius}
+                  fill="none"
+                  stroke={item.color}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="butt"
+                  style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }}
+                />
+              );
+            })}
+          </svg>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {data.map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                background: item.color,
+                flexShrink: 0,
+              }} />
+              <span style={{
+                fontFamily: inter,
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#1E293B',
+              }}>
+                {item.label} ({item.value}%)
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AISmartInsights() {
   return (
     <div style={{

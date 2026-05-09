@@ -60,9 +60,9 @@ const heatmapGrid = [
 ];
 
 const recentOrders = [
-  { id: '#ORD-2841', customer: 'Marcus Thorne',  route: 'Queens → Manhattan',        driver: 'Alex J.',  driverBg: '#2f80ed', status: 'IN TRANSIT', etd: '12 mins', boldEtd: false },
-  { id: '#ORD-2840', customer: 'Sarah Jenkins',  route: 'Brooklyn → Jersey City',     driver: 'Elena R.', driverBg: '#0058be', status: 'ASSIGNED',   etd: '22 mins', boldEtd: false },
-  { id: '#ORD-2839', customer: 'TechHub Inc.',   route: 'Financial Dist. → Midtown',  driver: 'David K.', driverBg: '#64748b', status: 'DELAYED',    etd: '45 mins', boldEtd: true  },
+  { id: '#ORD-2841', customer: 'Marcus Thorne',  route: 'Queens → Manhattan',        driver: 'Alex J.',  driverAvatar: '/driver-avatar.png', status: 'IN TRANSIT', etd: '12 mins', boldEtd: false },
+  { id: '#ORD-2840', customer: 'Sarah Jenkins',  route: 'Brooklyn → Jersey City',     driver: 'Elena R.', driverAvatar: '/driver-elena.png', status: 'ASSIGNED',   etd: '22 mins', boldEtd: false },
+  { id: '#ORD-2839', customer: 'TechHub Inc.',   route: 'Financial Dist. → Midtown',  driver: 'David K.', driverAvatar: '/recent-driver-david.png', status: 'DELAYED',    etd: '45 mins', boldEtd: true  },
 ];
 
 const systemLogs = [
@@ -435,16 +435,17 @@ export default function CommandCenterPage() {
           }}>
             {stats.map((s, i) => (
               <div key={s.label} style={{
-                flex: 1,
+                flex: '0 0 auto',
+                width: '200px',
                 height: '152px',
-                padding: '24px',
+                padding: '12px',
                 boxSizing: 'border-box',
                 borderRight: i < stats.length - 1 ? '1px solid #F1F5F9' : 'none',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
               }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: i === 3 ? '108px' : '12px' }}>
                   <div style={{
                     fontFamily: inter,
                     fontSize: '12px',
@@ -471,22 +472,24 @@ export default function CommandCenterPage() {
 
                 <div style={{
                   marginTop: 'auto',
-                  paddingTop: '16px',
+                  paddingTop: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: i === 3 ? 'space-between' : 'flex-start',
+                  justifyContent: 'flex-start',
+                  paddingRight: i === 3 ? '108px' : '12px',
                 }}>
                   <TrendBadge trend={s.trend} up={s.up} />
-
-                  {i === 3 && (
-                    <FourthCardGradientSvg />
-                  )}
                 </div>
 
                 {i === 3 && (
-                  <div style={{ position: 'absolute', top: '24px', right: '24px' }}>
-                    <FourthCardOverlayIconSvg />
-                  </div>
+                  <>
+                    <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                      <FourthCardOverlayIconSvg />
+                    </div>
+                    <div style={{ position: 'absolute', bottom: '12px', right: '12px' }}>
+                      <FourthCardGradientSvg />
+                    </div>
+                  </>
                 )}
               </div>
             ))}
@@ -499,26 +502,6 @@ export default function CommandCenterPage() {
             <div style={{ flex: 1, minWidth: 0, borderRadius: '12px', overflow: 'hidden', position: 'relative', minHeight: '310px', boxShadow: '0px 1px 2px rgba(0,0,0,0.05)' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/blue_map.png" alt="Live map" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: '310px' }} />
-
-              {/* Filter tabs — top center */}
-              <div style={{
-                position: 'absolute', top: '14px', left: '50%', transform: 'translateX(-50%)',
-                display: 'flex', background: 'rgba(247,249,251,0.92)', borderRadius: '8px',
-                border: '1px solid rgba(226,232,240,0.8)', backdropFilter: 'blur(8px)',
-                overflow: 'hidden',
-              }}>
-                {['ALL VEHICLES', 'BIKES', 'VANS'].map((tab, i) => (
-                  <div key={tab} style={{
-                    padding: '6px 14px',
-                    background: i === 0 ? '#0058be' : 'transparent',
-                    cursor: 'pointer',
-                    fontFamily: inter, fontSize: '10px', fontWeight: 700,
-                    color: i === 0 ? '#fff' : '#64748b',
-                    letterSpacing: '0.5px', textTransform: 'uppercase',
-                    borderRight: i < 2 ? '1px solid rgba(226,232,240,0.6)' : 'none',
-                  }}>{tab}</div>
-                ))}
-              </div>
 
               {/* Vehicle pins */}
               <div style={{ position: 'absolute', top: '30%', left: '28%', width: '28px', height: '28px', borderRadius: '50%', background: '#0058be', border: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -546,31 +529,56 @@ export default function CommandCenterPage() {
                 </svg>
               </div>
 
-              {/* LIVE FLEET OPERATIONS panel */}
+              {/* Vehicle filter tabs + LIVE FLEET OPERATIONS panel */}
               <div style={{
                 position: 'absolute', bottom: '14px', left: '14px',
-                background: 'rgba(247,249,251,0.88)', backdropFilter: 'blur(10px)',
-                borderRadius: '10px', padding: '12px 16px',
-                border: '1px solid rgba(226,232,240,0.7)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                minWidth: '200px',
+                display: 'flex', flexDirection: 'column', gap: '8px',
               }}>
-                <div style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
-                  Live Fleet Operations
+                {/* Filter tabs */}
+                <div style={{
+                  display: 'flex', background: 'rgba(247,249,251,0.95)', borderRadius: '12px',
+                  padding: '4px', backdropFilter: 'blur(8px)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  width: 'fit-content',
+                }}>
+                  {['ALL VEHICLES', 'BIKES', 'VANS'].map((tab, i) => (
+                    <div key={tab} style={{
+                      padding: '8px 16px',
+                      background: i === 0 ? '#0058be' : 'transparent',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontFamily: inter, fontSize: '12px', fontWeight: 700,
+                      color: i === 0 ? '#fff' : '#475569',
+                      letterSpacing: '0.5px',
+                    }}>{tab}</div>
+                  ))}
                 </div>
-                {[
-                  { label: 'In Transit', value: '284', dot: '#0058be' },
-                  { label: 'Delivering',  value: '128', dot: '#006947' },
-                  { label: 'Idle/Break',  value: '42',  dot: '#fbbf24' },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.dot, flexShrink: 0 }} />
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>{item.label}</span>
-                    </div>
-                    <span style={{ fontFamily: manrope, fontSize: '13px', fontWeight: 800, color: '#191c1e' }}>{item.value}</span>
+
+                {/* LIVE FLEET OPERATIONS panel */}
+                <div style={{
+                  background: 'rgba(247,249,251,0.88)', backdropFilter: 'blur(10px)',
+                  borderRadius: '10px', padding: '12px 16px',
+                  border: '1px solid rgba(226,232,240,0.7)',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+                  minWidth: '200px',
+                }}>
+                  <div style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
+                    Live Fleet Operations
                   </div>
-                ))}
+                  {[
+                    { label: 'In Transit', value: '284', dot: '#0058be' },
+                    { label: 'Delivering',  value: '128', dot: '#006947' },
+                    { label: 'Idle/Break',  value: '42',  dot: '#fbbf24' },
+                  ].map(item => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.dot, flexShrink: 0 }} />
+                        <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>{item.label}</span>
+                      </div>
+                      <span style={{ fontFamily: manrope, fontSize: '13px', fontWeight: 800, color: '#191c1e' }}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Zoom controls */}
@@ -706,11 +714,8 @@ export default function CommandCenterPage() {
                     <td style={{ padding: '21.5px 8px 23px', fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#000', whiteSpace: 'nowrap' }}>{o.route}</td>
                     <td style={{ padding: '16px 8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: o.driverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: '#fff' }}>
-                            {o.driver.split(' ').map(w => w[0]).join('')}
-                          </span>
-                        </div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={o.driverAvatar} alt={o.driver} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                         <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 500, color: '#000' }}>{o.driver}</span>
                       </div>
                     </td>
@@ -740,10 +745,8 @@ export default function CommandCenterPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {/* log icon */}
-                <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
-                  <rect x="1" y="1" width="18" height="14" rx="2" stroke="#64748b" strokeWidth="1.3" />
-                  <path d="M5 5.5h10M5 8.5h10M5 11.5h6" stroke="#64748b" strokeWidth="1.3" strokeLinecap="round" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/system-logs-icon.png" alt="" style={{ width: '20px', height: '16px', objectFit: 'contain' }} />
                 <span style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#191c1e', letterSpacing: '1.8px', textTransform: 'uppercase' }}>
                   System Logs
                 </span>

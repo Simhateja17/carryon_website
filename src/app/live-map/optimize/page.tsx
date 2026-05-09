@@ -43,6 +43,18 @@ function DestinationMarker({ top, left, label }: { top: string; left: string; la
   );
 }
 
+function TruckIcon({ color = '#2F80ED' }: { color?: string }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="2" y="5" width="14" height="10" rx="1.5" stroke={color} strokeWidth="1.5" />
+      <path d="M16 8h4l3 5h-7V8Z" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="6.5" cy="17.5" r="2" stroke={color} strokeWidth="1.5" />
+      <circle cx="17.5" cy="17.5" r="2" stroke={color} strokeWidth="1.5" />
+      <path d="M8.5 17.5h7" stroke={color} strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 /* ── Map Controls ───────────────────────────────────────────── */
 function MapControls() {
   return (
@@ -266,21 +278,7 @@ function FleetCard({
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          {icon === 'truck' ? (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="4" width="12" height="9" rx="1.5" stroke="#3B82F6" strokeWidth="1.3" />
-              <path d="M13 6h4l2.5 4.5H13V6Z" stroke="#3B82F6" strokeWidth="1.3" strokeLinejoin="round" />
-              <circle cx="4.5" cy="14.5" r="1.8" stroke="#3B82F6" strokeWidth="1.2" />
-              <circle cx="14" cy="14.5" r="1.8" stroke="#3B82F6" strokeWidth="1.2" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="5" width="18" height="9" rx="1.5" stroke="#3B82F6" strokeWidth="1.3" />
-              <path d="M1 9.5h18" stroke="#3B82F6" strokeWidth="1" opacity="0.4" />
-              <circle cx="5" cy="15.5" r="1.8" stroke="#3B82F6" strokeWidth="1.2" />
-              <circle cx="15" cy="15.5" r="1.8" stroke="#3B82F6" strokeWidth="1.2" />
-            </svg>
-          )}
+          <TruckIcon color="#3B82F6" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 700, color: '#0F172A', lineHeight: '20px' }}>
@@ -428,14 +426,19 @@ export default function OptimizeRoutesPage() {
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', minWidth: 0 }}>
           {/* Map area */}
           <div style={{
-            flex: 1,
+            height: '82vh',
+            minHeight: '640px',
+            maxHeight: '920px',
+            width: '96%',
+            margin: '0 auto',
+            flexShrink: 0,
             position: 'relative',
             overflow: 'hidden',
+            borderRadius: '12px',
             background: 'url(/blue_map.png) lightgray 0px 0px / cover no-repeat',
-            minHeight: 0,
           }}>
             {/* Map controls */}
             <MapControls />

@@ -264,7 +264,7 @@ export default function DispatchesPage() {
 
   const events: EventItem[] = [
     {
-      icon: <WarningIcon />,
+      icon: <img src="/event-icon-route-deviation.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
       title: 'Route Deviation Detected',
       description: 'Driver departed from planned I-90 route at Exit 42. Heading North on Kennedy Expressway. AI Prediction: Heavy traffic avoidance.',
       time: '14:12 PM',
@@ -274,19 +274,19 @@ export default function DispatchesPage() {
       ],
     },
     {
-      icon: <CheckCircleIcon />,
+      icon: <img src="/event-icon-pickup-complete.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
       title: 'Pickup Completed',
       description: 'Central Distribution Hub A. 4 Pallets confirmed. Digital signature acquired from dispatcher Dave S.',
       time: '13:45 PM',
     },
     {
-      icon: <UserIcon />,
+      icon: <img src="/event-icon-driver-assigned.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
       title: 'Driver Assigned',
       description: 'Marcus Thorne accepted the dispatch. ETA to origin: 15 minutes.',
       time: '12:30 PM',
     },
     {
-      icon: <FileIcon />,
+      icon: <img src="/event-icon-order-created.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
       title: 'Order Created',
       description: 'System generated dispatch for #CO-88219-X. Priority set by Automation Rule 4.',
       time: '11:05 AM',
@@ -342,7 +342,7 @@ export default function DispatchesPage() {
             flexWrap: 'wrap',
             gap: '16px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
               <h1 style={{
                 fontFamily: 'Inter',
                 fontSize: '28px',
@@ -356,7 +356,8 @@ export default function DispatchesPage() {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '20px',
+                flexWrap: 'wrap',
               }}>
                 <span style={{
                   display: 'inline-flex',
@@ -446,7 +447,7 @@ export default function DispatchesPage() {
                 padding: '24px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '20px',
+                gap: '12px',
               }}>
                 <div style={{
                   fontFamily: 'Inter',
@@ -495,6 +496,15 @@ export default function DispatchesPage() {
                     </div>
                   </div>
                   <LocationPinIcon />
+                </div>
+
+                <div style={{ paddingLeft: '22px' }}>
+                  <div style={{
+                    width: '1px',
+                    height: '72px',
+                    borderLeft: '2px dashed #CBD5E1',
+                    opacity: 0.9,
+                  }} />
                 </div>
 
                 {/* Destination */}
@@ -605,7 +615,7 @@ export default function DispatchesPage() {
                 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/marcus-jensen.png"
+                    src="/driver-profile-picture.png"
                     alt="Marcus Thorne"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
@@ -642,7 +652,12 @@ export default function DispatchesPage() {
                     ID: #DX-9022 &bull; 4.9 Rating
                   </div>
                 </div>
-                <CheckBadgeIcon />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/driver-verified-icon.png"
+                  alt="Verified"
+                  style={{ width: '32px', height: '32px', flexShrink: 0 }}
+                />
               </div>
 
               {/* Vehicle Status Card */}
@@ -656,16 +671,20 @@ export default function DispatchesPage() {
                 gap: '14px',
               }}>
                 <div style={{
-                  width: '44px',
-                  height: '44px',
+                  width: '24px',
+                  height: '24px',
                   borderRadius: '10px',
-                  background: '#EFF6FF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <TruckIcon />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/vehicle-status-icon.png"
+                    alt=""
+                    style={{ width: '24px', height: '24px', display: 'block' }}
+                  />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
@@ -734,66 +753,69 @@ export default function DispatchesPage() {
               gap: '12px',
               minWidth: 0,
             }}>
-              <MapPlaceholder />
+              <div style={{ position: 'relative' }}>
+                <MapPlaceholder />
 
-              {/* Map Legend */}
-              <div style={{
-                position: 'absolute',
-                top: '24px',
-                left: '24px',
-                background: 'rgba(255,255,255,0.95)',
-                borderRadius: '8px',
-                padding: '12px 16px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}>
+                {/* Map Legend */}
                 <div style={{
-                  fontFamily: 'Inter',
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  lineHeight: '15px',
-                  letterSpacing: '1px',
-                  color: '#94A3B8',
-                  textTransform: 'uppercase',
-                  marginBottom: '4px',
+                  position: 'absolute',
+                  top: '24px',
+                  left: '24px',
+                  background: 'rgba(255,255,255,0.95)',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
                 }}>
-                  Map Legend
+                  <div style={{
+                    fontFamily: 'Inter',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    lineHeight: '15px',
+                    letterSpacing: '1px',
+                    color: '#94A3B8',
+                    textTransform: 'uppercase',
+                    marginBottom: '4px',
+                  }}>
+                    Map Legend
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '20px', height: '2px', background: '#2F80ED', borderRadius: '1px' }} />
+                    <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#475569' }}>Planned Path</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '20px', height: '2px', background: '#EF4444', borderRadius: '1px' }} />
+                    <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#475569' }}>Actual Path (Deviation)</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '20px', height: '2px', background: '#2F80ED', borderRadius: '1px' }} />
-                  <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#475569' }}>Planned Path</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '20px', height: '2px', background: '#EF4444', borderRadius: '1px' }} />
-                  <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#475569' }}>Actual Path (Deviation)</span>
-                </div>
-              </div>
 
-              {/* Expand Live View button */}
-              <button suppressHydrationWarning style={{
-                position: 'absolute',
-                bottom: '16px',
-                right: '16px',
-                height: '36px',
-                padding: '0 14px',
-                borderRadius: '8px',
-                background: 'rgba(255,255,255,0.95)',
-                border: '1px solid #E2E8F0',
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#475569',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-              }}>
-                <ExpandIcon />
-                Expand Live View
-              </button>
+                {/* Expand Live View button */}
+                <button suppressHydrationWarning style={{
+                  position: 'absolute',
+                  bottom: '20px',
+                  right: '20px',
+                  height: '42px',
+                  padding: '0 16px',
+                  borderRadius: '12px',
+                  background: '#FFFFFF',
+                  border: '1px solid #E2E8F0',
+                  fontFamily: 'Inter',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: '#111827',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 8px 18px rgba(15, 23, 42, 0.12)',
+                  zIndex: 3,
+                }}>
+                  <ExpandIcon />
+                  Expand Live View
+                </button>
+              </div>
 
               {/* Event Log */}
               <div style={{
