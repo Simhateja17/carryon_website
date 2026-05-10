@@ -1,13 +1,15 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import { getCommandCenterSnapshot, type CommandCenterSnapshot } from '@/lib/api';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
 
 // ── Data ───────────────────────────────────────────────────────────────────────
-const stats = [
+const fallbackStats = [
   {
     label: 'TOTAL ORDERS\n(TODAY)',
     value: '1,284',
@@ -59,18 +61,8 @@ const heatmapGrid = [
   [0.2, 0.4, 0.6, 0.4, 0.2, 0.1],
 ];
 
-const recentOrders = [
-  { id: '#ORD-2841', customer: 'Marcus Thorne',  route: 'Queens → Manhattan',        driver: 'Alex J.',  driverAvatar: '/driver-avatar.png', status: 'IN TRANSIT', etd: '12 mins', boldEtd: false },
-  { id: '#ORD-2840', customer: 'Sarah Jenkins',  route: 'Brooklyn → Jersey City',     driver: 'Elena R.', driverAvatar: '/driver-elena.png', status: 'ASSIGNED',   etd: '22 mins', boldEtd: false },
-  { id: '#ORD-2839', customer: 'TechHub Inc.',   route: 'Financial Dist. → Midtown',  driver: 'David K.', driverAvatar: '/recent-driver-david.png', status: 'DELAYED',    etd: '45 mins', boldEtd: true  },
-];
-
-const systemLogs = [
-  { title: 'Order #2841 Assigned', desc: 'Driver Alex J. successfully assigned to route • 4 mins ago',  badge: 'SUCCESS', tc: '#2f80ed' },
-  { title: 'Payment Failure',      desc: 'Customer #8821 Stripe checkout failed • 12 mins ago',         badge: 'ERROR',   tc: '#2f80ed' },
-  { title: 'Driver #092 Offline',  desc: 'Shift ended according to schedule • 18 mins ago',             badge: 'INFO',    tc: '#2f80ed' },
-  { title: 'Revenue Target Hit',   desc: 'Daily goal achieved (100.2% of target) • 45 mins ago',        badge: 'SUCCESS', tc: '#0058be' },
-];
+const fallbackRecentOrders = [] as CommandCenterSnapshot['recentOrders'];
+const fallbackSystemLogs = [] as CommandCenterSnapshot['systemLogs'];
 
 function StatIcon({ type }: { type: 'orders' | 'deliveries' | 'revenue' | 'cancelled' }) {
   const icons = {
@@ -196,23 +188,10 @@ function FourthCardGradientSvg() {
   );
 }
 
-function AlertsPanel() {
-  const secondaryAlerts = [
-    {
-      id: 'system-delay',
-      label: 'System Delay',
-      title: ['System Surge', 'Risk'],
-      detail: ['North Sector •', '+15m delay'],
-      resolved: false,
-    },
-    {
-      id: 'resolved',
-      label: 'Resolved',
-      title: ['Bulk Payment', 'Issue'],
-      detail: ['Stripe Webhook •', '12m ago'],
-      resolved: true,
-    },
-  ] as const;
+function AlertsPanel({ alerts }: { alerts: CommandCenterSnapshot['alerts'] }) {
+  const [primaryAlert, ...secondaryAlerts] = alerts.length
+    ? alerts
+    : [{ severity: 'info', label: 'No Open Alerts', title: 'Operations stable', detail: 'No backend alerts found' }];
 
   return (
     <div style={{
@@ -233,7 +212,7 @@ function AlertsPanel() {
             <circle cx="11" cy="14" r="1" fill="#2F80ED" />
           </svg>
           <span style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, lineHeight: '24px', color: '#191C1E' }}>
-            Alerts (4)
+            Alerts ({alerts.length})
           </span>
         </div>
         <span style={{
@@ -282,18 +261,17 @@ function AlertsPanel() {
             <div>EMERGENCY</div>
           </div>
           <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 500, lineHeight: '17.5px', color: '#FFFFFF' }}>
-            <div>Driver #9244</div>
-            <div>SOS Signal</div>
+            <div>{primaryAlert.label}</div>
+            <div>{primaryAlert.title}</div>
           </div>
           <div style={{ paddingTop: '2px', opacity: 0.7, fontFamily: inter, fontSize: '10px', fontWeight: 700, lineHeight: '15px', color: '#FFFFFF' }}>
-            <div>Downtown • 2m</div>
-            <div>ago</div>
+            <div>{primaryAlert.detail}</div>
           </div>
         </div>
       </div>
 
-      {secondaryAlerts.map((alert) => (
-        <div key={alert.id} style={{
+      {secondaryAlerts.map((alert, index) => (
+        <div key={`${alert.label}-${index}`} style={{
           background: 'rgba(166,210,243,0.2)',
           border: '1px solid #A6D2F3',
           borderRadius: '12px',
@@ -322,13 +300,11 @@ function AlertsPanel() {
             <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, lineHeight: '16px', color: '#2F80ED' }}>
               {alert.label}
             </div>
-            <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, lineHeight: '16px', color: '#2F80ED', textDecoration: alert.resolved ? 'line-through' : 'none' }}>
-              <div>{alert.title[0]}</div>
-              <div>{alert.title[1]}</div>
+            <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, lineHeight: '16px', color: '#2F80ED' }}>
+              <div>{alert.title}</div>
             </div>
-            <div style={{ paddingTop: '4px', fontFamily: inter, fontSize: '10px', fontWeight: alert.resolved ? 400 : 500, lineHeight: '15px', color: '#000000' }}>
-              <div>{alert.detail[0]}</div>
-              <div>{alert.detail[1]}</div>
+            <div style={{ paddingTop: '4px', fontFamily: inter, fontSize: '10px', fontWeight: 500, lineHeight: '15px', color: '#000000' }}>
+              <div>{alert.detail}</div>
             </div>
           </div>
         </div>
@@ -375,20 +351,26 @@ function AlertsPanel() {
 }
 
 // ── Donut chart ────────────────────────────────────────────────────────────────
-function DonutChart() {
+function DonutChart({ breakdown }: { breakdown: CommandCenterSnapshot['breakdown'] }) {
   const r = 56; const cx = 64; const cy = 64;
   const C = 2 * Math.PI * r;
-  const segs = [
+  const fallbackSegs = [
     { pct: 0.65, color: '#0058be', label: 'Completed (65%)' },
     { pct: 0.20, color: '#2f80ed', label: 'In Transit (20%)' },
     { pct: 0.05, color: '#a6d2f3', label: 'Cancelled (5%)' },
     { pct: 0.10, color: '#e2e8f0', label: 'Pending (10%)' },
   ];
-  let cum = 0;
+  const colors = ['#0058be', '#2f80ed', '#a6d2f3', '#e2e8f0', '#006947', '#fbbf24'];
+  const segs = breakdown.length
+    ? breakdown.map((item, index) => ({
+        pct: Math.max(item.pct, 1) / 100,
+        color: colors[index % colors.length],
+        label: `${item.status.replaceAll('_', ' ')} (${item.pct}%)`,
+      }))
+    : fallbackSegs;
   const circles = segs.map((s, i) => {
     const len = s.pct * C;
-    const off = cum;
-    cum += len;
+    const off = segs.slice(0, i).reduce((sum, item) => sum + item.pct * C, 0);
     return (
       <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth="16"
         strokeDasharray={`${len} ${C - len}`}
@@ -416,12 +398,51 @@ function DonutChart() {
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function CommandCenterPage() {
+  const [snapshot, setSnapshot] = useState<CommandCenterSnapshot | null>(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    async function loadSnapshot() {
+      try {
+        const res = await getCommandCenterSnapshot();
+        if (alive) setSnapshot(res.data);
+      } catch (err) {
+        if (alive) setError(err instanceof Error ? err.message : 'Failed to load command center');
+      }
+    }
+    loadSnapshot();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const stats = useMemo(() => {
+    const apiStats = snapshot?.stats || [];
+    return fallbackStats.map((fallback, index) => ({ ...fallback, ...(apiStats[index] || {}) }));
+  }, [snapshot]);
+  const weeklyMax = Math.max(...(snapshot?.weeklyOrders || []).map((item) => item.count), 1);
+  const chartBars = snapshot?.weeklyOrders?.length
+    ? snapshot.weeklyOrders.map((item, index) => ({
+        h: item.count,
+        color: index === 6 ? '#0058be' : `rgba(0,88,190,${0.1 + index * 0.1})`,
+        day: item.day,
+      }))
+    : barData;
+  const recentOrders = snapshot?.recentOrders || fallbackRecentOrders;
+  const systemLogs = snapshot?.systemLogs || fallbackSystemLogs;
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
+          {error && (
+            <div style={{ marginBottom: '12px', color: '#DC2626', fontFamily: inter, fontSize: '13px' }}>
+              {error}
+            </div>
+          )}
 
           {/* ── Row 1: Top KPI Cards (Figma 143:2476) ─────────────────── */}
           <div style={{
@@ -435,17 +456,16 @@ export default function CommandCenterPage() {
           }}>
             {stats.map((s, i) => (
               <div key={s.label} style={{
-                flex: '0 0 auto',
-                width: '200px',
+                flex: 1,
                 height: '152px',
-                padding: '12px',
+                padding: '24px',
                 boxSizing: 'border-box',
                 borderRight: i < stats.length - 1 ? '1px solid #F1F5F9' : 'none',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
               }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: i === 3 ? '108px' : '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{
                     fontFamily: inter,
                     fontSize: '12px',
@@ -472,24 +492,22 @@ export default function CommandCenterPage() {
 
                 <div style={{
                   marginTop: 'auto',
-                  paddingTop: '8px',
+                  paddingTop: '16px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  paddingRight: i === 3 ? '108px' : '12px',
+                  justifyContent: i === 3 ? 'space-between' : 'flex-start',
                 }}>
                   <TrendBadge trend={s.trend} up={s.up} />
+
+                  {i === 3 && (
+                    <FourthCardGradientSvg />
+                  )}
                 </div>
 
                 {i === 3 && (
-                  <>
-                    <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
-                      <FourthCardOverlayIconSvg />
-                    </div>
-                    <div style={{ position: 'absolute', bottom: '12px', right: '12px' }}>
-                      <FourthCardGradientSvg />
-                    </div>
-                  </>
+                  <div style={{ position: 'absolute', top: '24px', right: '24px' }}>
+                    <FourthCardOverlayIconSvg />
+                  </div>
                 )}
               </div>
             ))}
@@ -503,82 +521,67 @@ export default function CommandCenterPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/blue_map.png" alt="Live map" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: '310px' }} />
 
-              {/* Vehicle pins */}
-              <div style={{ position: 'absolute', top: '30%', left: '28%', width: '28px', height: '28px', borderRadius: '50%', background: '#0058be', border: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                  <rect x="0.5" y="2" width="8.5" height="6" rx="1" fill="#fff" />
-                  <path d="M9 4h3l1.5 2.5H9V4Z" fill="#fff" />
-                  <circle cx="3" cy="9.5" r="1.5" fill="#fff" />
-                  <circle cx="11" cy="9.5" r="1.5" fill="#fff" />
-                </svg>
-              </div>
-              <div style={{ position: 'absolute', top: '55%', left: '45%', width: '28px', height: '28px', borderRadius: '50%', background: '#006947', border: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                  <rect x="0.5" y="2" width="8.5" height="6" rx="1" fill="#fff" />
-                  <path d="M9 4h3l1.5 2.5H9V4Z" fill="#fff" />
-                  <circle cx="3" cy="9.5" r="1.5" fill="#fff" />
-                  <circle cx="11" cy="9.5" r="1.5" fill="#fff" />
-                </svg>
-              </div>
-              <div style={{ position: 'absolute', top: '40%', left: '62%', width: '28px', height: '28px', borderRadius: '50%', background: '#fbbf24', border: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                  <rect x="0.5" y="2" width="8.5" height="6" rx="1" fill="#fff" />
-                  <path d="M9 4h3l1.5 2.5H9V4Z" fill="#fff" />
-                  <circle cx="3" cy="9.5" r="1.5" fill="#fff" />
-                  <circle cx="11" cy="9.5" r="1.5" fill="#fff" />
-                </svg>
+              {/* Filter tabs — top center */}
+              <div style={{
+                position: 'absolute', top: '14px', left: '50%', transform: 'translateX(-50%)',
+                display: 'flex', background: 'rgba(247,249,251,0.92)', borderRadius: '8px',
+                border: '1px solid rgba(226,232,240,0.8)', backdropFilter: 'blur(8px)',
+                overflow: 'hidden',
+              }}>
+                {['ALL VEHICLES', 'BIKES', 'VANS'].map((tab, i) => (
+                  <div key={tab} style={{
+                    padding: '6px 14px',
+                    background: i === 0 ? '#0058be' : 'transparent',
+                    cursor: 'pointer',
+                    fontFamily: inter, fontSize: '10px', fontWeight: 700,
+                    color: i === 0 ? '#fff' : '#64748b',
+                    letterSpacing: '0.5px', textTransform: 'uppercase',
+                    borderRight: i < 2 ? '1px solid rgba(226,232,240,0.6)' : 'none',
+                  }}>{tab}</div>
+                ))}
               </div>
 
-              {/* Vehicle filter tabs + LIVE FLEET OPERATIONS panel */}
+              {/* Vehicle pins */}
+              {(snapshot?.fleet.pins || [
+                { id: 'fallback-1', top: 30, left: 28, vehicleType: 'CAR' },
+                { id: 'fallback-2', top: 55, left: 45, vehicleType: 'VAN_7FT' },
+                { id: 'fallback-3', top: 40, left: 62, vehicleType: 'BIKE' },
+              ]).map((pin, index) => (
+              <div key={pin.id} style={{ position: 'absolute', top: `${pin.top}%`, left: `${pin.left}%`, width: '28px', height: '28px', borderRadius: '50%', background: ['#0058be', '#006947', '#fbbf24'][index % 3], border: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                  <rect x="0.5" y="2" width="8.5" height="6" rx="1" fill="#fff" />
+                  <path d="M9 4h3l1.5 2.5H9V4Z" fill="#fff" />
+                  <circle cx="3" cy="9.5" r="1.5" fill="#fff" />
+                  <circle cx="11" cy="9.5" r="1.5" fill="#fff" />
+                </svg>
+              </div>
+              ))}
+
+              {/* LIVE FLEET OPERATIONS panel */}
               <div style={{
                 position: 'absolute', bottom: '14px', left: '14px',
-                display: 'flex', flexDirection: 'column', gap: '8px',
+                background: 'rgba(247,249,251,0.88)', backdropFilter: 'blur(10px)',
+                borderRadius: '10px', padding: '12px 16px',
+                border: '1px solid rgba(226,232,240,0.7)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+                minWidth: '200px',
               }}>
-                {/* Filter tabs */}
-                <div style={{
-                  display: 'flex', background: 'rgba(247,249,251,0.95)', borderRadius: '12px',
-                  padding: '4px', backdropFilter: 'blur(8px)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  width: 'fit-content',
-                }}>
-                  {['ALL VEHICLES', 'BIKES', 'VANS'].map((tab, i) => (
-                    <div key={tab} style={{
-                      padding: '8px 16px',
-                      background: i === 0 ? '#0058be' : 'transparent',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontFamily: inter, fontSize: '12px', fontWeight: 700,
-                      color: i === 0 ? '#fff' : '#475569',
-                      letterSpacing: '0.5px',
-                    }}>{tab}</div>
-                  ))}
+                <div style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
+                  Live Fleet Operations
                 </div>
-
-                {/* LIVE FLEET OPERATIONS panel */}
-                <div style={{
-                  background: 'rgba(247,249,251,0.88)', backdropFilter: 'blur(10px)',
-                  borderRadius: '10px', padding: '12px 16px',
-                  border: '1px solid rgba(226,232,240,0.7)',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                  minWidth: '200px',
-                }}>
-                  <div style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
-                    Live Fleet Operations
-                  </div>
-                  {[
-                    { label: 'In Transit', value: '284', dot: '#0058be' },
-                    { label: 'Delivering',  value: '128', dot: '#006947' },
-                    { label: 'Idle/Break',  value: '42',  dot: '#fbbf24' },
-                  ].map(item => (
-                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.dot, flexShrink: 0 }} />
-                        <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>{item.label}</span>
-                      </div>
-                      <span style={{ fontFamily: manrope, fontSize: '13px', fontWeight: 800, color: '#191c1e' }}>{item.value}</span>
+                {[
+                  { label: 'In Transit', value: String(snapshot?.fleet.inTransit ?? 0), dot: '#0058be' },
+                  { label: 'Delivering',  value: String(snapshot?.fleet.delivering ?? 0), dot: '#006947' },
+                  { label: 'Idle/Break',  value: String(snapshot?.fleet.idle ?? 0), dot: '#fbbf24' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.dot, flexShrink: 0 }} />
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>{item.label}</span>
                     </div>
-                  ))}
-                </div>
+                    <span style={{ fontFamily: manrope, fontSize: '13px', fontWeight: 800, color: '#191c1e' }}>{item.value}</span>
+                  </div>
+                ))}
               </div>
 
               {/* Zoom controls */}
@@ -611,7 +614,7 @@ export default function CommandCenterPage() {
 
             {/* Alerts panel */}
             <div style={{ width: '280px', flexShrink: 0 }}>
-              <AlertsPanel />
+              <AlertsPanel alerts={snapshot?.alerts || []} />
             </div>
           </div>
 
@@ -632,15 +635,15 @@ export default function CommandCenterPage() {
               </div>
               {/* bars */}
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '150px' }}>
-                {barData.map((b, i) => (
+                {chartBars.map((b, i) => (
                   <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', height: '100%', justifyContent: 'flex-end' }}>
-                    <div style={{ width: '100%', background: b.color, borderRadius: '2px 2px 0 0', height: `${(b.h / 137.75) * 130}px` }} />
+                    <div style={{ width: '100%', background: b.color, borderRadius: '2px 2px 0 0', height: `${(b.h / weeklyMax) * 130}px` }} />
                   </div>
                 ))}
               </div>
               {/* day labels */}
               <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
-                {barData.map((b, i) => (
+                {chartBars.map((b, i) => (
                   <div key={i} style={{ flex: 1, textAlign: 'center', fontFamily: inter, fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>
                     {b.day}
                   </div>
@@ -654,7 +657,7 @@ export default function CommandCenterPage() {
                 Order Breakdown
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                <DonutChart />
+                <DonutChart breakdown={snapshot?.breakdown || []} />
               </div>
             </div>
 
@@ -707,15 +710,20 @@ export default function CommandCenterPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map(o => (
+                {recentOrders.length === 0 ? (
+                  <tr><td colSpan={7} style={{ padding: '20px', fontFamily: inter, color: '#64748b' }}>No active orders found.</td></tr>
+                ) : recentOrders.map(o => (
                   <tr key={o.id} style={{ borderTop: '1px solid #f8fafc' }}>
                     <td style={{ padding: '19.5px 8px 21px', fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#000', whiteSpace: 'nowrap' }}>{o.id}</td>
                     <td style={{ padding: '19.5px 8px 21px', fontFamily: inter, fontSize: '14px', fontWeight: 500, color: '#000' }}>{o.customer}</td>
                     <td style={{ padding: '21.5px 8px 23px', fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#000', whiteSpace: 'nowrap' }}>{o.route}</td>
                     <td style={{ padding: '16px 8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={o.driverAvatar} alt={o.driver} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#2f80ed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: '#fff' }}>
+                            {o.driver.split(' ').map(w => w[0]).join('')}
+                          </span>
+                        </div>
                         <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 500, color: '#000' }}>{o.driver}</span>
                       </div>
                     </td>
@@ -724,7 +732,7 @@ export default function CommandCenterPage() {
                         {o.status}
                       </span>
                     </td>
-                    <td style={{ padding: '19.5px 8px 21px', fontFamily: inter, fontSize: '14px', fontWeight: o.boldEtd ? 700 : 500, color: '#000', whiteSpace: 'nowrap' }}>{o.etd}</td>
+                    <td style={{ padding: '19.5px 8px 21px', fontFamily: inter, fontSize: '14px', fontWeight: 500, color: '#000', whiteSpace: 'nowrap' }}>{o.etd}</td>
                     <td style={{ padding: '16px 8px' }}>
                       <button suppressHydrationWarning type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
@@ -745,8 +753,10 @@ export default function CommandCenterPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {/* log icon */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/system-logs-icon.png" alt="" style={{ width: '20px', height: '16px', objectFit: 'contain' }} />
+                <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+                  <rect x="1" y="1" width="18" height="14" rx="2" stroke="#64748b" strokeWidth="1.3" />
+                  <path d="M5 5.5h10M5 8.5h10M5 11.5h6" stroke="#64748b" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
                 <span style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#191c1e', letterSpacing: '1.8px', textTransform: 'uppercase' }}>
                   System Logs
                 </span>
@@ -758,7 +768,9 @@ export default function CommandCenterPage() {
 
             {/* 2-column log grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px 48px' }}>
-              {systemLogs.map((log, i) => (
+              {systemLogs.length === 0 ? (
+                <div style={{ fontFamily: inter, color: '#64748b' }}>No audit logs found.</div>
+              ) : systemLogs.map((log, i) => (
                 <div key={i} style={{ position: 'relative', paddingLeft: '40px' }}>
                   {/* timeline dot */}
                   <div style={{
@@ -781,7 +793,7 @@ export default function CommandCenterPage() {
                         {log.desc}
                       </div>
                     </div>
-                    <span style={{ background: '#a6d2f3', color: log.tc, fontFamily: inter, fontSize: '9px', fontWeight: 500, padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', flexShrink: 0 }}>
+                    <span style={{ background: '#a6d2f3', color: '#2f80ed', fontFamily: inter, fontSize: '9px', fontWeight: 500, padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', flexShrink: 0 }}>
                       {log.badge}
                     </span>
                   </div>

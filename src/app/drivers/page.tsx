@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DriverAdvancedFiltersPanel from '@/components/DriverAdvancedFiltersPanel';
+import { getAdminDrivers, type DriverListItem } from '@/lib/api';
 
 /* ── Types ───────────────────────────────────────────────────── */
 type DriverStatus = 'ONLINE' | 'BUSY' | 'OFFLINE';
@@ -30,71 +31,37 @@ interface Driver {
   earningsSub?: string;
 }
 
-/* ── Data ────────────────────────────────────────────────────── */
-const drivers: Driver[] = [
-  {
-    id: '1',
-    drvId: 'DRV-5021',
-    name: 'Marcus Sterling',
-    email: 'm.sterling@fleet.com',
-    licenseClass: 'Class A',
-    licenseType: 'CDL',
-    dotColor: '#22C55E',
-    avatarSrc: '/driver-avatar.png',
-    vehicleName: 'Peterbilt 579',
-    vehicleId: 'ID: NX2-788',
-    routeFrom: 'Chicago Hub',
-    routeTo: 'Springfield',
-    routeEta: 'EST ARRIVAL 14:45 PM',
-    status: 'ONLINE',
-    acceptance: 98,
-    rating: 4.9,
-    earnings: '$542.50',
-    earningsSub: '+$45 Bonus',
-  },
-  {
-    id: '2',
-    drvId: 'DRV-4412',
-    name: 'Elena Rodriguez',
-    email: 'e.rodriguez@fleet.com',
-    licenseClass: 'Class B',
-    licenseType: 'CDL',
-    dotColor: '#2563EB',
-    avatarSrc: '/driver-elena.png',
-    vehicleName: 'Freightliner Cascadia',
-    vehicleId: 'ID: TX9-001',
-    routeFrom: 'St. Louis',
-    routeTo: 'Memphis',
-    routeStatus: 'STATUS: HEAVY TRAFFIC',
-    status: 'BUSY',
-    acceptance: 92,
-    rating: 4.7,
-    earnings: '$398.20',
-    earningsSub: 'Standard Rate',
-  },
-  {
-    id: '3',
-    drvId: 'DRV-2104',
-    name: 'Julian Vance',
-    email: 'j.vance@fleet.com',
-    licenseClass: 'Special',
-    licenseType: 'Hazmat',
-    dotColor: '#94A3B8',
-    avatarSrc: '/driver-james.png',
-    vehicleName: 'Volvo VNL 860',
-    vehicleId: 'ID: ZT-909',
-    routeFrom: 'No Active Route',
-    routeTo: '',
-    routeInfo: 'LAST ACTIVE 2H AGO',
-    status: 'OFFLINE',
-    acceptance: 100,
-    rating: 5.0,
-    earnings: '$0.00',
-    earningsSub: 'Shift Pending',
-  },
-];
-
 /* ── Helpers ─────────────────────────────────────────────────── */
+function toDriverRow(driver: DriverListItem): Driver {
+  const approvedRatio = driver.documentsCount > 0
+    ? Math.round((driver.documentsApproved / driver.documentsCount) * 100)
+    : driver.isVerified ? 100 : 0;
+  const status: DriverStatus = driver.isOnline
+    ? driver.verificationStatus === 'APPROVED' ? 'ONLINE' : 'BUSY'
+    : 'OFFLINE';
+
+  return {
+    id: driver.id,
+    drvId: `DRV-${driver.id.slice(0, 4).toUpperCase()}`,
+    name: driver.name || 'Unnamed Driver',
+    email: driver.email || '--',
+    licenseClass: driver.verificationStatus.replace('_', ' '),
+    licenseType: driver.isVerified ? 'Verified' : 'Review',
+    dotColor: driver.isOnline ? '#22C55E' : '#94A3B8',
+    avatarSrc: driver.photo || '/driver-avatar.png',
+    vehicleName: driver.vehicleSummary || 'No vehicle submitted',
+    vehicleId: driver.hasVehicle ? `ID: ${driver.id.slice(0, 6).toUpperCase()}` : 'Awaiting vehicle',
+    routeFrom: driver.isOnline ? 'Available' : 'No Active Route',
+    routeTo: driver.isOnline ? 'Dispatch Pool' : '',
+    routeInfo: driver.isOnline ? undefined : `JOINED ${new Date(driver.createdAt).toLocaleDateString()}`,
+    status,
+    acceptance: approvedRatio,
+    rating: driver.rating || 0,
+    earnings: `${driver.totalTrips} trips`,
+    earningsSub: driver.hasFcmToken ? 'Push enabled' : 'No push token',
+  };
+}
+
 function statusBadgeStyle(status: DriverStatus): { bg: string; color: string } {
   switch (status) {
     case 'ONLINE':
@@ -319,7 +286,34 @@ export default function DriversPage() {
   const [activeTab, setActiveTab] = useState<'All Drivers' | 'Favorites'>('All Drivers');
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 125;
+  const [driverRows, setDriverRows] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const totalPages = Math.max(1, Math.ceil(driverRows.length / 10));
+  const visibleDrivers = useMemo(
+    () => driverRows.slice((currentPage - 1) * 10, currentPage * 10),
+    [currentPage, driverRows]
+  );
+
+  useEffect(() => {
+    let alive = true;
+    async function loadDrivers() {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await getAdminDrivers();
+        if (alive) setDriverRows(res.data.map(toDriverRow));
+      } catch (err) {
+        if (alive) setError(err instanceof Error ? err.message : 'Failed to load drivers');
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+    loadDrivers();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <>
@@ -631,12 +625,18 @@ export default function DriversPage() {
                   textTransform: 'uppercase',
                   lineHeight: '14px',
                 }}>
-                  Today's<br />Earnings
+                  Today&apos;s<br />Earnings
                 </th>
               </tr>
             </thead>
             <tbody>
-              {drivers.map((d) => (
+              {loading ? (
+                <tr><td colSpan={7} style={{ padding: '28px', color: '#64748B', fontFamily: 'Inter' }}>Loading drivers...</td></tr>
+              ) : error ? (
+                <tr><td colSpan={7} style={{ padding: '28px', color: '#DC2626', fontFamily: 'Inter' }}>{error}</td></tr>
+              ) : visibleDrivers.length === 0 ? (
+                <tr><td colSpan={7} style={{ padding: '28px', color: '#64748B', fontFamily: 'Inter' }}>No drivers found.</td></tr>
+              ) : visibleDrivers.map((d) => (
                 <DriverTableRow key={d.id} driver={d} />
               ))}
             </tbody>
@@ -647,7 +647,7 @@ export default function DriversPage() {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '20px 28px',
+            padding: '16px 24px',
             borderTop: '1px solid #F1F5F9',
           }}>
             <div style={{
@@ -659,17 +659,17 @@ export default function DriversPage() {
               textTransform: 'uppercase',
               lineHeight: '16px',
             }}>
-              SHOWING 1-10 OF 1,248 DRIVERS
+              SHOWING {driverRows.length === 0 ? 0 : (currentPage - 1) * 10 + 1}-{Math.min(currentPage * 10, driverRows.length)} OF {driverRows.length} DRIVERS
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '300px', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <button
                 suppressHydrationWarning
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
                   border: '1px solid #E2E8F0',
                   background: '#fff',
                   cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
@@ -684,15 +684,15 @@ export default function DriversPage() {
                 </svg>
               </button>
 
-              {[1, 2, 3].map((p) => (
+              {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => idx + 1).map((p) => (
                 <button
                   suppressHydrationWarning
                   key={p}
                   onClick={() => setCurrentPage(p)}
                   style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '6px',
                     border: 'none',
                     background: currentPage === p ? '#2F80ED' : 'transparent',
                     cursor: 'pointer',
@@ -712,7 +712,7 @@ export default function DriversPage() {
                 fontSize: '12px',
                 fontWeight: 700,
                 color: '#64748B',
-                padding: '0 6px',
+                padding: '0 4px',
               }}>
                 ...
               </span>
@@ -721,9 +721,9 @@ export default function DriversPage() {
                 suppressHydrationWarning
                 onClick={() => setCurrentPage(totalPages)}
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
                   border: 'none',
                   background: currentPage === totalPages ? '#2F80ED' : 'transparent',
                   cursor: 'pointer',
@@ -742,9 +742,9 @@ export default function DriversPage() {
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
                   border: '1px solid #E2E8F0',
                   background: '#fff',
                   cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',

@@ -664,7 +664,7 @@ export default function AdminGroupPage() {
                   </span>
                 </div>
                 <p style={{ margin: 0, fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '1.6' }}>
-                  Members are automatically rotated through "Active Alert" status based on timezone and weekend availability.
+                  Members are automatically rotated through &quot;Active Alert&quot; status based on timezone and weekend availability.
                 </p>
               </div>
             </div>

@@ -9,9 +9,74 @@ type Props = {
   onClose: () => void;
 };
 
+type VehicleKey = 'truck' | 'van' | 'bike' | 'evCar';
+
 const DRIVER_STATUS_ROW1 = ['Active', 'On Break', 'Offline'] as const;
 const DRIVER_STATUS_ROW2 = ['In Transit'] as const;
 type DriverStatusOpt = (typeof DRIVER_STATUS_ROW1)[number] | (typeof DRIVER_STATUS_ROW2)[number];
+
+function VehicleTile({
+  id,
+  label,
+  selected,
+  icon,
+  onToggle,
+}: {
+  id: VehicleKey;
+  label: string;
+  selected: boolean;
+  icon: React.ReactNode;
+  onToggle: (id: VehicleKey) => void;
+}) {
+  return (
+    <button
+      suppressHydrationWarning
+      type="button"
+      onClick={() => onToggle(id)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '11px',
+        height: '58px',
+        padding: '17px 16px',
+        borderRadius: '12px',
+        border: '1px solid transparent',
+        background: 'rgba(166, 210, 243, 0.2)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        boxSizing: 'border-box',
+      }}
+    >
+      <span
+        style={{
+          width: selected ? '18px' : '16px',
+          height: selected ? '18px' : '16px',
+          borderRadius: '4px',
+          background: selected ? '#2F80ED' : '#fff',
+          border: selected ? 'none' : '1px solid #C2C6D6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {selected ? (
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden>
+            <path d="M1 5l3 3 7-7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : null}
+      </span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', color: '#2F80ED' }}>
+          {icon}
+        </span>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: '#2F80ED', lineHeight: '20px' }}>
+          {label}
+        </span>
+      </span>
+    </button>
+  );
+}
 
 export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
   const [driverStatus, setDriverStatus] = useState<DriverStatusOpt>('Active');
@@ -38,7 +103,7 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const toggleVehicle = (key: keyof typeof vehicle) => {
+  const toggleVehicle = (key: VehicleKey) => {
     setVehicle((v) => ({ ...v, [key]: !v[key] }));
   };
 
@@ -66,65 +131,6 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
         {text}
       </span>
     </div>
-  );
-
-  const VehicleTile = ({
-    id,
-    label,
-    selected,
-    icon,
-  }: {
-    id: keyof typeof vehicle;
-    label: string;
-    selected: boolean;
-    icon: React.ReactNode;
-  }) => (
-    <button
-      suppressHydrationWarning
-      type="button"
-      onClick={() => toggleVehicle(id)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '11px',
-        height: '58px',
-        padding: '17px 16px',
-        borderRadius: '12px',
-        border: '1px solid transparent',
-        background: 'rgba(166, 210, 243, 0.2)',
-        cursor: 'pointer',
-        textAlign: 'left',
-        boxSizing: 'border-box',
-      }}
-    >
-      <span
-        style={{
-          width: selected ? '18px' : '16px',
-          height: selected ? '18px' : '16px',
-          borderRadius: selected ? '4px' : '4px',
-          background: selected ? '#2F80ED' : '#fff',
-          border: selected ? 'none' : '1px solid #C2C6D6',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        {selected ? (
-          <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden>
-            <path d="M1 5l3 3 7-7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : null}
-      </span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', color: '#2F80ED' }}>
-          {icon}
-        </span>
-        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: '#2F80ED', lineHeight: '20px' }}>
-          {label}
-        </span>
-      </span>
-    </button>
   );
 
   return (
@@ -345,6 +351,7 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
                 id="truck"
                 label="Truck"
                 selected={vehicle.truck}
+                onToggle={toggleVehicle}
                 icon={
                   <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden>
                     <rect x="1" y="4" width="12" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
@@ -358,6 +365,7 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
                 id="van"
                 label="Van"
                 selected={vehicle.van}
+                onToggle={toggleVehicle}
                 icon={
                   <svg width="22" height="14" viewBox="0 0 22 14" fill="none" aria-hidden>
                     <rect x="1" y="3" width="14" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
@@ -371,6 +379,7 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
                 id="bike"
                 label="Bike"
                 selected={vehicle.bike}
+                onToggle={toggleVehicle}
                 icon={
                   <svg width="24" height="16" viewBox="0 0 24 16" fill="none" aria-hidden>
                     <circle cx="6" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.3" />
@@ -383,6 +392,7 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
                 id="evCar"
                 label="EV Car"
                 selected={vehicle.evCar}
+                onToggle={toggleVehicle}
                 icon={
                   <svg width="18" height="22" viewBox="0 0 18 22" fill="none" aria-hidden>
                     <path d="M4 8h10v8H4V8Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />

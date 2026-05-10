@@ -1,34 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import {
+  getPricingConfig,
+  updatePricingVehicles,
+  type AdminPricingSnapshot,
+  type AdminPricingVehicle,
+} from '@/lib/api';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
 
 const tabs = ['Base Fare', 'Surge Pricing', 'Zone Pricing', 'Coupons', 'Commission', 'Charges'];
 
-const vehicleFares = [
-  { type: 'Bike', icon: 'bike', base: '2.50', perKm: '0.45', min: '5.00' },
-  { type: 'Pickup', icon: 'pickup', base: '8.00', perKm: '1.20', min: '15.00' },
-  { type: 'Truck', icon: 'truck', base: '25.00', perKm: '3.50', min: '45.00' },
+const fallbackVehicleFares: AdminPricingVehicle[] = [
+  { id: null, type: 'BIKE', name: 'Bike', basePrice: 2.5, pricePerKm: 0.45, minimumFare: 5, isAvailable: true },
+  { id: null, type: 'PICKUP', name: 'Pickup', basePrice: 8, pricePerKm: 1.2, minimumFare: 15, isAvailable: true },
+  { id: null, type: 'LORRY_10FT', name: 'Truck', basePrice: 25, pricePerKm: 3.5, minimumFare: 45, isAvailable: true },
 ];
 
 const surgeItems = [
   { name: 'Time-based Surge', multiplier: '1.5x', desc: 'Active during configured peak hours (20:00 - 04:00).', active: true },
   { name: 'Demand-based Surge', multiplier: '1.0x', desc: 'Applies when demand exceeds driver supply by 20%.', active: false },
   { name: 'Area-based Surge', multiplier: '1.2x', desc: 'Triggers in Central Business District during gridlock alerts.', active: true },
-];
-
-const coupons = [
-  { code: 'SAVE25NOW', desc: '25% Off • Up to $10 • Pickup Only', status: 'ACTIVE', expires: 'Dec 31, 2024', usage: '432 / 1000' },
-  { code: 'FIRSTM30VE', desc: 'Flat $5 Off • First 3 Orders', status: 'PAUSED', expires: 'N/A (Unlimited)', usage: '897 / --' },
-];
-
-const history = [
-  { time: 'Today, 10:45 AM', user: 'Admin_Robert', action: 'Updated Base Fare for Truck (+12%)', status: 'SUCCESS', statusColor: '#059669', statusBg: '#D1FAE5' },
-  { time: 'Yesterday, 4:12 PM', user: 'System_Auto', action: 'Enabled Weekend Surge in Downtown', status: 'SYSTEM', statusColor: '#3B82F6', statusBg: '#DBEAFE' },
 ];
 
 function VehicleIcon({ type }: { type: string }) {
@@ -62,6 +58,54 @@ function VehicleIcon({ type }: { type: string }) {
 
 export default function PricingPage() {
   const [activeTab, setActiveTab] = useState('Base Fare');
+  const [pricing, setPricing] = useState<AdminPricingSnapshot | null>(null);
+  const [vehicles, setVehicles] = useState<AdminPricingVehicle[]>(fallbackVehicleFares);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+
+  async function loadPricing() {
+    setError('');
+    try {
+      const res = await getPricingConfig();
+      setPricing(res.data);
+      setVehicles(res.data.vehicles.length ? res.data.vehicles : fallbackVehicleFares);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load pricing');
+    }
+  }
+
+  useEffect(() => {
+    loadPricing();
+  }, []);
+
+  function updateVehicle(index: number, key: keyof AdminPricingVehicle, value: string) {
+    setVehicles((prev) => prev.map((vehicle, i) => {
+      if (i !== index) return vehicle;
+      if (key === 'basePrice' || key === 'pricePerKm' || key === 'minimumFare') {
+        return { ...vehicle, [key]: Number(value) };
+      }
+      return { ...vehicle, [key]: value };
+    }));
+  }
+
+  async function savePricing() {
+    setSaving(true);
+    setError('');
+    setStatus('');
+    try {
+      await updatePricingVehicles(vehicles);
+      setStatus('Pricing saved.');
+      await loadPricing();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save pricing');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const coupons = pricing?.coupons || [];
+  const history = pricing?.history || [];
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
@@ -84,12 +128,12 @@ export default function PricingPage() {
               }}>
                 Export Rules
               </button>
-              <button suppressHydrationWarning type="button" style={{
+              <button suppressHydrationWarning type="button" onClick={savePricing} disabled={saving} style={{
                 padding: '10px 18px', borderRadius: '8px', border: 'none', background: '#3B82F6',
-                fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#FFFFFF', cursor: 'pointer',
+                fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#FFFFFF', cursor: saving ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
               }}>
-                PREVIEW & CONFIRM
+                {saving ? 'SAVING...' : 'PREVIEW & CONFIRM'}
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
@@ -103,6 +147,11 @@ export default function PricingPage() {
             </svg>
             <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#EF4444' }}>Mistakes in pricing may lead to financial loss. Please verify all changes.</span>
           </div>
+          {(error || status) && (
+            <div style={{ fontFamily: inter, fontSize: '12px', color: error ? '#DC2626' : '#059669', marginBottom: '16px' }}>
+              {error || status}
+            </div>
+          )}
 
           {/* ── Tabs ── */}
           <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -178,8 +227,8 @@ export default function PricingPage() {
                 </div>
 
                 {/* Vehicle rows */}
-                {vehicleFares.map((v) => (
-                  <div key={v.type} style={{
+                {vehicles.map((v, index) => (
+                  <div key={`${v.id || v.type}-${index}`} style={{
                     display: 'grid',
                     gridTemplateColumns: '40px 1fr 100px 100px 100px 60px',
                     gap: '12px',
@@ -187,17 +236,20 @@ export default function PricingPage() {
                     padding: '10px 0',
                     borderBottom: '1px solid #F8FAFC',
                   }}>
-                    <VehicleIcon type={v.icon} />
-                    <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{v.type}</span>
-                    <input suppressHydrationWarning type="text" defaultValue={v.base} style={{
+                    <VehicleIcon type={v.type.toLowerCase().includes('bike') ? 'bike' : v.type.toLowerCase().includes('pickup') ? 'pickup' : 'truck'} />
+                    <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{v.name}</span>
+                    <input suppressHydrationWarning type="number" value={v.basePrice} onChange={(e) => updateVehicle(index, 'basePrice', e.target.value)} style={{
                       width: '70px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
                       fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A', background: '#F8FAFC',
                     }} />
-                    <input suppressHydrationWarning type="text" defaultValue={v.perKm} style={{
+                    <input suppressHydrationWarning type="number" value={v.pricePerKm} onChange={(e) => updateVehicle(index, 'pricePerKm', e.target.value)} style={{
                       width: '70px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
                       fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A', background: '#F8FAFC',
                     }} />
-                    <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>${v.min}</span>
+                    <input suppressHydrationWarning type="number" value={v.minimumFare} onChange={(e) => updateVehicle(index, 'minimumFare', e.target.value)} style={{
+                      width: '70px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
+                      fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A', background: '#F8FAFC',
+                    }} />
                     <button suppressHydrationWarning type="button" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M8 3v10M3 8h10" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" />
@@ -227,7 +279,7 @@ export default function PricingPage() {
                   </div>
                   <div>
                     <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>PLATFORM EARNINGS</div>
-                    <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>20% commission per order</div>
+                    <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>{Math.round((1 - (pricing?.commissionRate ?? 0.88)) * 100)}% commission per order</div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -465,9 +517,9 @@ export default function PricingPage() {
                     </div>
                     <span style={{
                       padding: '3px 10px', borderRadius: '4px',
-                      background: h.statusBg,
+                      background: h.status === 'SUCCESS' ? '#D1FAE5' : '#DBEAFE',
                       fontFamily: inter, fontSize: '10px', fontWeight: 800,
-                      color: h.statusColor,
+                      color: h.status === 'SUCCESS' ? '#059669' : '#3B82F6',
                       letterSpacing: '0.5px', textTransform: 'uppercase',
                     }}>{h.status}</span>
                   </div>
