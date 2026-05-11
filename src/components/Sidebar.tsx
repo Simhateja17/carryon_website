@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 const manrope = "'Manrope', Inter, sans-serif";
@@ -221,20 +221,15 @@ const settingsSubItems = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  // Which section is expanded (null = all collapsed)
-  const [openSection, setOpenSection] = useState<string | null>(() => getSectionForPath(pathname));
-
-  // Auto-expand the correct section when the route changes
-  useEffect(() => {
-    const section = getSectionForPath(pathname);
-    if (section) setOpenSection(section);
-  }, [pathname]);
+  const routeSection = getSectionForPath(pathname);
+  const [manualOpenSection, setManualOpenSection] = useState<string | null>(null);
+  const openSection = manualOpenSection ?? routeSection;
 
   function toggle(section: string, href?: string) {
     if (openSection === section) {
-      setOpenSection(null);           // collapse
+      setManualOpenSection(null);           // collapse
     } else {
-      setOpenSection(section);        // expand
+      setManualOpenSection(section);        // expand
       if (href) router.push(href);    // navigate to section root
     }
   }

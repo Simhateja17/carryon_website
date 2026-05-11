@@ -3,12 +3,25 @@
 import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import { createRideRequest } from '@/lib/api';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
 
 // ── Shared Input ───────────────────────────────────────────────────────────────
-function FormInput({ placeholder, type = 'text', area = false }: { placeholder: string; type?: string; area?: boolean }) {
+function FormInput({
+  placeholder,
+  type = 'text',
+  area = false,
+  value,
+  onChange,
+}: {
+  placeholder: string;
+  type?: string;
+  area?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
+}) {
   const baseStyle = {
     width: '100%',
     padding: '12px 14px',
@@ -24,15 +37,15 @@ function FormInput({ placeholder, type = 'text', area = false }: { placeholder: 
     resize: 'none' as const,
   };
   if (area) {
-    return <textarea suppressHydrationWarning placeholder={placeholder} rows={2} style={{ ...baseStyle, minHeight: '60px' }} />;
+    return <textarea suppressHydrationWarning value={value} onChange={(e) => onChange?.(e.target.value)} placeholder={placeholder} rows={2} style={{ ...baseStyle, minHeight: '60px' }} />;
   }
-  return <input suppressHydrationWarning type={type} placeholder={placeholder} style={baseStyle} />;
+  return <input suppressHydrationWarning type={type} value={value} onChange={(e) => onChange?.(e.target.value)} placeholder={placeholder} style={baseStyle} />;
 }
 
-function FormSelect({ placeholder, options }: { placeholder: string; options: string[] }) {
+function FormSelect({ placeholder, options, value, onChange }: { placeholder: string; options: string[]; value?: string; onChange?: (value: string) => void }) {
   return (
     <div style={{ position: 'relative' }}>
-      <select suppressHydrationWarning style={{
+      <select suppressHydrationWarning value={value} onChange={(e) => onChange?.(e.target.value)} style={{
         width: '100%',
         padding: '12px 32px 12px 14px',
         borderRadius: '8px',
@@ -47,7 +60,7 @@ function FormSelect({ placeholder, options }: { placeholder: string; options: st
         cursor: 'pointer',
         boxSizing: 'border-box' as const,
       }}>
-        <option>{placeholder}</option>
+        <option value="">{placeholder}</option>
         {options.map((o) => <option key={o}>{o}</option>)}
       </select>
       <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
@@ -85,7 +98,24 @@ function Toggle({ active }: { active?: boolean }) {
 }
 
 // ── Contact Entities ───────────────────────────────────────────────────────────
-function ContactEntities() {
+type OrderFormState = {
+  senderName: string;
+  senderPhone: string;
+  pickupAddress: string;
+  pickupLatitude: string;
+  pickupLongitude: string;
+  recipientName: string;
+  recipientPhone: string;
+  recipientEmail: string;
+  deliveryAddress: string;
+  deliveryLatitude: string;
+  deliveryLongitude: string;
+  vehicleType: string;
+  price: string;
+  paymentMethod: string;
+};
+
+function ContactEntities({ form, setField }: { form: OrderFormState; setField: (key: keyof OrderFormState, value: string) => void }) {
   return (
     <div style={{
       background: '#EFF6FF',
@@ -114,9 +144,13 @@ function ContactEntities() {
             marginBottom: '12px',
           }}>Origin (Sender)</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <FormInput placeholder="Sender Full Name" />
-            <FormInput placeholder="Phone Number" type="tel" />
-            <FormInput placeholder="Pickup Address (Line 1, Line 2, Zip, City)" area />
+            <FormInput placeholder="Sender Full Name" value={form.senderName} onChange={(value) => setField('senderName', value)} />
+            <FormInput placeholder="Phone Number" type="tel" value={form.senderPhone} onChange={(value) => setField('senderPhone', value)} />
+            <FormInput placeholder="Pickup Address (Line 1, Line 2, Zip, City)" area value={form.pickupAddress} onChange={(value) => setField('pickupAddress', value)} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <FormInput placeholder="Pickup Latitude" type="number" value={form.pickupLatitude} onChange={(value) => setField('pickupLatitude', value)} />
+              <FormInput placeholder="Pickup Longitude" type="number" value={form.pickupLongitude} onChange={(value) => setField('pickupLongitude', value)} />
+            </div>
           </div>
         </div>
 
@@ -132,9 +166,14 @@ function ContactEntities() {
             marginBottom: '12px',
           }}>Destination (Recipient)</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <FormInput placeholder="Recipient Full Name" />
-            <FormInput placeholder="Phone Number" type="tel" />
-            <FormInput placeholder="Delivery Address (Line 1, Line 2, Zip, City)" area />
+            <FormInput placeholder="Recipient Full Name" value={form.recipientName} onChange={(value) => setField('recipientName', value)} />
+            <FormInput placeholder="Phone Number" type="tel" value={form.recipientPhone} onChange={(value) => setField('recipientPhone', value)} />
+            <FormInput placeholder="Recipient Email" type="email" value={form.recipientEmail} onChange={(value) => setField('recipientEmail', value)} />
+            <FormInput placeholder="Delivery Address (Line 1, Line 2, Zip, City)" area value={form.deliveryAddress} onChange={(value) => setField('deliveryAddress', value)} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <FormInput placeholder="Delivery Latitude" type="number" value={form.deliveryLatitude} onChange={(value) => setField('deliveryLatitude', value)} />
+              <FormInput placeholder="Delivery Longitude" type="number" value={form.deliveryLongitude} onChange={(value) => setField('deliveryLongitude', value)} />
+            </div>
           </div>
         </div>
       </div>
@@ -143,13 +182,28 @@ function ContactEntities() {
 }
 
 // ── Order Summary ──────────────────────────────────────────────────────────────
-function OrderSummary() {
+function OrderSummary({
+  form,
+  submitting,
+  result,
+  error,
+  onSubmit,
+}: {
+  form: OrderFormState;
+  submitting: boolean;
+  result: string;
+  error: string;
+  onSubmit: () => void;
+}) {
+  const price = Number(form.price || 0);
   return (
     <div style={{
       background: '#FFFFFF',
       borderRadius: '12px',
       padding: '24px',
       boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
+      position: 'sticky',
+      top: '20px',
     }}>
       <div style={{
         fontFamily: manrope,
@@ -163,10 +217,9 @@ function OrderSummary() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
         {[
-          { label: 'Base Fare', value: '$124.50', sign: '' },
-          { label: 'Priority Surcharge', value: '$45.00', sign: '+' },
-          { label: 'Insurance (1%)', value: '$18.20', sign: '+' },
-          { label: 'Fuel Adjustment', value: '$4.15', sign: '+' },
+          { label: 'Entered Fare', value: `RM ${price.toFixed(2)}`, sign: '' },
+          { label: 'Vehicle Type', value: form.vehicleType || '--', sign: '' },
+          { label: 'Payment Method', value: form.paymentMethod || '--', sign: '' },
         ].map((item) => (
           <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 500, color: '#64748B' }}>{item.label}</span>
@@ -186,7 +239,7 @@ function OrderSummary() {
           marginBottom: '4px',
         }}>Estimated Total</div>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: manrope, fontSize: '32px', fontWeight: 800, color: '#0F172A' }}>$191.85</span>
+          <span style={{ fontFamily: manrope, fontSize: '32px', fontWeight: 800, color: '#0F172A' }}>RM {price.toFixed(2)}</span>
           <span style={{
             background: '#DBEAFE',
             borderRadius: '4px',
@@ -197,11 +250,14 @@ function OrderSummary() {
             color: '#3B82F6',
             letterSpacing: '0.5px',
             textTransform: 'uppercase',
-          }}>USD</span>
+          }}>MYR</span>
         </div>
       </div>
 
-      <button suppressHydrationWarning type="button" style={{
+      {error && <div style={{ color: '#DC2626', fontFamily: inter, fontSize: '12px', marginBottom: '10px' }}>{error}</div>}
+      {result && <div style={{ color: '#059669', fontFamily: inter, fontSize: '12px', marginBottom: '10px' }}>{result}</div>}
+
+      <button suppressHydrationWarning type="button" onClick={onSubmit} disabled={submitting} style={{
         width: '100%',
         padding: '14px',
         borderRadius: '10px',
@@ -211,7 +267,7 @@ function OrderSummary() {
         fontSize: '13px',
         fontWeight: 700,
         color: '#FFFFFF',
-        cursor: 'pointer',
+        cursor: submitting ? 'not-allowed' : 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -219,7 +275,7 @@ function OrderSummary() {
         marginBottom: '10px',
         boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
       }}>
-        Create Order
+        {submitting ? 'Creating...' : 'Create Order'}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </button>
 
@@ -382,21 +438,21 @@ function RouteDistanceCard() {
 // ── Pickup / Delivery Cards ────────────────────────────────────────────────────
 function PickupDeliveryCards() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
       {/* Pickup Window */}
       <div style={{
         background: '#EFF6FF',
-        borderRadius: '16px',
-        padding: '28px',
+        borderRadius: '12px',
+        padding: '24px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="7" stroke="#3B82F6" strokeWidth="1.5" />
             <path d="M9 5v4l3 2" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6', lineHeight: '1.2' }}>Pickup Window</span>
+          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6' }}>Pickup Window</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <FormInput placeholder="mm/dd/yyyy" type="date" />
           <FormSelect placeholder="Morning (08:00 - 12:00)" options={['Afternoon (12:00 - 17:00)', 'Evening (17:00 - 21:00)']} />
         </div>
@@ -405,22 +461,22 @@ function PickupDeliveryCards() {
       {/* Expected Delivery */}
       <div style={{
         background: '#EFF6FF',
-        borderRadius: '16px',
-        padding: '28px',
+        borderRadius: '12px',
+        padding: '24px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="7" stroke="#3B82F6" strokeWidth="1.5" />
             <path d="M6 9l2 2 4-4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6', lineHeight: '1.2' }}>Expected Delivery</span>
+          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6' }}>Expected Delivery</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <FormInput placeholder="mm/dd/yyyy" type="date" />
           <div style={{
             background: '#DBEAFE',
-            borderRadius: '12px',
-            padding: '14px 14px',
+            borderRadius: '8px',
+            padding: '12px 14px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -429,7 +485,7 @@ function PickupDeliveryCards() {
               <circle cx="7" cy="7" r="6" stroke="#3B82F6" strokeWidth="1.2" />
               <path d="M7 4v3l2 1.5" stroke="#3B82F6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6', lineHeight: '18px' }}>Standard Transit: 2-3 Business Days</span>
+            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#3B82F6' }}>Standard Transit: 2-3 Business Days</span>
           </div>
         </div>
       </div>
@@ -478,20 +534,19 @@ function ServiceLevelAgreement() {
   return (
     <div style={{
       background: '#EFF6FF',
-      borderRadius: '16px',
-      padding: '30px 28px',
-      marginBottom: '24px',
+      borderRadius: '12px',
+      padding: '24px',
+      marginBottom: '16px',
     }}>
       <div style={{
         fontFamily: manrope,
         fontSize: '14px',
         fontWeight: 800,
         color: '#3B82F6',
-        marginBottom: '24px',
-        lineHeight: '1.2',
+        marginBottom: '16px',
       }}>Service Level Agreement</div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
         {tiers.map((tier, i) => (
           <button
             key={i}
@@ -501,23 +556,22 @@ function ServiceLevelAgreement() {
             style={{
               background: selected === i ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
               border: selected === i ? '2px solid #3B82F6' : '2px solid transparent',
-              borderRadius: '16px',
-              padding: '22px 20px',
+              borderRadius: '12px',
+              padding: '16px',
               cursor: 'pointer',
               textAlign: 'left',
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px',
+              gap: '8px',
               transition: 'all 0.2s ease',
-              minHeight: '218px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {tier.icon}
-              <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6', lineHeight: '1.2' }}>{tier.price}</span>
+              <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{tier.price}</span>
             </div>
-            <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A', lineHeight: '1.25' }}>{tier.name}</span>
-            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#1E293B', lineHeight: '18px' }}>{tier.desc}</span>
+            <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>{tier.name}</span>
+            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#64748B', lineHeight: '16px' }}>{tier.desc}</span>
           </button>
         ))}
       </div>
@@ -640,6 +694,63 @@ function NeedAssistance() {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function CreateOrderPage() {
+  const [form, setForm] = useState<OrderFormState>({
+    senderName: '',
+    senderPhone: '',
+    pickupAddress: '',
+    pickupLatitude: '',
+    pickupLongitude: '',
+    recipientName: '',
+    recipientPhone: '',
+    recipientEmail: '',
+    deliveryAddress: '',
+    deliveryLatitude: '',
+    deliveryLongitude: '',
+    vehicleType: 'CAR',
+    price: '',
+    paymentMethod: 'CASH',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitResult, setSubmitResult] = useState('');
+
+  function setField(key: keyof OrderFormState, value: string) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleCreateOrder() {
+    setSubmitting(true);
+    setSubmitError('');
+    setSubmitResult('');
+    try {
+      const res = await createRideRequest({
+        from: {
+          address: form.pickupAddress,
+          latitude: Number(form.pickupLatitude),
+          longitude: Number(form.pickupLongitude),
+          contactName: form.senderName,
+          contactPhone: form.senderPhone,
+        },
+        to: {
+          address: form.deliveryAddress,
+          latitude: Number(form.deliveryLatitude),
+          longitude: Number(form.deliveryLongitude),
+          contactName: form.recipientName,
+          contactPhone: form.recipientPhone,
+          contactEmail: form.recipientEmail,
+        },
+        price: Number(form.price),
+        vehicleType: form.vehicleType as OrderFormState['vehicleType'] & 'CAR',
+        paymentMethod: form.paymentMethod as 'CASH',
+      });
+      setSubmitResult(`Created ${res.data.bookingId} and targeted ${res.data.targetedDrivers.length} drivers.`);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to create order');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
       <Sidebar />
@@ -672,25 +783,30 @@ export default function CreateOrderPage() {
           <div style={{ display: 'flex', gap: '24px' }}>
             {/* Left: Form */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <ContactEntities />
+              <ContactEntities form={form} setField={setField} />
+              <div style={{ background: '#EFF6FF', borderRadius: '12px', padding: '24px', marginBottom: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <FormSelect placeholder="Vehicle Type" value={form.vehicleType} onChange={(value) => setField('vehicleType', value)} options={['BIKE', 'CAR', 'PICKUP', 'VAN_7FT', 'VAN_9FT', 'LORRY_10FT', 'LORRY_14FT', 'LORRY_17FT']} />
+                <FormSelect placeholder="Payment Method" value={form.paymentMethod} onChange={(value) => setField('paymentMethod', value)} options={['CASH', 'UPI', 'CARD', 'WALLET']} />
+                <FormInput placeholder="Final Price (MYR)" type="number" value={form.price} onChange={(value) => setField('price', value)} />
+              </div>
               <CargoSpecifications />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px' }}>
                 <div>
                   <PickupDeliveryCards />
                   <ServiceLevelAgreement />
                   <SpecializedHandling />
                 </div>
+                <div>
+                  <RouteDistanceCard />
+                  <NeedAssistance />
+                </div>
               </div>
             </div>
 
             {/* Right: Order Summary */}
-            <div style={{ width: '300px', flexShrink: 0, position: 'sticky', top: '20px', alignSelf: 'flex-start' }}>
-              <OrderSummary />
-              <div style={{ marginTop: '16px' }}>
-                <RouteDistanceCard />
-                <NeedAssistance />
-              </div>
+            <div style={{ width: '300px', flexShrink: 0 }}>
+              <OrderSummary form={form} submitting={submitting} result={submitResult} error={submitError} onSubmit={handleCreateOrder} />
             </div>
           </div>
 

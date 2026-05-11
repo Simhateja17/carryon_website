@@ -399,7 +399,7 @@ export default function RevenuePage() {
                   </div>
                   <div>
                     <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginBottom: '4px' }}>Reference ID</div>
-                    <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 500, color: '#0F172A', fontFamilyMono: 'monospace' }}>rzp_live_k9JIL2p0</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 500, color: '#0F172A' }}>rzp_live_k9JIL2p0</span>
                   </div>
                 </div>
               </div>

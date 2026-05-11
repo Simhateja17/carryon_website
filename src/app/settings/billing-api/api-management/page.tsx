@@ -83,7 +83,7 @@ export default function ApiManagementPage() {
                 Security Recommendation: Key Rotation
               </div>
               <p style={{ color: '#6B7280', fontSize: '13px', margin: '0 0 8px 0', lineHeight: 1.5 }}>
-                It's been over 90 days since your Production key was rotated. Regular rotation reduces the risk of unauthorized access and is recommended for all live integrations.
+                It&apos;s been over 90 days since your Production key was rotated. Regular rotation reduces the risk of unauthorized access and is recommended for all live integrations.
               </p>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2F80ED', fontSize: '13px', fontWeight: 600, padding: 0 }}>
                 Learn more about rotation best practices →

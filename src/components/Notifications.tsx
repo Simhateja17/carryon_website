@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface Notification {
   id: string;
@@ -23,6 +23,11 @@ const inter = "'Inter', sans-serif";
 function NotificationToast({ notification, onClose }: NotificationToastProps) {
   const [isVisible, setIsVisible] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(() => onClose(notification.id), 300);
+  }, [notification.id, onClose]);
+
   useEffect(() => {
     // Trigger enter animation
     const enterTimer = setTimeout(() => setIsVisible(true), 10);
@@ -37,12 +42,7 @@ function NotificationToast({ notification, onClose }: NotificationToastProps) {
       clearTimeout(enterTimer);
       clearTimeout(closeTimer);
     };
-  }, [notification.duration]);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(() => onClose(notification.id), 300);
-  };
+  }, [handleClose, notification.duration]);
 
   const borderColors = {
     info: '#2F80ED',

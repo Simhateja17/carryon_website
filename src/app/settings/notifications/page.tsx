@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import {
+  getNotificationSettings,
+  updateNotificationSettings,
+  type NotificationAlertSetting,
+  type NotificationSettingsSnapshot,
+} from '@/lib/api';
 
 /* ── Toggle switch ───────────────────────────────────────────── */
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -136,18 +141,10 @@ function GroupIcon({ type }: { type: 'admin' | 'dispatch' | 'driver' }) {
 }
 
 /* ── Page ────────────────────────────────────────────────────── */
-type AlertRow = {
-  type: 'delay' | 'order' | 'offline' | 'fuel';
-  label: string;
-  sub: string;
-  sms: boolean;
-  push: boolean;
-  email: boolean;
-};
+type AlertRow = NotificationAlertSetting;
 
 export default function NotificationsPage() {
-  const router = useRouter();
-  const [alerts, setAlerts] = useState<AlertRow[]>([
+  const fallbackAlerts: AlertRow[] = [
     {
       type: 'delay',
       label: 'Critical Delays',
@@ -180,13 +177,37 @@ export default function NotificationsPage() {
       push: true,
       email: false,
     },
-  ]);
+  ];
+  const [alerts, setAlerts] = useState<AlertRow[]>(fallbackAlerts);
+  const [snapshot, setSnapshot] = useState<NotificationSettingsSnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function loadSettings() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getNotificationSettings();
+      setSnapshot(res.data);
+      setAlerts(res.data.settings.alerts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load notification settings');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
   const toggle = (idx: number, ch: 'sms' | 'push' | 'email') => {
     setAlerts((prev) => prev.map((a, i) => (i === idx ? { ...a, [ch]: !a[ch] } : a)));
   };
 
-  const auditItems = [
+  const auditItems = snapshot?.auditItems.length ? snapshot.auditItems : [
     {
       icon: 'edit',
       text: 'Alex M. updated critical alerts',
@@ -204,7 +225,7 @@ export default function NotificationsPage() {
     },
   ];
 
-  const groups = [
+  const groups = snapshot?.groups.length ? snapshot.groups : [
     {
       type: 'admin' as const,
       label: 'Admins',
@@ -241,6 +262,11 @@ export default function NotificationsPage() {
 
         {/* Main content */}
         <div style={{ flex: 1, padding: '28px 32px 40px', overflowY: 'auto' }}>
+          {(error || message || loading) && (
+            <div style={{ marginBottom: '12px', fontFamily: 'Inter', fontSize: '13px', color: error ? '#DC2626' : '#2563EB' }}>
+              {error || message || 'Loading notification settings...'}
+            </div>
+          )}
           {/* Page title */}
           <h1
             style={{
@@ -267,7 +293,7 @@ export default function NotificationsPage() {
           </p>
 
           {/* Two-column layout */}
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: '24px', flex: 1, minHeight: 0 }}>
             {/* ── LEFT COLUMN ── */}
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Active Alerts card */}
@@ -389,7 +415,6 @@ export default function NotificationsPage() {
                   <span style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Recipient Groups</span>
                   <button
                     suppressHydrationWarning
-                    onClick={() => router.push('/settings/notifications/new-group')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -414,12 +439,10 @@ export default function NotificationsPage() {
                   {groups.map((g) => (
                     <div
                       key={g.label}
-                      onClick={() => router.push(`/settings/notifications/group/${g.label.toLowerCase()}`)}
                       style={{
                         borderRadius: '12px',
                         background: '#F8FAFC',
                         padding: '20px',
-                        cursor: 'pointer',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
@@ -429,11 +452,11 @@ export default function NotificationsPage() {
                             display: 'inline-block',
                             padding: '3px 10px',
                             borderRadius: '999px',
-                            background: g.badgeBg,
+                            background: 'badgeBg' in g ? g.badgeBg : '#DBEAFE',
                             fontFamily: 'Inter',
                             fontSize: '10px',
                             fontWeight: 700,
-                            color: g.badgeColor,
+                            color: 'badgeColor' in g ? g.badgeColor : '#2563EB',
                             letterSpacing: '0.3px',
                           }}
                         >
@@ -494,7 +517,7 @@ export default function NotificationsPage() {
                         lineHeight: 1,
                       }}
                     >
-                      98.2%
+                      {(snapshot?.health.deliveryRate ?? 0).toFixed(1)}%
                     </span>
                     <span
                       style={{
@@ -516,11 +539,10 @@ export default function NotificationsPage() {
                       marginBottom: '24px',
                     }}
                   >
-                    The platform successfully pushed 14,204 critical alerts over the last 24 hours.
+                    The platform successfully recorded {snapshot?.health.deliveredLast24h ?? 0} driver notifications over the last 24 hours.
                   </div>
                   <button
                     suppressHydrationWarning
-                    onClick={() => router.push('/settings/notifications/logs')}
                     style={{
                       width: '100%',
                       height: '40px',
@@ -719,6 +741,11 @@ export default function NotificationsPage() {
           >
             <button
               suppressHydrationWarning
+              onClick={() => {
+                setMessage('');
+                setError('');
+                setAlerts(snapshot?.settings.alerts || fallbackAlerts);
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -739,6 +766,22 @@ export default function NotificationsPage() {
             </button>
             <button
               suppressHydrationWarning
+              onClick={async () => {
+                setSaving(true);
+                setError('');
+                setMessage('');
+                try {
+                  const res = await updateNotificationSettings(alerts);
+                  setAlerts(res.data.alerts);
+                  setMessage('Notification settings saved.');
+                  await loadSettings();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Failed to save notification settings');
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              disabled={saving}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -749,7 +792,7 @@ export default function NotificationsPage() {
                 borderRadius: '8px',
                 background: '#2563EB',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: saving ? 'not-allowed' : 'pointer',
                 fontFamily: 'Inter',
                 fontSize: '13px',
                 fontWeight: 700,
@@ -759,7 +802,7 @@ export default function NotificationsPage() {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M13 4L6 11l-3-3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Save Configurations
+              {saving ? 'Saving...' : 'Save Configurations'}
             </button>
           </div>
         </div>
