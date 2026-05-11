@@ -140,9 +140,9 @@ export default function NewCustomerPage() {
                   </h2>
                 </div>
                 <div style={{ marginBottom: '12px' }}>
-                  <span style={label}>Credit Limit ($)</span>
+                  <span style={label}>Credit Limit (MYR)</span>
                   <div style={{ ...field, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#6B7280', fontWeight: 700 }}>$</span>
+                    <span style={{ color: '#6B7280', fontWeight: 700 }}>MYR</span>
                     <span style={{ fontWeight: 700 }}>50000</span>
                   </div>
                 </div>

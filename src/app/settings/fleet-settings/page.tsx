@@ -1,12 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import { getFleetSettings, updateFleetSettings } from '@/lib/api';
+import { formatMoney, ADMIN_DISTANCE_UNIT } from '@/lib/format';
+import type { AdminFleetSettingsSnapshot, AdminFleetSettingsUpdatePayload, AdminFleetVehicleClass } from '@/types';
 
-/* ── Vehicle icon ────────────────────────────────────────────── */
-function VehicleIcon({ type }: { type: 'bike' | 'car' | 'van' | 'truck' }) {
-  const icons: Record<string, React.ReactNode> = {
+const inter = "'Inter', sans-serif";
+
+type VehicleIconType = 'bike' | 'car' | 'van' | 'truck';
+
+function iconType(type: string): VehicleIconType {
+  if (type === 'BIKE') return 'bike';
+  if (type === 'CAR') return 'car';
+  if (type.includes('VAN')) return 'van';
+  return 'truck';
+}
+
+function VehicleIcon({ type }: { type: VehicleIconType }) {
+  const icons: Record<VehicleIconType, React.ReactNode> = {
     bike: (
       <svg width="22" height="20" viewBox="0 0 22 20" fill="none">
         <circle cx="4.5" cy="15" r="3.5" stroke="#2563EB" strokeWidth="1.5"/>
@@ -22,7 +35,6 @@ function VehicleIcon({ type }: { type: 'bike' | 'car' | 'van' | 'truck' }) {
         <path d="M4 6l2.5-4h9l2.5 4" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         <circle cx="5.5" cy="13.5" r="2" fill="#2563EB"/>
         <circle cx="16.5" cy="13.5" r="2" fill="#2563EB"/>
-        <path d="M8 6h6" stroke="#2563EB" strokeWidth="1.2"/>
       </svg>
     ),
     van: (
@@ -44,179 +56,224 @@ function VehicleIcon({ type }: { type: 'bike' | 'car' | 'van' | 'truck' }) {
       </svg>
     ),
   };
-  return (
-    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      {icons[type]}
-    </div>
-  );
+  return <div style={{ width: 42, height: 42, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icons[type]}</div>;
 }
 
-/* ── Toggle switch ───────────────────────────────────────────── */
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ on, onChange, disabled }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
-    <button suppressHydrationWarning onClick={() => onChange(!on)} style={{ width: '44px', height: '24px', borderRadius: '12px', background: on ? '#337ADF' : '#A7CBE8', border: 'none', cursor: 'pointer', position: 'relative', padding: 0, flexShrink: 0 }}>
-      <div style={{ position: 'absolute', top: '3px', left: on ? '23px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#F1F5F9', boxShadow: '0 1px 2px rgba(15, 23, 42, 0.18)', transition: 'left 0.15s' }} />
+    <button suppressHydrationWarning type="button" disabled={disabled} onClick={() => onChange(!on)} style={{ width: 44, height: 24, borderRadius: 12, background: on ? '#337ADF' : '#CBD5E1', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', position: 'relative', padding: 0, flexShrink: 0, opacity: disabled ? 0.6 : 1 }}>
+      <div style={{ position: 'absolute', top: 3, left: on ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#F1F5F9', boxShadow: '0 1px 2px rgba(15, 23, 42, 0.18)', transition: 'left 0.15s' }} />
     </button>
   );
 }
 
-/* ── Vehicle categories data ─────────────────────────────────── */
-const vehicles = [
-  { type: 'bike'  as const, label: 'Bikes',  active: 12, desc: 'Urban last-mile delivery. Max payload 25kg.' },
-  { type: 'car'   as const, label: 'Cars',   active: 48, desc: 'Standard courier routes. Max payload 400kg.' },
-  { type: 'van'   as const, label: 'Vans',   active: 32, desc: 'Large parcel routes. Max payload 1,200kg.' },
-  { type: 'truck' as const, label: 'Trucks', active: 8,  desc: 'Inter-city logistics. Max payload 8,000kg.' },
-];
+const fallbackSettings: AdminFleetSettingsUpdatePayload = {
+  payout: { baseRatePerKm: 1.45, peakMultiplier: 1.5 },
+  maintenance: {
+    mileageThresholdEnabled: true,
+    mileageThresholdKm: 5000,
+    emissionCheckEnabled: true,
+    telematicsFaultsEnabled: false,
+    criticalNotification: 'Fleet Sync Pending',
+  },
+  regions: [
+    { id: 'klang-valley', name: 'Klang Valley', hubCount: 42, zone: 'Greater Kuala Lumpur', enabled: true },
+    { id: 'penang', name: 'Penang', hubCount: 15, zone: 'Island and Mainland', enabled: true },
+  ],
+  vehicleClasses: [
+    { type: 'BIKE', label: 'Bikes', description: 'Bike routes. Max payload 25kg.', enabled: true, active: 0 },
+    { type: 'CAR', label: 'Cars', description: 'Car routes. Max payload 400kg.', enabled: true, active: 0 },
+    { type: 'PICKUP', label: 'Pickups', description: 'Pickup routes. Max payload 800kg.', enabled: true, active: 0 },
+    { type: 'VAN_7FT', label: '7ft Vans', description: 'Van 7ft routes. Max payload 1,200kg.', enabled: true, active: 0 },
+    { type: 'VAN_9FT', label: '9ft Vans', description: 'Van 9ft routes. Max payload 1,600kg.', enabled: true, active: 0 },
+    { type: 'LORRY_10FT', label: '10ft Lorries', description: 'Lorry 10ft routes. Max payload 3,000kg.', enabled: true, active: 0 },
+    { type: 'LORRY_14FT', label: '14ft Lorries', description: 'Lorry 14ft routes. Max payload 5,000kg.', enabled: true, active: 0 },
+    { type: 'LORRY_17FT', label: '17ft Lorries', description: 'Lorry 17ft routes. Max payload 8,000kg.', enabled: true, active: 0 },
+  ],
+};
 
-/* ── Page ────────────────────────────────────────────────────── */
 export default function FleetSettingsPage() {
-  const [mileage,    setMileage]    = useState(true);
-  const [emission,   setEmission]   = useState(true);
-  const [telematics, setTelematics] = useState(false);
-  const [baseRate,   setBaseRate]   = useState('1.45');
+  const [snapshot, setSnapshot] = useState<AdminFleetSettingsSnapshot | null>(null);
+  const [settings, setSettings] = useState<AdminFleetSettingsUpdatePayload>(fallbackSettings);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+
+  async function loadFleetSettings() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getFleetSettings();
+      setSnapshot(res.data);
+      setSettings(res.data.settings);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load fleet settings');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadFleetSettings();
+  }, []);
+
+  async function saveFleetSettings() {
+    setSaving(true);
+    setError('');
+    setStatus('');
+    try {
+      const res = await updateFleetSettings(settings);
+      setSettings(res.data);
+      setStatus('Fleet settings saved.');
+      await loadFleetSettings();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save fleet settings');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const enabledRegions = useMemo(() => settings.regions.filter((region) => region.enabled), [settings.regions]);
+
+  function setPayout(key: keyof AdminFleetSettingsUpdatePayload['payout'], value: string) {
+    const next = Number(value);
+    setSettings((prev) => ({ ...prev, payout: { ...prev.payout, [key]: Number.isFinite(next) ? next : 0 } }));
+  }
+
+  function setMaintenance(key: keyof AdminFleetSettingsUpdatePayload['maintenance'], value: boolean | number | string) {
+    setSettings((prev) => ({ ...prev, maintenance: { ...prev.maintenance, [key]: value } }));
+  }
+
+  function setVehicleClass(index: number, patch: Partial<AdminFleetVehicleClass>) {
+    setSettings((prev) => ({
+      ...prev,
+      vehicleClasses: prev.vehicleClasses.map((entry, i) => i === index ? { ...entry, ...patch } : entry),
+    }));
+  }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F8FAFC', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F8FAFC', fontFamily: inter }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
+        <main style={{ flex: 1, padding: '28px', overflowY: 'auto', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', marginBottom: 24 }}>
+            <div>
+              <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.3px' }}>Fleet Infrastructure</h1>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748B', lineHeight: 1.6, maxWidth: 620 }}>
+                Configure live CarryOn fleet classes, payout policy, maintenance automation, and operating regions. Admin policy is fixed to MYR and {ADMIN_DISTANCE_UNIT}.
+              </p>
+            </div>
+            <button suppressHydrationWarning type="button" onClick={saveFleetSettings} disabled={saving || loading} style={{ minWidth: 148, height: 42, borderRadius: 10, background: '#2563EB', border: 'none', color: '#fff', fontSize: 13, fontWeight: 800, cursor: saving || loading ? 'not-allowed' : 'pointer', opacity: saving || loading ? 0.65 : 1 }}>
+              {saving ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
 
-        {/* Content */}
-        <main style={{ flex: 1, padding: '28px 28px', overflowY: 'auto', boxSizing: 'border-box' }}>
+          {(loading || error || status) && (
+            <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, border: `1px solid ${error ? '#FCA5A5' : '#BFDBFE'}`, background: error ? '#FEF2F2' : '#EFF6FF', color: error ? '#B91C1C' : '#1D4ED8', fontSize: 13, fontWeight: 700 }}>
+              {loading ? 'Loading fleet settings...' : error || status}
+            </div>
+          )}
 
-          {/* Page title */}
-          <h1 style={{ margin: '0 0 6px', fontFamily: 'Inter', fontSize: '26px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.3px' }}>Fleet Infrastructure</h1>
-          <p style={{ margin: '0 0 24px', fontFamily: 'Inter', fontSize: '13px', color: '#64748B', lineHeight: '1.6', maxWidth: '560px' }}>
-            Configure the operational parameters for your Carry On logistics network. Manage asset classification, financial triggers, and automated maintenance workflows.
-          </p>
-
-          {/* Two-column layout */}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-
-            {/* LEFT column */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-              {/* Vehicle Categories */}
-              <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '22px 24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>Vehicle Categories</span>
-                  <button suppressHydrationWarning style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add New Class</button>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <section style={cardStyle}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                  <span style={sectionTitleStyle}>Vehicle Categories</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: '#2563EB', letterSpacing: 0.5 }}>CANONICAL CATALOG</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  {vehicles.map((v) => (
-                    <div key={v.label} style={{ background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                        <VehicleIcon type={v.type} />
-                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: '999px', background: '#DBEAFE', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#1D4ED8' }}>
-                          {v.active} Active
-                        </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
+                  {settings.vehicleClasses.map((v, index) => (
+                    <div key={v.type} style={{ background: '#F8FAFC', borderRadius: 10, border: '1px solid #E2E8F0', padding: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                        <VehicleIcon type={iconType(v.type)} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: 999, background: '#DBEAFE', fontSize: 11, fontWeight: 800, color: '#1D4ED8' }}>
+                            {v.active ?? 0} Active
+                          </span>
+                          <Toggle on={v.enabled} onChange={(enabled) => setVehicleClass(index, { enabled })} disabled={saving} />
+                        </div>
                       </div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>{v.label}</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#2563EB', lineHeight: '1.5' }}>{v.desc}</div>
+                      <input suppressHydrationWarning value={v.label} onChange={(e) => setVehicleClass(index, { label: e.target.value })} style={textInputStyle} />
+                      <textarea suppressHydrationWarning value={v.description} onChange={(e) => setVehicleClass(index, { description: e.target.value })} style={{ ...textInputStyle, height: 58, resize: 'vertical', marginTop: 8, color: '#2563EB', fontSize: 11, lineHeight: 1.45 }} />
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
 
-              {/* Operational Regions */}
-              <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '22px 24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>Operational Regions</span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button suppressHydrationWarning style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', display: 'flex', alignItems: 'center' }}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="4" height="12" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="7" y="2" width="4" height="12" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="1" y="2" width="14" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3"/></svg>
-                    </button>
-                    <button suppressHydrationWarning style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', display: 'flex', alignItems: 'center' }}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                    </button>
-                  </div>
+              <section style={cardStyle}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <span style={sectionTitleStyle}>Operational Regions</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{enabledRegions.length} enabled</span>
                 </div>
-
-                {[
-                  { name: 'London Metropolitan', sub: '42 Active hubs • Zone 1-6' },
-                  { name: 'Manchester District',  sub: '15 Active hubs • Greater Manchester' },
-                ].map((region, i, arr) => (
-                  <div key={region.name} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 0', borderTop: i === 0 ? '1px solid #F1F5F9' : 'none', borderBottom: i < arr.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M9 1C6.239 1 4 3.239 4 6c0 4.5 5 11 5 11s5-6.5 5-11c0-2.761-2.239-5-5-5Z" stroke="#2563EB" strokeWidth="1.5"/>
-                        <circle cx="9" cy="6" r="2" fill="#2563EB"/>
-                      </svg>
+                {settings.regions.map((region, index) => (
+                  <div key={region.id} style={{ display: 'grid', gridTemplateColumns: '38px 1fr 86px 120px 56px', alignItems: 'center', gap: 12, padding: '14px 0', borderTop: index === 0 ? '1px solid #F1F5F9' : 'none', borderBottom: index < settings.regions.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1C6.239 1 4 3.239 4 6c0 4.5 5 11 5 11s5-6.5 5-11c0-2.761-2.239-5-5-5Z" stroke="#2563EB" strokeWidth="1.5"/><circle cx="9" cy="6" r="2" fill="#2563EB"/></svg>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{region.name}</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{region.sub}</div>
-                    </div>
-                    <button suppressHydrationWarning style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center', padding: '4px' }}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1.2" fill="currentColor"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="8" cy="13" r="1.2" fill="currentColor"/></svg>
-                    </button>
+                    <input suppressHydrationWarning value={region.name} onChange={(e) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, name: e.target.value, id: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || r.id } : r) }))} style={textInputStyle} />
+                    <input suppressHydrationWarning type="number" value={region.hubCount} onChange={(e) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, hubCount: Number(e.target.value) } : r) }))} style={textInputStyle} />
+                    <input suppressHydrationWarning value={region.zone} onChange={(e) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, zone: e.target.value } : r) }))} style={textInputStyle} />
+                    <Toggle on={region.enabled} onChange={(enabled) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, enabled } : r) }))} disabled={saving} />
                   </div>
                 ))}
-              </div>
-
+              </section>
             </div>
 
-            {/* RIGHT column */}
-            <div style={{ width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-              {/* Payout Rates */}
-              <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 20px' }}>
-                <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#0F172A', marginBottom: '16px' }}>Payout Rates</div>
-
-                <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.6px', marginBottom: '8px' }}>BASE RATE / MILE</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '44px', padding: '0 14px', background: '#B7DAF5', border: '1.5px solid #BFDBFE', borderRadius: '8px', marginBottom: '16px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#94A3B8' }}>£</span>
-                  <input
-                    suppressHydrationWarning
-                    value={baseRate}
-                    onChange={(e) => setBaseRate(e.target.value)}
-                    style={{ flex: 1, border: 'none', background: 'transparent', fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#0F172A', outline: 'none' }}
-                  />
+            <div style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <section style={cardStyle}>
+                <div style={sectionTitleStyle}>Payout Rates</div>
+                <label style={labelStyle}>BASE RATE / {ADMIN_DISTANCE_UNIT.toUpperCase()}</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', background: '#DBEAFE', border: '1.5px solid #BFDBFE', borderRadius: 8, margin: '8px 0 16px' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#2563EB' }}>MYR</span>
+                  <input suppressHydrationWarning type="number" step="0.01" value={settings.payout.baseRatePerKm} onChange={(e) => setPayout('baseRatePerKm', e.target.value)} style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 18, fontWeight: 800, color: '#0F172A', outline: 'none', minWidth: 0 }} />
                 </div>
+                <label style={labelStyle}>PEAK MULTIPLIER</label>
+                <input suppressHydrationWarning type="number" step="0.01" value={settings.payout.peakMultiplier} onChange={(e) => setPayout('peakMultiplier', e.target.value)} style={{ ...textInputStyle, fontSize: 22, fontWeight: 800, color: '#2563EB', textAlign: 'right', margin: '8px 0 14px' }} />
+                <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5 }}>Current base payout: <strong>{formatMoney(settings.payout.baseRatePerKm)}</strong> per {ADMIN_DISTANCE_UNIT}.</div>
+              </section>
 
-                <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.6px', marginBottom: '6px' }}>PEAK MULTIPLIER</div>
-                <div style={{ fontFamily: 'Inter', fontSize: '22px', fontWeight: 800, color: '#2563EB', marginBottom: '18px', textAlign: 'right' }}>x1.5</div>
-
-                <button suppressHydrationWarning style={{ width: '100%', height: '40px', borderRadius: '8px', background: '#2563EB', border: 'none', cursor: 'pointer', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#fff' }}>
-                  Update Financials
-                </button>
-              </div>
-
-              {/* Maintenance Logic */}
-              <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '28px 28px' }}>
-                <div style={{ fontFamily: 'Inter', fontSize: '31px', fontWeight: 700, color: '#0F172A', marginBottom: '30px', lineHeight: 1.08, letterSpacing: '-0.4px' }}>Maintenance Logic</div>
-
-                {/* Toggle rows */}
+              <section style={{ ...cardStyle, borderRadius: 14, padding: 28 }}>
+                <div style={{ fontSize: 31, fontWeight: 800, color: '#0F172A', marginBottom: 26, lineHeight: 1.08, letterSpacing: '-0.4px' }}>Maintenance Logic</div>
                 {[
-                  { label: 'Mileage Threshold', sub: 'Auto-alert every 5k miles', on: mileage,    set: setMileage    },
-                  { label: 'Emission Check',    sub: 'Annual regulatory alert',   on: emission,   set: setEmission   },
-                  { label: 'Telematics Faults', sub: 'Real-time engine alerts',   on: telematics, set: setTelematics },
-                ].map((item, i) => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingBottom: i < 2 ? '22px' : '0', marginBottom: i < 2 ? '22px' : '0', borderBottom: i < 2 ? '1px solid #EFF3F8' : 'none' }}>
+                  { key: 'mileageThresholdEnabled' as const, label: 'Mileage Threshold', sub: `Auto-alert every ${settings.maintenance.mileageThresholdKm.toLocaleString('en-MY')} km`, on: settings.maintenance.mileageThresholdEnabled },
+                  { key: 'emissionCheckEnabled' as const, label: 'Emission Check', sub: 'Annual regulatory alert', on: settings.maintenance.emissionCheckEnabled },
+                  { key: 'telematicsFaultsEnabled' as const, label: 'Telematics Faults', sub: 'Real-time engine alerts', on: settings.maintenance.telematicsFaultsEnabled },
+                ].map((item, index) => (
+                  <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingBottom: index < 2 ? 20 : 0, marginBottom: index < 2 ? 20 : 0, borderBottom: index < 2 ? '1px solid #EFF3F8' : 'none' }}>
                     <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '4px', lineHeight: 1.18 }}>{item.label}</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#2E74D7', lineHeight: 1.2 }}>{item.sub}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 4, lineHeight: 1.18 }}>{item.label}</div>
+                      <div style={{ fontSize: 12, color: '#2E74D7', lineHeight: 1.2 }}>{item.sub}</div>
                     </div>
-                    <Toggle on={item.on} onChange={item.set} />
+                    <Toggle on={item.on} onChange={(value) => setMaintenance(item.key, value)} disabled={saving} />
                   </div>
                 ))}
+                <label style={{ ...labelStyle, marginTop: 22 }}>THRESHOLD KM</label>
+                <input suppressHydrationWarning type="number" value={settings.maintenance.mileageThresholdKm} onChange={(e) => setMaintenance('mileageThresholdKm', Number(e.target.value))} style={{ ...textInputStyle, marginTop: 8 }} />
 
-                {/* Critical Notification */}
-                <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: '2px solid #ECEFF4' }}>
-                  <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#111827', letterSpacing: '0.8px', marginBottom: '14px' }}>CRITICAL NOTIFICATION</div>
-                  <div style={{ background: '#A5C8E4', borderRadius: '16px', padding: '22px 22px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                    <svg width="34" height="34" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: '3px' }}>
-                      <path d="M8 2L14.5 13H1.5L8 2Z" stroke="#2C79DE" strokeWidth="1.4" strokeLinejoin="round"/>
-                      <path d="M8 6.5v3M8 11v.5" stroke="#2C79DE" strokeWidth="1.4" strokeLinecap="round"/>
-                    </svg>
+                <div style={{ marginTop: 28, paddingTop: 24, borderTop: '2px solid #ECEFF4' }}>
+                  <label style={labelStyle}>CRITICAL NOTIFICATION</label>
+                  <input suppressHydrationWarning value={settings.maintenance.criticalNotification} onChange={(e) => setMaintenance('criticalNotification', e.target.value)} style={{ ...textInputStyle, marginTop: 10 }} />
+                  <div style={{ marginTop: 14, background: '#DBEAFE', borderRadius: 14, padding: 18, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                    <svg width="28" height="28" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}><path d="M8 2L14.5 13H1.5L8 2Z" stroke="#2C79DE" strokeWidth="1.4" strokeLinejoin="round"/><path d="M8 6.5v3M8 11v.5" stroke="#2C79DE" strokeWidth="1.4" strokeLinecap="round"/></svg>
                     <div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#2C79DE', marginBottom: '4px', lineHeight: 1.15 }}>Fleet Sync Pending</div>
-                      <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#2C79DE', lineHeight: '1.3' }}>4 trucks missed the weekly scan.</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#2C79DE', marginBottom: 4, lineHeight: 1.15 }}>{settings.maintenance.criticalNotification}</div>
+                      <div style={{ fontSize: 12, color: '#2C79DE', lineHeight: 1.35 }}>Latest policy will be persisted to AdminSetting and audited.</div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </section>
 
+              <section style={cardStyle}>
+                <div style={sectionTitleStyle}>Recent Fleet Audits</div>
+                {(snapshot?.auditItems.length ? snapshot.auditItems : [{ icon: 'edit' as const, text: 'No fleet settings updates yet', time: 'Now' }]).map((item, index) => (
+                  <div key={`${item.text}-${index}`} style={{ padding: '12px 0', borderBottom: index === 0 ? '1px solid #F1F5F9' : 'none', fontSize: 12, color: '#64748B' }}>
+                    <strong style={{ display: 'block', color: '#0F172A', fontSize: 13 }}>{item.text}</strong>
+                    {item.time}
+                  </div>
+                ))}
+              </section>
             </div>
           </div>
         </main>
@@ -224,3 +281,39 @@ export default function FleetSettingsPage() {
     </div>
   );
 }
+
+const cardStyle: React.CSSProperties = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #E2E8F0',
+  padding: '22px 24px',
+};
+
+const sectionTitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 800,
+  color: '#0F172A',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 10,
+  fontWeight: 800,
+  color: '#94A3B8',
+  letterSpacing: 0.6,
+};
+
+const textInputStyle: React.CSSProperties = {
+  width: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
+  padding: '8px 10px',
+  borderRadius: 8,
+  border: '1px solid #E2E8F0',
+  background: '#FFFFFF',
+  fontFamily: inter,
+  fontSize: 13,
+  fontWeight: 700,
+  color: '#0F172A',
+  outline: 'none',
+};

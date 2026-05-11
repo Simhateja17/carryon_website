@@ -22,10 +22,10 @@ export default function BillingSubscriptionPage() {
   };
 
   const invoices = [
-    { id: 'INV-2024-082', date: 'Aug 24, 2024', plan: 'Pro Enterprise', amount: '$4,250.00', status: 'PAID' },
-    { id: 'INV-2024-079', date: 'Jul 24, 2024', plan: 'Pro Enterprise', amount: '$4,250.00', status: 'PAID' },
-    { id: 'INV-2024-071', date: 'Jun 24, 2024', plan: 'Pro Enterprise', amount: '$4,250.00', status: 'PAID' },
-    { id: 'INV-2024-065', date: 'May 24, 2024', plan: 'Pro Enterprise', amount: '$4,250.00', status: 'PAID' },
+    { id: 'INV-2024-082', date: 'Aug 24, 2024', plan: 'Pro Enterprise', amount: 'RM 4,250.00', status: 'PAID' },
+    { id: 'INV-2024-079', date: 'Jul 24, 2024', plan: 'Pro Enterprise', amount: 'RM 4,250.00', status: 'PAID' },
+    { id: 'INV-2024-071', date: 'Jun 24, 2024', plan: 'Pro Enterprise', amount: 'RM 4,250.00', status: 'PAID' },
+    { id: 'INV-2024-065', date: 'May 24, 2024', plan: 'Pro Enterprise', amount: 'RM 4,250.00', status: 'PAID' },
   ];
 
   return (
@@ -72,7 +72,7 @@ export default function BillingSubscriptionPage() {
                 <span style={{ background: 'rgba(47,128,237,0.12)', color: '#2F80ED', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', padding: '4px 10px', borderRadius: '20px' }}>ACTIVE PLAN</span>
               </div>
               <h2 style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: '26px', color: '#2F80ED', margin: '0 0 4px 0' }}>Enterprise Tier</h2>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: '#191C1E', margin: '8px 0 2px 0' }}>$4,250.00</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#191C1E', margin: '8px 0 2px 0' }}>RM 4,250.00</div>
               <div style={{ color: '#6B7280', fontSize: '13px', marginBottom: '20px' }}>Billed Annually</div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
@@ -111,9 +111,9 @@ export default function BillingSubscriptionPage() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
                 {[
-                  { label: 'Base Subscription', amount: '$3,800' },
-                  { label: 'Overage Surcharge', amount: '$420' },
-                  { label: 'API Usage', amount: '$30' },
+                  { label: 'Base Subscription', amount: 'RM 3,800' },
+                  { label: 'Overage Surcharge', amount: 'RM 420' },
+                  { label: 'API Usage', amount: 'RM 30' },
                 ].map((item) => (
                   <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#424754', fontSize: '13px' }}>{item.label}</span>
@@ -125,7 +125,7 @@ export default function BillingSubscriptionPage() {
               <div style={{ borderTop: '1px solid rgba(47,128,237,0.2)', paddingTop: '14px', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#191C1E', fontSize: '14px', fontWeight: 700 }}>Estimated Total</span>
-                  <span style={{ color: '#2F80ED', fontSize: '18px', fontWeight: 800 }}>$4,250</span>
+                  <span style={{ color: '#2F80ED', fontSize: '18px', fontWeight: 800 }}>RM 4,250</span>
                 </div>
               </div>
 

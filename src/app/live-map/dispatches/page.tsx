@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import MapSurface from '@/components/MapSurface';
+import AdminDataStatus from '@/components/AdminDataStatus';
+import { useAdminPolling } from '@/lib/useAdminPolling';
+import { toDispatchOperationsView, type DispatchOperationsView } from '@/lib/adminOperations';
+import { getDispatchMap } from '@/lib/api';
+import type { DispatchMapSnapshot } from '@/types';
 
 /* ── Icons ────────────────────────────────────────────────────── */
 function LocationPinIcon() {
@@ -24,70 +30,11 @@ function FlagIcon() {
   );
 }
 
-function TruckIcon({ color = '#2F80ED' }: { color?: string }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="2" y="5" width="14" height="10" rx="1.5" stroke={color} strokeWidth="1.5" />
-      <path d="M16 8h4l3 5h-7V8Z" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx="6.5" cy="17.5" r="2" stroke={color} strokeWidth="1.5" />
-      <circle cx="17.5" cy="17.5" r="2" stroke={color} strokeWidth="1.5" />
-      <path d="M8.5 17.5h7" stroke={color} strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function CheckBadgeIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="9" fill="#16A34A" />
-      <path d="M6 10l2.5 2.5L14 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function InfoIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="8" cy="8" r="7" stroke="#94A3B8" strokeWidth="1.3" />
       <path d="M8 7v4M8 5.5v.1" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function WarningIcon({ bg = '#DBEAFE' }: { bg?: string }) {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="16" cy="16" r="16" fill={bg} />
-      <path d="M16 9v8M16 19.5v.1" stroke="#2F80ED" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CheckCircleIcon({ bg = '#DBEAFE' }: { bg?: string }) {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="16" cy="16" r="16" fill={bg} />
-      <path d="M10 16l4 4 6-6" stroke="#2F80ED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function UserIcon({ bg = '#DBEAFE' }: { bg?: string }) {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="16" cy="16" r="16" fill={bg} />
-      <circle cx="16" cy="13" r="3" stroke="#2F80ED" strokeWidth="1.5" />
-      <path d="M10 22c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function FileIcon({ bg = '#DBEAFE' }: { bg?: string }) {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="16" cy="16" r="16" fill={bg} />
-      <path d="M17 9h-6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-9l-3-4Z" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M17 9v4h4M17 13h4" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -109,7 +56,24 @@ function ChevronDownIcon() {
 }
 
 /* ── Map Placeholder ──────────────────────────────────────────── */
-function MapPlaceholder() {
+function MapPlaceholder({ snapshot }: { snapshot: DispatchMapSnapshot | null }) {
+  if (snapshot) {
+    return (
+      <MapSurface
+        minHeight={420}
+        markers={[
+          { id: 'driver', position: snapshot.booking.driver?.position || null, label: snapshot.booking.driver?.name || 'Driver', tone: 'driver' },
+          { id: 'pickup', position: snapshot.booking.route.pickup, label: 'Pickup', tone: 'pickup' },
+          { id: 'dropoff', position: snapshot.booking.route.dropoff, label: 'Drop', tone: 'dropoff' },
+        ]}
+        routes={[
+          { id: 'planned', path: snapshot.plannedRoute.geometry, tone: 'planned' },
+          { id: 'actual', path: snapshot.actualPath.map((point) => point.position), tone: 'actual' },
+        ]}
+      />
+    );
+  }
+
   return (
     <div style={{
       position: 'relative',
@@ -257,41 +221,48 @@ function EventLogItem({ event }: { event: EventItem }) {
   );
 }
 
-/* ── Page ─────────────────────────────────────────────────────── */
-export default function DispatchesPage() {
-  const router = useRouter();
-  const [showAllEvents, setShowAllEvents] = useState(false);
+function statusLabel(status?: string) {
+  return (status || 'LOADING').replaceAll('_', ' ');
+}
 
-  const events: EventItem[] = [
-    {
-      icon: <img src="/event-icon-route-deviation.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
-      title: 'Route Deviation Detected',
-      description: 'Driver departed from planned I-90 route at Exit 42. Heading North on Kennedy Expressway. AI Prediction: Heavy traffic avoidance.',
-      time: '14:12 PM',
-      actions: [
-        { label: 'Acknowledge' },
-        { label: 'View Street View' },
-      ],
-    },
-    {
-      icon: <img src="/event-icon-pickup-complete.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
-      title: 'Pickup Completed',
-      description: 'Central Distribution Hub A. 4 Pallets confirmed. Digital signature acquired from dispatcher Dave S.',
-      time: '13:45 PM',
-    },
-    {
-      icon: <img src="/event-icon-driver-assigned.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
-      title: 'Driver Assigned',
-      description: 'Marcus Thorne accepted the dispatch. ETA to origin: 15 minutes.',
-      time: '12:30 PM',
-    },
-    {
-      icon: <img src="/event-icon-order-created.png" alt="" style={{ width: '24px', height: '24px', display: 'block' }} />,
-      title: 'Order Created',
-      description: 'System generated dispatch for #CO-88219-X. Priority set by Automation Rule 4.',
-      time: '11:05 AM',
-    },
-  ];
+function vehicleLabel(snapshot: DispatchMapSnapshot | null) {
+  const vehicle = snapshot?.booking.driver?.vehicle;
+  if (!vehicle) return snapshot?.booking.vehicleType || 'Unassigned vehicle';
+  return [vehicle.make, vehicle.model, vehicle.licensePlate ? `(${vehicle.licensePlate})` : '']
+    .filter(Boolean)
+    .join(' ') || vehicle.type || snapshot?.booking.vehicleType || 'Assigned vehicle';
+}
+
+function statusIcon(success: boolean) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={success ? '/event-icon-order-created.png' : '/event-icon-route-deviation.png'} alt="" style={{ width: '24px', height: '24px', display: 'block' }} />
+  );
+}
+
+/* ── Page ─────────────────────────────────────────────────────── */
+function DispatchesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showAllEvents, setShowAllEvents] = useState(false);
+  const requestedBookingId = searchParams.get('bookingId') || searchParams.get('orderCode') || 'latest';
+  const dispatchState = useAdminPolling<DispatchOperationsView>(
+    async () => { const res = await getDispatchMap(requestedBookingId); return toDispatchOperationsView(res.data); },
+    { intervalMs: 12_000 }
+  );
+  const mapSnapshot = dispatchState.data?.snapshot || null;
+
+  const booking = mapSnapshot?.booking;
+  const orderCode = booking?.orderCode || requestedBookingId;
+  const driverName = booking?.driver?.name || 'Unassigned driver';
+  const rawEvents = (dispatchState.data?.events || []).slice().reverse();
+  const events: EventItem[] = (showAllEvents ? rawEvents : rawEvents.slice(0, 5)).map((event) => ({
+    icon: statusIcon(event.success),
+    title: event.title,
+    description: event.description || `Event recorded for ${orderCode}.`,
+    time: event.time,
+    actions: event.success ? undefined : [{ label: 'Acknowledge' }],
+  }));
 
   return (
     <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', background: '#F7F9FB' }}>
@@ -303,6 +274,7 @@ export default function DispatchesPage() {
 
         {/* Main content */}
         <div style={{ flex: 1, padding: '28px 32px 40px', overflowY: 'auto' }}>
+          <AdminDataStatus error={dispatchState.error} stale={dispatchState.stale} lastUpdated={dispatchState.lastUpdated} />
 
           {/* Breadcrumb */}
           <div style={{
@@ -329,7 +301,7 @@ export default function DispatchesPage() {
             </button>
             <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8' }}>/</span>
             <span style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>
-              Dispatch #CO-88219-X
+              Dispatch {orderCode}
             </span>
           </div>
 
@@ -351,7 +323,7 @@ export default function DispatchesPage() {
                 margin: 0,
                 lineHeight: '1.2',
               }}>
-                Dispatch #CO-88219-X
+                Dispatch {orderCode}
               </h1>
               <div style={{
                 display: 'flex',
@@ -373,7 +345,7 @@ export default function DispatchesPage() {
                   textTransform: 'uppercase',
                   letterSpacing: '0.3px',
                 }}>
-                  In Transit
+                  {statusLabel(booking?.status)}
                 </span>
                 <span style={{
                   display: 'inline-flex',
@@ -388,7 +360,7 @@ export default function DispatchesPage() {
                     <circle cx="8" cy="8" r="6.5" stroke="#94A3B8" strokeWidth="1.2" />
                     <path d="M8 5v3.5l2.5 1.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" />
                   </svg>
-                  Estimated Arrival: 14:45 (in 22 mins)
+                  ETA: {booking?.etaMinutes != null ? `${booking.etaMinutes} mins` : 'Unavailable'}
                 </span>
               </div>
             </div>
@@ -483,7 +455,7 @@ export default function DispatchesPage() {
                       lineHeight: '20px',
                       color: '#0F172A',
                     }}>
-                      Central Distribution Hub A
+                      {booking?.route.pickupLabel || 'Pickup'}
                     </div>
                     <div style={{
                       fontFamily: 'Inter',
@@ -492,7 +464,9 @@ export default function DispatchesPage() {
                       lineHeight: '18px',
                       color: '#64748B',
                     }}>
-                      102 Logistics Way, Chicago, IL
+                      {booking?.route.pickup
+                        ? `${booking.route.pickup.lat.toFixed(5)}, ${booking.route.pickup.lng.toFixed(5)}`
+                        : 'Coordinates unavailable'}
                     </div>
                   </div>
                   <LocationPinIcon />
@@ -529,7 +503,7 @@ export default function DispatchesPage() {
                       lineHeight: '20px',
                       color: '#0F172A',
                     }}>
-                      Northside Medical Center
+                      {booking?.route.dropoffLabel || 'Drop-off'}
                     </div>
                     <div style={{
                       fontFamily: 'Inter',
@@ -538,7 +512,9 @@ export default function DispatchesPage() {
                       lineHeight: '18px',
                       color: '#64748B',
                     }}>
-                      4422 Harrison Blvd, Evanston, IL
+                      {booking?.route.dropoff
+                        ? `${booking.route.dropoff.lat.toFixed(5)}, ${booking.route.dropoff.lng.toFixed(5)}`
+                        : 'Coordinates unavailable'}
                     </div>
                   </div>
                   <FlagIcon />
@@ -557,7 +533,7 @@ export default function DispatchesPage() {
                       textTransform: 'uppercase',
                       marginBottom: '4px',
                     }}>
-                      Package Weight
+                      Vehicle Type
                     </div>
                     <div style={{
                       fontFamily: 'Inter',
@@ -566,7 +542,7 @@ export default function DispatchesPage() {
                       lineHeight: '28px',
                       color: '#0F172A',
                     }}>
-                      142.5 kg
+                      {booking?.vehicleType || 'N/A'}
                     </div>
                   </div>
                   <div>
@@ -580,7 +556,7 @@ export default function DispatchesPage() {
                       textTransform: 'uppercase',
                       marginBottom: '4px',
                     }}>
-                      Priority
+                      Route Status
                     </div>
                     <div style={{
                       fontFamily: 'Inter',
@@ -589,7 +565,7 @@ export default function DispatchesPage() {
                       lineHeight: '20px',
                       color: '#DC2626',
                     }}>
-                      High (Level 1)
+                      {mapSnapshot?.deviation.status || 'UNKNOWN'}
                     </div>
                   </div>
                 </div>
@@ -616,7 +592,7 @@ export default function DispatchesPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/driver-profile-picture.png"
-                    alt="Marcus Thorne"
+                    alt={driverName}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
@@ -640,7 +616,7 @@ export default function DispatchesPage() {
                     lineHeight: '20px',
                     color: '#0F172A',
                   }}>
-                    Marcus Thorne
+                    {driverName}
                   </div>
                   <div style={{
                     fontFamily: 'Inter',
@@ -649,7 +625,7 @@ export default function DispatchesPage() {
                     lineHeight: '16px',
                     color: '#64748B',
                   }}>
-                    ID: #DX-9022 &bull; 4.9 Rating
+                    {booking?.driver ? `ID: ${booking.driver.id}` : 'No assigned driver'}
                   </div>
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -706,7 +682,7 @@ export default function DispatchesPage() {
                     lineHeight: '20px',
                     color: '#0F172A',
                   }}>
-                    Freightliner M2 (VAN-04)
+                    {vehicleLabel(mapSnapshot)}
                   </div>
                   <div style={{
                     display: 'flex',
@@ -721,7 +697,7 @@ export default function DispatchesPage() {
                       background: '#E2E8F0',
                       overflow: 'hidden',
                     }}>
-                      <div style={{ width: '92%', height: '100%', borderRadius: '9999px', background: '#16A34A' }} />
+                      <div style={{ width: booking?.driver?.isOnline ? '100%' : '20%', height: '100%', borderRadius: '9999px', background: booking?.driver?.isOnline ? '#16A34A' : '#94A3B8' }} />
                     </div>
                     <span style={{
                       fontFamily: 'Inter',
@@ -729,7 +705,7 @@ export default function DispatchesPage() {
                       fontWeight: 600,
                       color: '#16A34A',
                     }}>
-                      92%
+                      {booking?.driver?.isOnline ? 'Online' : 'Offline'}
                     </span>
                     <span style={{
                       fontFamily: 'Inter',
@@ -737,7 +713,7 @@ export default function DispatchesPage() {
                       fontWeight: 400,
                       color: '#64748B',
                     }}>
-                      &bull; Fuel: 450mi range
+                      &bull; {booking?.driver?.vehicle?.type || booking?.vehicleType || 'Vehicle'}
                     </span>
                   </div>
                 </div>
@@ -754,7 +730,7 @@ export default function DispatchesPage() {
               minWidth: 0,
             }}>
               <div style={{ position: 'relative' }}>
-                <MapPlaceholder />
+                <MapPlaceholder snapshot={mapSnapshot} />
 
                 {/* Map Legend */}
                 <div style={{
@@ -851,7 +827,7 @@ export default function DispatchesPage() {
                   fontWeight: 400,
                   color: '#64748B',
                 }}>
-                  Showing 5 of 12 events
+                  Showing {events.length} of {mapSnapshot?.events.length || 0} events
                 </span>
                 <button suppressHydrationWarning style={{
                   background: 'none',
@@ -870,9 +846,15 @@ export default function DispatchesPage() {
 
             {/* Events */}
             <div>
-              {events.map((event) => (
-                <EventLogItem key={event.title} event={event} />
-              ))}
+              {events.length > 0
+                ? events.map((event) => (
+                  <EventLogItem key={`${event.title}-${event.time}`} event={event} />
+                ))
+                : (
+                  <div style={{ padding: '18px 0', fontFamily: 'Inter', fontSize: '12px', color: '#64748B' }}>
+                    No lifecycle events have been recorded for this dispatch yet.
+                  </div>
+                )}
             </div>
 
             {/* View all */}
@@ -897,7 +879,7 @@ export default function DispatchesPage() {
               }}
             >
               <ChevronDownIcon />
-              View All 12 History Items
+              {showAllEvents ? 'Collapse History' : `View All ${mapSnapshot?.events.length || 0} History Items`}
             </button>
           </div>
         </div>
@@ -905,5 +887,13 @@ export default function DispatchesPage() {
     </div>
   </div>
 </div>
+  );
+}
+
+export default function DispatchesPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#F7F9FB' }} />}>
+      <DispatchesContent />
+    </Suspense>
   );
 }

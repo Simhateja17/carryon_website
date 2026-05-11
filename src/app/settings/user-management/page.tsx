@@ -56,7 +56,7 @@ const auditLogs = [
     moduleColor: '#7C3AED',
     moduleBg: '#F5F3FF',
     detail: 'Refunded',
-    detailLink: '$120.50 to #REF-2210',
+    detailLink: 'RM 120.50 to #REF-2210',
   },
   {
     id: 3,

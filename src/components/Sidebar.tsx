@@ -10,12 +10,11 @@ const manrope = "'Manrope', Inter, sans-serif";
 function getSectionForPath(p: string): string | null {
   if (p === '/command-center' || p === '/') return 'dashboard';
   if (p.startsWith('/incident-center')) return 'incident';
-  if (p.startsWith('/analytics')) return 'analytics';
   if (p.startsWith('/live-map')) return 'live';
   if (p.startsWith('/orders')) return 'orders';
   if (p.startsWith('/drivers')) return 'drivers';
   if (p.startsWith('/customers')) return 'customers';
-  if (p.startsWith('/settings') || p === '/revenue' || p.startsWith('/settings/pricing')) return 'settings';
+  if (p.startsWith('/settings')) return 'settings';
   return null;
 }
 
@@ -208,9 +207,9 @@ function SettingsSubLink({ label, active, onClick, first }: { label: string; act
 // ── Settings sub-items data ────────────────────────────────────────────────────
 const settingsSubItems = [
   { label: 'FLEET MANAGEMENT', href: '/settings/fleet-settings', match: (p: string) => p.startsWith('/settings/fleet-settings') },
-  { label: 'PAYMENTS & EARNINGS', href: '/revenue', match: (p: string) => p === '/revenue' },
-  { label: 'REPORTS & ANALYTICS', href: '/analytics', match: (p: string) => p.startsWith('/analytics') },
-  { label: 'SAFETY & FRAUD', href: '/settings', match: (p: string) => p === '/settings' },
+  { label: 'PAYMENTS & EARNINGS', href: '/settings/revenue', match: (p: string) => p.startsWith('/settings/revenue') },
+  { label: 'REPORTS & ANALYTICS', href: '/settings/analytics', match: (p: string) => p.startsWith('/settings/analytics') },
+  { label: 'SAFETY & FRAUD', href: '/settings/safety-fraud', match: (p: string) => p.startsWith('/settings/safety-fraud') },
   { label: 'NOTIFICATIONS', href: '/settings/notifications', match: (p: string) => p.startsWith('/settings/notifications') },
   { label: 'ADMIN & ROLES', href: '/settings/user-management', match: (p: string) => p.startsWith('/settings/user-management') },
   { label: 'PRICING AND FARE MANAGEMENT', href: '/settings/pricing', match: (p: string) => p.startsWith('/settings/pricing') },
@@ -236,7 +235,6 @@ export default function Sidebar() {
 
   const dashActive = pathname === '/command-center' || pathname === '/';
   const incidentActive = pathname.startsWith('/incident-center');
-  const analyticsActive = pathname.startsWith('/analytics');
   const liveActive = pathname.startsWith('/live-map');
   const ordersActive = pathname.startsWith('/orders');
   const driversActive = pathname.startsWith('/drivers');
@@ -351,6 +349,7 @@ export default function Sidebar() {
           </div>
           {openSection === 'drivers' && (
             <div style={{ paddingLeft: '48px', paddingRight: '16px' }}>
+              <SubLink label="ONBOARDING REVIEW" onClick={() => router.push('/drivers/onboarding')} active={pathname === '/drivers/onboarding'} />
               <SubLink label="REGISTER DRIVER" onClick={() => router.push('/drivers/register')} active={pathname === '/drivers/register'} />
             </div>
           )}

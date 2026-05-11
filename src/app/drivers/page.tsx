@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DriverAdvancedFiltersPanel from '@/components/DriverAdvancedFiltersPanel';
-import { getAdminDrivers, type DriverListItem } from '@/lib/api';
+import { getAdminDrivers } from '@/lib/api';
+import type { DriverListItem } from '@/types';
 
 /* ── Types ───────────────────────────────────────────────────── */
 type DriverStatus = 'ONLINE' | 'BUSY' | 'OFFLINE';
@@ -48,7 +49,7 @@ function toDriverRow(driver: DriverListItem): Driver {
     licenseClass: driver.verificationStatus.replace('_', ' '),
     licenseType: driver.isVerified ? 'Verified' : 'Review',
     dotColor: driver.isOnline ? '#22C55E' : '#94A3B8',
-    avatarSrc: driver.photo || '/driver-avatar.png',
+    avatarSrc: driver.photo?.startsWith('http') ? driver.photo : '/driver-avatar.png',
     vehicleName: driver.vehicleSummary || 'No vehicle submitted',
     vehicleId: driver.hasVehicle ? `ID: ${driver.id.slice(0, 6).toUpperCase()}` : 'Awaiting vehicle',
     routeFrom: driver.isOnline ? 'Available' : 'No Active Route',
@@ -125,7 +126,7 @@ function WarningIcon() {
 }
 
 /* ── Table Row ───────────────────────────────────────────────── */
-function DriverTableRow({ driver }: { driver: Driver }) {
+function DriverTableRow({ driver, onOpen }: { driver: Driver; onOpen: (id: string) => void }) {
   const status = statusBadgeStyle(driver.status);
   return (
     <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
@@ -152,9 +153,25 @@ function DriverTableRow({ driver }: { driver: Driver }) {
             }} />
           </div>
           <div>
-            <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#2F80ED', lineHeight: '16px' }}>
+            <button
+              suppressHydrationWarning
+              type="button"
+              onClick={() => onOpen(driver.id)}
+              style={{
+                fontFamily: 'Inter',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#2F80ED',
+                lineHeight: '16px',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
               #{driver.drvId}
-            </div>
+            </button>
             <div style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 500, color: '#64748B', lineHeight: '14px' }}>
               {driver.licenseClass} {driver.licenseType}
             </div>
@@ -637,7 +654,7 @@ export default function DriversPage() {
               ) : visibleDrivers.length === 0 ? (
                 <tr><td colSpan={7} style={{ padding: '28px', color: '#64748B', fontFamily: 'Inter' }}>No drivers found.</td></tr>
               ) : visibleDrivers.map((d) => (
-                <DriverTableRow key={d.id} driver={d} />
+                <DriverTableRow key={d.id} driver={d} onOpen={(id) => router.push(`/drivers/${id}`)} />
               ))}
             </tbody>
           </table>

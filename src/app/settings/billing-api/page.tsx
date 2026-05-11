@@ -271,7 +271,7 @@ export default function BillingAPIPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', alignSelf: 'stretch', justifyContent: 'center', gap: '4px' }}>
                 <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#000', letterSpacing: '-0.3px', textTransform: 'uppercase' }}>Last Payment</div>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', color: '#2F80ED', fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, lineHeight: '20px' }}>$2,450.00 (Sept 12)</div>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', color: '#2F80ED', fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, lineHeight: '20px' }}>RM 2,450.00 (Sept 12)</div>
               </div>
             </div>
 

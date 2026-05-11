@@ -1,11 +1,41 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 const inter = "'Inter', sans-serif";
 
 export default function Navbar() {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await fetch('/auth/signout', { method: 'POST' });
+    router.push('/login');
+  }
 
   return (
     <header style={{
@@ -72,16 +102,83 @@ export default function Navbar() {
         {/* Divider */}
         <div style={{ width: '1px', height: '28px', background: '#E2E8F0', margin: '0 8px' }} />
 
-        {/* Admin user info + avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A', lineHeight: '20px' }}>Admin</div>
-            <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: '14px' }}>Master Op</div>
-          </div>
-          <div style={{ width: '40px', height: '40px', borderRadius: '9999px', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/nav-user-profile.png" alt="Admin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
+        {/* Admin user info + avatar — clickable, opens dropdown */}
+        <div ref={menuRef} style={{ position: 'relative' }}>
+          <button
+            suppressHydrationWarning
+            type="button"
+            onClick={() => setMenuOpen(prev => !prev)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              borderRadius: '8px', padding: '4px 6px',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A', lineHeight: '20px' }}>Admin</div>
+              <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: '14px' }}>Master Op</div>
+            </div>
+            <div style={{ width: '40px', height: '40px', borderRadius: '9999px', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/nav-user-profile.png" alt="Admin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          </button>
+
+          {/* Dropdown */}
+          {menuOpen && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+              width: '220px',
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: '10px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+              overflow: 'hidden',
+              zIndex: 100,
+            }}>
+              {/* Email row */}
+              <div style={{
+                padding: '12px 16px',
+                borderBottom: '1px solid #F1F5F9',
+              }}>
+                <div style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '4px' }}>
+                  Signed in as
+                </div>
+                <div style={{
+                  fontFamily: inter, fontSize: '13px', fontWeight: 500, color: '#334155',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {email ?? '—'}
+                </div>
+              </div>
+
+              {/* Logout row */}
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={handleLogout}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '11px 16px',
+                  background: 'transparent', border: 'none', cursor: loggingOut ? 'default' : 'pointer',
+                  fontFamily: inter, fontSize: '13px', fontWeight: 500,
+                  color: loggingOut ? '#94A3B8' : '#EF4444',
+                  transition: 'background 0.15s',
+                  textAlign: 'left',
+                }}
+                onMouseEnter={e => { if (!loggingOut) e.currentTarget.style.background = '#FFF5F5'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke={loggingOut ? '#94A3B8' : '#EF4444'} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {loggingOut ? 'Signing out…' : 'Log out'}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

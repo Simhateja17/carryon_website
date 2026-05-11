@@ -3,12 +3,9 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import {
-  getPricingConfig,
-  updatePricingVehicles,
-  type AdminPricingSnapshot,
-  type AdminPricingVehicle,
-} from '@/lib/api';
+import { getPricingConfig, updatePricingVehicles } from '@/lib/api';
+import { formatMoney } from '@/lib/format';
+import type { AdminPricingSnapshot, AdminPricingVehicle } from '@/types';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
@@ -218,7 +215,7 @@ export default function PricingPage() {
                   borderBottom: '1px solid #F1F5F9',
                   marginBottom: '8px',
                 }}>
-                  {['', 'VEHICLE TYPE', 'BASE FARE ($)', 'PER KM RATE ($)', 'MIN. FARE ($)', 'ACTIONS'].map((h, i) => (
+                  {['', 'VEHICLE TYPE', 'BASE FARE (MYR)', 'PER KM RATE (MYR)', 'MIN. FARE (MYR)', 'ACTIONS'].map((h, i) => (
                     <span key={i} style={{
                       fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#94A3B8',
                       letterSpacing: '0.8px', textTransform: 'uppercase',
@@ -284,7 +281,7 @@ export default function PricingPage() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>EST. REVENUE (SIMULATED)</div>
-                  <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#FFFFFF' }}>$4.37</div>
+                  <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#FFFFFF' }}>{formatMoney(4.37)}</div>
                 </div>
               </div>
 
@@ -626,19 +623,19 @@ export default function PricingPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Base Fare (Pickup)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>$8.00</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{formatMoney(8)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Distance (12.5km x $1.20)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>$15.00</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Distance (12.5 km x MYR 1.20)</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{formatMoney(15)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#EF4444' }}>⚡ Surge Multiplier (1.2x)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#EF4444' }}>+$4.60</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#EF4444' }}>+{formatMoney(4.6)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#10B981' }}>☐ Discount (SAVE25)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#10B981' }}>-$5.75</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#10B981' }}>-{formatMoney(5.75)}</span>
                     </div>
                   </div>
                 </div>
@@ -651,7 +648,7 @@ export default function PricingPage() {
                   marginBottom: '12px',
                 }}>
                   <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>FINAL ESTIMATED TOTAL</div>
-                  <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#FFFFFF' }}>$21.85</div>
+                  <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#FFFFFF' }}>{formatMoney(21.85)}</div>
                   <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

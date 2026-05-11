@@ -3,12 +3,8 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import {
-  getNotificationSettings,
-  updateNotificationSettings,
-  type NotificationAlertSetting,
-  type NotificationSettingsSnapshot,
-} from '@/lib/api';
+import { getNotificationSettings, updateNotificationSettings } from '@/lib/api';
+import type { NotificationAlertSetting, NotificationSettingsSnapshot } from '@/types';
 
 /* ── Toggle switch ───────────────────────────────────────────── */
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { createRideRequest } from '@/lib/api';
+import { createRideRequest, getRouteDistance } from '@/lib/api';
+import { usePricing } from '@/hooks/usePricing';
+import type { AdminPricingVehicle } from '@/types';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
@@ -373,7 +375,24 @@ function CargoSpecifications() {
 }
 
 // ── Route Distance Card ────────────────────────────────────────────────────────
-function RouteDistanceCard() {
+function RouteDistanceCard({
+  distanceKm,
+  durationMinutes,
+  calculating,
+}: {
+  distanceKm: number | null;
+  durationMinutes: number | null;
+  calculating: boolean;
+}) {
+  let distanceLabel: string;
+  if (calculating) {
+    distanceLabel = 'Calculating...';
+  } else if (distanceKm !== null) {
+    distanceLabel = `${distanceKm.toLocaleString('en-MY', { maximumFractionDigits: 1 })} km`;
+  } else {
+    distanceLabel = 'Enter coordinates';
+  }
+
   return (
     <div style={{
       background: 'linear-gradient(135deg, #0F766E 0%, #134E4A 50%, #115E59 100%)',
@@ -405,10 +424,17 @@ function RouteDistanceCard() {
         }}>ROUTE DISTANCE</div>
         <div style={{
           fontFamily: manrope,
-          fontSize: '28px',
+          fontSize: calculating ? '18px' : '28px',
           fontWeight: 800,
           color: '#FFFFFF',
-        }}>1,145 km</div>
+          opacity: calculating ? 0.7 : 1,
+          transition: 'font-size 0.2s',
+        }}>{distanceLabel}</div>
+        {durationMinutes !== null && !calculating && (
+          <div style={{ fontFamily: inter, fontSize: '11px', color: 'rgba(255,255,255,0.65)', marginTop: '4px' }}>
+            ~{durationMinutes} min drive
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
@@ -494,12 +520,16 @@ function PickupDeliveryCards() {
 }
 
 // ── Service Level Agreement ────────────────────────────────────────────────────
-function ServiceLevelAgreement() {
+function ServiceLevelAgreement({ vehiclePricing }: { vehiclePricing: AdminPricingVehicle | null }) {
   const [selected, setSelected] = useState(0);
+
+  // Derive SLA surcharges from real vehicle pricing when available.
+  // Same-Day = 3× base, Express = 1.3× base, Standard = base (included).
+  const base = vehiclePricing?.basePrice ?? null;
   const tiers = [
     {
       name: 'Same-Day Priority',
-      price: '+$45.00',
+      price: base !== null ? `+RM ${(base * 2).toFixed(2)}` : '+RM --',
       desc: 'Delivered within 6 hours of pickup. Direct courier dispatch.',
       icon: (
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -509,7 +539,7 @@ function ServiceLevelAgreement() {
     },
     {
       name: 'Express Transit',
-      price: '+$12.00',
+      price: base !== null ? `+RM ${(base * 0.5).toFixed(2)}` : '+RM --',
       desc: 'Next-day delivery guaranteed. Priority warehouse sorting.',
       icon: (
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -714,6 +744,56 @@ export default function CreateOrderPage() {
   const [submitError, setSubmitError] = useState('');
   const [submitResult, setSubmitResult] = useState('');
 
+  // Route distance — recalculate when all 4 coordinates are valid numbers
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
+  const distanceAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const pLat = Number(form.pickupLatitude);
+    const pLng = Number(form.pickupLongitude);
+    const dLat = Number(form.deliveryLatitude);
+    const dLng = Number(form.deliveryLongitude);
+
+    const coordsValid =
+      form.pickupLatitude && form.pickupLongitude &&
+      form.deliveryLatitude && form.deliveryLongitude &&
+      !isNaN(pLat) && !isNaN(pLng) && !isNaN(dLat) && !isNaN(dLng);
+
+    if (!coordsValid) {
+      setDistanceKm(null);
+      setDurationMinutes(null);
+      return;
+    }
+
+    // Debounce: cancel previous in-flight request
+    distanceAbortRef.current?.abort();
+    const timer = setTimeout(async () => {
+      setCalculatingDistance(true);
+      try {
+        const res = await getRouteDistance(
+          { lat: pLat, lng: pLng },
+          { lat: dLat, lng: dLng }
+        );
+        setDistanceKm(res.data.distanceKm);
+        setDurationMinutes(res.data.durationMinutes);
+      } catch {
+        // Silently ignore — show no distance rather than an error
+        setDistanceKm(null);
+        setDurationMinutes(null);
+      } finally {
+        setCalculatingDistance(false);
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [form.pickupLatitude, form.pickupLongitude, form.deliveryLatitude, form.deliveryLongitude]);
+
+  // Pricing — fetch once; re-derive when vehicleType changes
+  const { getVehiclePrice } = usePricing();
+  const vehiclePricing = getVehiclePrice(form.vehicleType);
+
   function setField(key: keyof OrderFormState, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
@@ -794,11 +874,15 @@ export default function CreateOrderPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px' }}>
                 <div>
                   <PickupDeliveryCards />
-                  <ServiceLevelAgreement />
+                  <ServiceLevelAgreement vehiclePricing={vehiclePricing} />
                   <SpecializedHandling />
                 </div>
                 <div>
-                  <RouteDistanceCard />
+                  <RouteDistanceCard
+                    distanceKm={distanceKm}
+                    durationMinutes={durationMinutes}
+                    calculating={calculatingDistance}
+                  />
                   <NeedAssistance />
                 </div>
               </div>

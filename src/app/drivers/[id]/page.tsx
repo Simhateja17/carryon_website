@@ -2,44 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  getDriverDetail,
-  reviewDocument,
-  updateDriverVerification,
-  type DriverDetail,
-  type DriverDocument,
-} from "@/lib/api";
-
-const DOC_TYPE_LABELS: Record<string, string> = {
-  DRIVERS_LICENSE: "Driver's License",
-  DRIVERS_LICENSE_BACK: "Driver's License Back",
-  GDL: "GDL",
-  VEHICLE_REGISTRATION: "Vehicle Registration",
-  ROAD_TAX: "Road Tax",
-  PUSPAKOM: "PUSPAKOM",
-  APAD_PERMIT: "APAD / LPKP Permit",
-  VEHICLE_PHOTO_FRONT: "Vehicle Front Photo",
-  VEHICLE_PHOTO_BACK: "Vehicle Back Photo",
-  VEHICLE_PHOTO_LEFT: "Vehicle Left Photo",
-  VEHICLE_PHOTO_RIGHT: "Vehicle Right Photo",
-  VEHICLE_PHOTO_INTERIOR: "Vehicle Interior Photo",
-  BANK_STATEMENT: "Bank Statement",
-  POLICE_CLEARANCE: "Police Clearance",
-  INSURANCE: "Insurance Certificate",
-  PROFILE_PHOTO: "Profile Photo",
-  ID_PROOF: "Government ID",
-  MYKAD_FRONT: "MyKad Front",
-  MYKAD_BACK: "MyKad Back",
-  SELFIE: "Selfie",
-  PASSPORT: "Passport",
-  WORK_PERMIT_PLKS: "Work Permit / PLKS",
-};
-
-const DOC_STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-700",
-  APPROVED: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
-};
+import { getDriverDetail, revealDriverSensitiveField, reviewDocument, updateDriverVerification } from "@/lib/api";
+import type { DriverDetail, DriverDocument, DriverSensitiveField } from "@/types";
+import { DriverDocumentsReviewSection } from "./DriverDocumentsReviewSection";
 
 const VERIFICATION_STYLES: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -66,8 +31,11 @@ export default function DriverDetailPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectDocId, setRejectDocId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectDriverOpen, setRejectDriverOpen] = useState(false);
+  const [driverRejectionReason, setDriverRejectionReason] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [revealedFields, setRevealedFields] = useState<Partial<Record<DriverSensitiveField, string>>>({});
 
   async function loadDriver() {
     try {
@@ -116,11 +84,14 @@ export default function DriverDetailPage() {
     }
   }
 
-  async function handleVerification(status: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED") {
+  async function handleVerification(
+    status: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED",
+    reason?: string
+  ) {
     setActionLoading(`verify-${status}`);
     setActionError(null);
     try {
-      await updateDriverVerification(driverId, status);
+      await updateDriverVerification(driverId, status, reason);
       await loadDriver();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to update verification");
@@ -129,37 +100,79 @@ export default function DriverDetailPage() {
     }
   }
 
+  async function handleRejectDriver() {
+    if (!driverRejectionReason.trim()) return;
+    await handleVerification("REJECTED", driverRejectionReason.trim());
+    setRejectDriverOpen(false);
+    setDriverRejectionReason("");
+  }
+
+  async function handleReveal(field: DriverSensitiveField) {
+    setActionLoading(`reveal-${field}`);
+    setActionError(null);
+    try {
+      const res = await revealDriverSensitiveField(driverId, field, "Driver onboarding review");
+      setRevealedFields((current) => ({ ...current, [field]: res.data.value }));
+      const ttl = Math.max(0, new Date(res.data.expiresAt).getTime() - Date.now());
+      window.setTimeout(() => {
+        setRevealedFields((current) => {
+          const next = { ...current };
+          delete next[field];
+          return next;
+        });
+      }, ttl || 60_000);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to reveal field");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 gap-3">
-        <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-        <span className="text-gray-500">Loading driver details...</span>
-      </div>
+      <main className="flex-1 overflow-y-auto p-8 box-border">
+        <div className="flex items-center justify-center h-64 gap-3">
+          <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-gray-500">Loading driver details...</span>
+        </div>
+      </main>
     );
   }
 
   if (error || !driver) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-red-500">{error || "Driver not found"}</p>
-        <button
-          onClick={() => router.push("/drivers")}
-          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-        >
-          Back to Drivers
-        </button>
-      </div>
+      <main className="flex-1 overflow-y-auto p-8 box-border">
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <p className="text-red-500">{error || "Driver not found"}</p>
+          <button
+            onClick={() => router.push("/drivers")}
+            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+          >
+            Back to Drivers
+          </button>
+        </div>
+      </main>
     );
   }
 
-  const allDocsApproved =
-    driver.documents.length > 0 && driver.documents.every((d) => d.status === "APPROVED");
+  const pendingDocCount = driver.documents.filter((doc) => doc.status === "PENDING").length;
+  const rejectedDocCount = driver.documents.filter((doc) => doc.status === "REJECTED").length;
+  const approvalBlockers = [
+    !driver.vehicle ? "Vehicle details are missing." : "",
+    driver.documents.length === 0 ? "No documents have been uploaded." : "",
+    pendingDocCount > 0 ? `${pendingDocCount} document${pendingDocCount === 1 ? " is" : "s are"} still pending.` : "",
+    rejectedDocCount > 0 ? `${rejectedDocCount} rejected document${rejectedDocCount === 1 ? "" : "s"} must be corrected.` : "",
+    !driver.profile?.pdpaConsent ? "PDPA consent is missing." : "",
+    !driver.profile?.backgroundCheckConsent ? "Background check consent is missing." : "",
+    !driver.profile?.noOffencesDeclared ? "No-offences declaration is missing." : "",
+  ].filter(Boolean);
+  const canApproveDriver = approvalBlockers.length === 0;
 
   return (
-    <div>
+    <main className="flex-1 overflow-y-auto p-8 box-border">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
@@ -198,6 +211,88 @@ export default function DriverDetailPage() {
         </div>
       )}
 
+      {/* Review decision */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Review Decision</h2>
+            <p className="text-sm text-gray-500">
+              Approving verifies the driver and allows them to accept deliveries. Rejecting keeps them out of the fleet until they correct the issue.
+            </p>
+            {driver.verificationRejectionReason && (
+              <p className="mt-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                Rejection reason: {driver.verificationRejectionReason}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {driver.verificationStatus !== "IN_REVIEW" && driver.verificationStatus !== "APPROVED" && (
+              <button
+                onClick={() => handleVerification("IN_REVIEW")}
+                disabled={actionLoading?.startsWith("verify")}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {actionLoading === "verify-IN_REVIEW" ? "Marking..." : "Start Review"}
+              </button>
+            )}
+            {driver.verificationStatus !== "APPROVED" && (
+              <button
+                onClick={() => handleVerification("APPROVED")}
+                disabled={!canApproveDriver || actionLoading?.startsWith("verify")}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                title={!canApproveDriver ? approvalBlockers.join(" ") : "Approve driver"}
+              >
+                {actionLoading === "verify-APPROVED" ? "Approving..." : "Approve Driver"}
+              </button>
+            )}
+            {driver.verificationStatus !== "REJECTED" && driver.verificationStatus !== "APPROVED" && (
+              <button
+                onClick={() => {
+                  setRejectDriverOpen(true);
+                  setDriverRejectionReason("");
+                }}
+                disabled={actionLoading?.startsWith("verify")}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                Reject Driver
+              </button>
+            )}
+          </div>
+        </div>
+
+        {driver.verificationStatus === "APPROVED" ? (
+          <p className="mt-4 flex items-center gap-2 text-green-700 text-sm font-medium">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Driver is verified and can accept deliveries.
+          </p>
+        ) : canApproveDriver ? (
+          <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm text-green-800">All required review checks are complete.</p>
+          </div>
+        ) : (
+          <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-1">
+              <p className="text-sm font-medium text-amber-900">Approval is blocked until:</p>
+              {driver.documents.length > 0 && (
+                <a
+                  href="#uploaded-documents"
+                  className="text-xs font-semibold text-amber-900 underline underline-offset-2"
+                >
+                  Review {driver.documents.length} uploaded documents
+                </a>
+              )}
+            </div>
+            <ul className="list-disc pl-5 text-sm text-amber-800 space-y-1">
+              {approvalBlockers.map((blocker) => (
+                <li key={blocker}>{blocker}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       {/* Driver Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <InfoCard label="Phone" value={driver.phone || "Not provided"} />
@@ -210,6 +305,83 @@ export default function DriverDetailPage() {
           value={driver.isOnline ? "Online" : "Offline"}
           valueClassName={driver.isOnline ? "text-green-600" : "text-gray-500"}
         />
+        <InfoCard
+          label="Onboarding Submitted"
+          value={driver.onboardingSubmittedAt ? new Date(driver.onboardingSubmittedAt).toLocaleString() : "Not submitted"}
+        />
+        <InfoCard
+          label="Agreement"
+          value={driver.latestSubmission?.agreementVersion || driver.profile?.agreementVersion || "Not provided"}
+        />
+      </div>
+
+      <DriverDocumentsReviewSection
+        documents={driver.documents}
+        actionLoading={actionLoading}
+        onApprove={handleApproveDoc}
+        onRejectStart={(docId) => {
+          setRejectDocId(docId);
+          setRejectionReason("");
+        }}
+        onPreview={setPreviewImage}
+      />
+
+      {/* Personal Identity */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">Personal Identity</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Detail label="Date of Birth" value={driver.profile?.dateOfBirth || ""} />
+          <Detail label="Gender" value={driver.profile?.gender || ""} />
+          <Detail label="Nationality" value={driver.profile?.nationality || ""} />
+          <SensitiveDetail label="MyKad Number" field="mykadNumber" driver={driver} revealed={revealedFields.mykadNumber} loading={actionLoading === "reveal-mykadNumber"} onReveal={handleReveal} />
+          <SensitiveDetail label="Passport Number" field="passportNumber" driver={driver} revealed={revealedFields.passportNumber} loading={actionLoading === "reveal-passportNumber"} onReveal={handleReveal} />
+          <SensitiveDetail label="PLKS Number" field="plksNumber" driver={driver} revealed={revealedFields.plksNumber} loading={actionLoading === "reveal-plksNumber"} onReveal={handleReveal} />
+        </div>
+      </div>
+
+      {/* Contact and Address */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">Contact and Address</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Detail label="Address Line 1" value={driver.profile?.addressLine1 || ""} />
+          <Detail label="Address Line 2" value={driver.profile?.addressLine2 || ""} />
+          <Detail label="City" value={driver.profile?.city || ""} />
+          <Detail label="Postcode" value={driver.profile?.postcode || ""} />
+          <Detail label="State" value={driver.profile?.state || ""} />
+          <Detail label="Working States" value={(driver.profile?.workingStates || []).join(", ")} />
+          <Detail label="Emergency Name" value={driver.profile?.emergencyContactName || ""} />
+          <Detail label="Emergency Relation" value={driver.profile?.emergencyContactRelation || ""} />
+          <Detail label="Emergency Phone" value={driver.profile?.emergencyContactPhone || ""} />
+        </div>
+      </div>
+
+      {/* License and Banking */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">License and Banking</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <SensitiveDetail label="License Number" field="driversLicenseNumber" driver={driver} revealed={revealedFields.driversLicenseNumber} loading={actionLoading === "reveal-driversLicenseNumber"} onReveal={handleReveal} />
+          <Detail label="License Class" value={driver.profile?.licenseClass || ""} />
+          <Detail label="License Expiry" value={driver.profile?.licenseExpiry || ""} />
+          <Detail label="Has GDL" value={driver.profile?.hasGDL ? "Yes" : "No"} />
+          <Detail label="GDL Expiry" value={driver.profile?.gdlExpiry || ""} />
+          <Detail label="Bank Name" value={driver.profile?.bankName || ""} />
+          <Detail label="Account Holder" value={driver.profile?.bankAccountHolder || ""} />
+          <SensitiveDetail label="Account Number" field="bankAccountNumber" driver={driver} revealed={revealedFields.bankAccountNumber} loading={actionLoading === "reveal-bankAccountNumber"} onReveal={handleReveal} />
+          <SensitiveDetail label="DuitNow ID" field="duitNowId" driver={driver} revealed={revealedFields.duitNowId} loading={actionLoading === "reveal-duitNowId"} onReveal={handleReveal} />
+          <SensitiveDetail label="TNG Wallet ID" field="tngEwalletId" driver={driver} revealed={revealedFields.tngEwalletId} loading={actionLoading === "reveal-tngEwalletId"} onReveal={handleReveal} />
+          <SensitiveDetail label="LHDN Tax Number" field="lhdnTaxNumber" driver={driver} revealed={revealedFields.lhdnTaxNumber} loading={actionLoading === "reveal-lhdnTaxNumber"} onReveal={handleReveal} />
+          <SensitiveDetail label="SST Number" field="sstNumber" driver={driver} revealed={revealedFields.sstNumber} loading={actionLoading === "reveal-sstNumber"} onReveal={handleReveal} />
+        </div>
+      </div>
+
+      {/* Consent */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">Consent and Declarations</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Detail label="PDPA Consent" value={driver.profile?.pdpaConsent ? "Accepted" : "Missing"} />
+          <Detail label="Background Check Consent" value={driver.profile?.backgroundCheckConsent ? "Accepted" : "Missing"} />
+          <Detail label="No Offences Declared" value={driver.profile?.noOffencesDeclared ? "Declared" : "Missing"} />
+        </div>
       </div>
 
       {/* Vehicle Info */}
@@ -223,155 +395,23 @@ export default function DriverDetailPage() {
             <Detail label="Year" value={String(driver.vehicle.year)} />
             <Detail label="License Plate" value={driver.vehicle.licensePlate} />
             <Detail label="Color" value={driver.vehicle.color} />
+            <Detail label="Chassis Number" value={driver.vehicle.chassisNumber || ""} />
+            <Detail label="Engine Number" value={driver.vehicle.engineNumber || ""} />
+            <Detail label="Ownership" value={driver.vehicle.ownership || ""} />
+            <Detail label="Owner Name" value={driver.vehicle.ownerName || ""} />
+            <Detail label="Road Tax Expiry" value={driver.vehicle.roadTaxExpiry || ""} />
+            <Detail label="PUSPAKOM Expiry" value={driver.vehicle.puspakomExpiry || ""} />
+            <Detail label="APAD Permit Number" value={driver.vehicle.apadPermitNumber || ""} />
+            <Detail label="APAD Permit Expiry" value={driver.vehicle.apadPermitExpiry || ""} />
+            <Detail label="Insurer" value={driver.vehicle.insurerName || ""} />
+            <Detail label="Insurance Policy" value={driver.vehicle.insurancePolicyNumber || ""} />
+            <Detail label="Coverage Type" value={driver.vehicle.insuranceCoverageType || ""} />
+            <Detail label="Insurance Expiry" value={driver.vehicle.insuranceExpiry || ""} />
+            <Detail label="Commercial Cover" value={driver.vehicle.hasCommercialCover ? "Yes" : "No"} />
           </div>
         ) : (
           <p className="text-gray-400 text-sm">No vehicle information submitted</p>
         )}
-      </div>
-
-      {/* Documents Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Uploaded Documents</h2>
-
-        {driver.documents.length === 0 ? (
-          <p className="text-gray-400 text-sm">No documents uploaded yet</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {driver.documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="border border-gray-200 rounded-lg overflow-hidden"
-              >
-                {/* Document image */}
-                <div
-                  className="relative h-48 bg-gray-100 cursor-pointer group"
-                  onClick={() => setPreviewImage(doc.imageUrl)}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={doc.imageUrl}
-                    alt={DOC_TYPE_LABELS[doc.type] || doc.type}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
-                      Click to enlarge
-                    </span>
-                  </div>
-                </div>
-
-                {/* Document info + actions */}
-                <div className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-900">
-                      {DOC_TYPE_LABELS[doc.type] || doc.type}
-                    </p>
-                    <span
-                      className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                        DOC_STATUS_STYLES[doc.status] || "bg-gray-100"
-                      }`}
-                    >
-                      {doc.status}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-gray-400 mb-3">
-                    Uploaded {new Date(doc.uploadedAt).toLocaleDateString()}
-                  </p>
-
-                  {doc.expiryDate && (
-                    <p className="text-xs text-gray-500 mb-3">
-                      Expires {new Date(doc.expiryDate).toLocaleDateString()}
-                    </p>
-                  )}
-
-                  {doc.rejectionReason && (
-                    <p className="text-xs text-red-600 bg-red-50 rounded p-2 mb-3">
-                      Rejection reason: {doc.rejectionReason}
-                    </p>
-                  )}
-
-                  {/* Action buttons — only show for PENDING docs */}
-                  {doc.status === "PENDING" && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleApproveDoc(doc)}
-                        disabled={actionLoading === doc.id}
-                        className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                      >
-                        {actionLoading === doc.id ? "..." : "Approve"}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setRejectDocId(doc.id);
-                          setRejectionReason("");
-                        }}
-                        disabled={actionLoading === doc.id}
-                        className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Verification Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Driver Verification</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Update the driver&apos;s overall verification status. Approving allows the driver to start accepting deliveries.
-        </p>
-
-        {allDocsApproved && driver.verificationStatus !== "APPROVED" && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-green-800">
-              All documents have been approved. This driver is ready to be verified.
-            </p>
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-3">
-          {driver.verificationStatus !== "APPROVED" && (
-            <button
-              onClick={() => handleVerification("APPROVED")}
-              disabled={actionLoading?.startsWith("verify")}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-            >
-              {actionLoading === "verify-APPROVED" ? "Approving..." : "Approve Driver"}
-            </button>
-          )}
-          {driver.verificationStatus !== "IN_REVIEW" && driver.verificationStatus !== "APPROVED" && (
-            <button
-              onClick={() => handleVerification("IN_REVIEW")}
-              disabled={actionLoading?.startsWith("verify")}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {actionLoading === "verify-IN_REVIEW" ? "..." : "Mark In Review"}
-            </button>
-          )}
-          {driver.verificationStatus !== "REJECTED" && driver.verificationStatus !== "PENDING" && (
-            <button
-              onClick={() => handleVerification("REJECTED")}
-              disabled={actionLoading?.startsWith("verify")}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
-            >
-              {actionLoading === "verify-REJECTED" ? "..." : "Reject Driver"}
-            </button>
-          )}
-          {driver.verificationStatus === "APPROVED" && (
-            <p className="flex items-center gap-2 text-green-700 text-sm font-medium">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Driver is verified and can accept deliveries
-            </p>
-          )}
-        </div>
       </div>
 
       {/* Rejection Reason Modal */}
@@ -412,6 +452,44 @@ export default function DriverDetailPage() {
         </div>
       )}
 
+      {/* Driver Rejection Modal */}
+      {rejectDriverOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Reject Driver</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Provide a clear reason so the driver knows what must be corrected before joining the fleet.
+            </p>
+            <textarea
+              value={driverRejectionReason}
+              onChange={(e) => setDriverRejectionReason(e.target.value)}
+              placeholder="e.g., Missing commercial insurance, identity document does not match..."
+              className="w-full border border-gray-300 rounded-lg p-3 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              rows={4}
+              autoFocus
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setRejectDriverOpen(false);
+                  setDriverRejectionReason("");
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectDriver}
+                disabled={driverRejectionReason.trim().length < 3 || actionLoading === "verify-REJECTED"}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {actionLoading === "verify-REJECTED" ? "Rejecting..." : "Reject Driver"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Image Preview Modal */}
       {previewImage && (
         <div
@@ -430,12 +508,13 @@ export default function DriverDetailPage() {
               src={previewImage}
               alt="Document preview"
               className="max-w-full max-h-[85vh] rounded-lg object-contain"
+              referrerPolicy="no-referrer"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -461,6 +540,43 @@ function Detail({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs text-gray-500">{label}</p>
       <p className="text-sm font-medium text-gray-900">{value || "-"}</p>
+    </div>
+  );
+}
+
+function SensitiveDetail({
+  label,
+  field,
+  driver,
+  revealed,
+  loading,
+  onReveal,
+}: {
+  label: string;
+  field: DriverSensitiveField;
+  driver: DriverDetail;
+  revealed?: string;
+  loading: boolean;
+  onReveal: (field: DriverSensitiveField) => void;
+}) {
+  const meta = driver.sensitive?.[field];
+  const value = revealed ?? meta?.masked ?? "";
+  return (
+    <div>
+      <p className="text-xs text-gray-500">{label}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-medium text-gray-900">{value || "-"}</p>
+        {meta?.hasValue && !revealed && (
+          <button
+            type="button"
+            onClick={() => onReveal(field)}
+            disabled={loading}
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+          >
+            {loading ? "..." : "Reveal"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

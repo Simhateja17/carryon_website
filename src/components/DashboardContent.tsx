@@ -19,7 +19,7 @@ const stats = [
   },
   {
     label: "TODAY'S REVENUE",
-    value: '$42.8k',
+    value: 'RM 42.8k',
     trend: '+18.7%',
     trendUp: true,
     icon: 'revenue' as const,
@@ -38,21 +38,21 @@ const stats = [
 const jobs = [
   {
     id: '#CR-9042', driver: 'David Chen',
-    route: 'ORD → DWT', routeSub: 'Long Haul • 420mi',
+    route: 'ORD → DWT', routeSub: 'Long Haul • 676 km',
     status: 'ACTIVE', statusBg: '#2563EB', statusText: '#fff',
-    earnings: '$1,240.00',
+    earnings: 'RM 1,240.00',
   },
   {
     id: '#CR-8991', driver: 'Sarah Miller',
-    route: 'SFO → SJX', routeSub: 'Local • 45mi',
+    route: 'SFO → SJX', routeSub: 'Local • 72 km',
     status: 'COMPLETED', statusBg: '#10B981', statusText: '#fff',
-    earnings: '$320.00',
+    earnings: 'RM 320.00',
   },
   {
     id: '#CR-9102', driver: 'Marcus Johnson',
-    route: 'LGA → PHL', routeSub: 'Express • 95mi',
+    route: 'LGA → PHL', routeSub: 'Express • 153 km',
     status: 'PENDING', statusBg: '#BFDBFE', statusText: '#1D4ED8',
-    earnings: '$580.00',
+    earnings: 'RM 580.00',
   },
 ];
 

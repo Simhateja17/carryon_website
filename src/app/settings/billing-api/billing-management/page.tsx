@@ -5,9 +5,9 @@ import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
 const invoiceRows = [
-  { id: 'INV-2023-09-881', date: 'Sep 24, 2023', plan: 'Pro Enterprise', amount: '$950.00' },
-  { id: 'INV-2023-08-442', date: 'Aug 24, 2023', plan: 'Pro Enterprise', amount: '$950.00' },
-  { id: 'INV-2023-07-201', date: 'Jul 24, 2023', plan: 'Standard', amount: '$299.00' },
+  { id: 'INV-2023-09-881', date: 'Sep 24, 2023', plan: 'Pro Enterprise', amount: 'RM 950.00' },
+  { id: 'INV-2023-08-442', date: 'Aug 24, 2023', plan: 'Pro Enterprise', amount: 'RM 950.00' },
+  { id: 'INV-2023-07-201', date: 'Jul 24, 2023', plan: 'Standard', amount: 'RM 299.00' },
 ];
 
 export default function BillingManagementPage() {
@@ -50,7 +50,7 @@ export default function BillingManagementPage() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 500, color: '#424754', marginBottom: '4px' }}>Annual Allocation</div>
-                  <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '24px', fontWeight: 700, color: '#2F80ED' }}>$12,450.00 <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#424754', fontWeight: 400 }}>/ yr</span></div>
+                  <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '24px', fontWeight: 700, color: '#2F80ED' }}>RM 12,450.00 <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#424754', fontWeight: 400 }}>/ yr</span></div>
                 </div>
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function BillingManagementPage() {
                   <p style={{ margin: 0, fontFamily: 'Inter', fontSize: '14px', color: '#424754' }}>Essential tools for small local fleets.</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '32px' }}>
-                  <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '30px', fontWeight: 700, color: '#191C1E' }}>$299</span>
+                  <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '30px', fontWeight: 700, color: '#191C1E' }}>RM 299</span>
                   <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#424754', marginBottom: '4px' }}>/ month</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px' }}>
@@ -120,7 +120,7 @@ export default function BillingManagementPage() {
                   <p style={{ margin: 0, fontFamily: 'Inter', fontSize: '14px', color: '#424754' }}>Our most popular scale for growth.</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '32px' }}>
-                  <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '30px', fontWeight: 700, color: '#191C1E' }}>$950</span>
+                  <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '30px', fontWeight: 700, color: '#191C1E' }}>RM 950</span>
                   <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#424754', marginBottom: '4px' }}>/ month</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px' }}>
@@ -141,7 +141,7 @@ export default function BillingManagementPage() {
                   <p style={{ margin: 0, fontFamily: 'Inter', fontSize: '14px', color: '#424754' }}>Custom solutions for massive networks.</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '32px' }}>
-                  <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '30px', fontWeight: 700, color: '#191C1E' }}>$2,400</span>
+                  <span style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '30px', fontWeight: 700, color: '#191C1E' }}>RM 2,400</span>
                   <span style={{ fontFamily: 'Inter', fontSize: '16px', color: '#424754', marginBottom: '4px' }}>/ month</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px' }}>

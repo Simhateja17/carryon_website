@@ -1,144 +1,55 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { getCommandCenterSnapshot, type CommandCenterSnapshot } from '@/lib/api';
+import MapSurface from '@/components/MapSurface';
+import AdminDataStatus from '@/components/AdminDataStatus';
+import { useAdminPolling } from '@/lib/useAdminPolling';
+import { getCommandCenterSnapshot, getLiveOverviewMap } from '@/lib/api';
+import type { CommandCenterSnapshot, LiveOverviewSnapshot } from '@/types';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
 
 // ── Data ───────────────────────────────────────────────────────────────────────
-const fallbackStats = [
+const statShells = [
   {
     label: 'TOTAL ORDERS\n(TODAY)',
-    value: '1,284',
-    trend: '+12.5%',
+    value: '...',
+    trend: 'Loading',
     up: true,
     icon: 'orders' as const,
     sparkline: 'M0 26 C8 20, 18 28, 28 18 C38 8, 48 22, 60 14 C72 6, 82 16, 96 6',
   },
   {
     label: 'ACTIVE DELIVERIES',
-    value: '432',
-    trend: '+4.2%',
+    value: '...',
+    trend: 'Loading',
     up: true,
     icon: 'deliveries' as const,
     sparkline: 'M0 22 C10 26, 22 16, 34 20 C46 24, 56 12, 68 16 C78 20, 86 8, 96 4',
   },
   {
     label: "TODAY'S REVENUE",
-    value: '$42.8k',
-    trend: '+18.7%',
+    value: '...',
+    trend: 'Loading',
     up: true,
     icon: 'revenue' as const,
     sparkline: 'M0 24 C12 18, 22 26, 34 16 C46 6, 58 20, 70 12 C80 4, 88 10, 96 6',
   },
   {
     label: 'CANCELLED\nORDERS',
-    value: '12',
-    trend: '-2.1%',
+    value: '...',
+    trend: 'Loading',
     up: false,
     icon: 'cancelled' as const,
     sparkline: 'M0 6 C10 10, 22 4, 34 12 C46 20, 56 14, 68 20 C80 26, 88 18, 96 24',
   },
 ];
 
-const barData = [
-  { h: 58,     color: 'rgba(0,88,190,0.1)', day: 'MON' },
-  { h: 87,     color: 'rgba(0,88,190,0.2)', day: 'TUE' },
-  { h: 65.25,  color: 'rgba(0,88,190,0.4)', day: 'WED' },
-  { h: 116,    color: 'rgba(0,88,190,0.6)', day: 'THU' },
-  { h: 137.75, color: '#0058be',            day: 'FRI' },
-  { h: 101.5,  color: 'rgba(0,88,190,0.5)', day: 'SAT' },
-  { h: 79.75,  color: 'rgba(0,88,190,0.3)', day: 'SUN' },
-];
-
-const heatmapGrid = [
-  [0.1, 0.2, 0.4, 0.6, 0.8, 1.0],
-  [0.3, 0.5, 0.7, 0.9, 0.7, 0.5],
-  [0.6, 0.8, 1.0, 0.8, 0.6, 0.4],
-  [0.2, 0.4, 0.6, 0.4, 0.2, 0.1],
-];
-
 const fallbackRecentOrders = [] as CommandCenterSnapshot['recentOrders'];
 const fallbackSystemLogs = [] as CommandCenterSnapshot['systemLogs'];
-
-function StatIcon({ type }: { type: 'orders' | 'deliveries' | 'revenue' | 'cancelled' }) {
-  const icons = {
-    orders: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="2" width="12" height="14" rx="2" stroke="#2563EB" strokeWidth="1.4" />
-        <path d="M6 6h6M6 9h6M6 12h4" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
-    deliveries: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="6" width="11" height="8" rx="1.5" stroke="#2563EB" strokeWidth="1.4" />
-        <path d="M12 9h3l2 3v2h-5V9z" stroke="#2563EB" strokeWidth="1.4" strokeLinejoin="round" />
-        <circle cx="4.5" cy="14.5" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
-        <circle cx="13.5" cy="14.5" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
-      </svg>
-    ),
-    revenue: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="9" r="7" stroke="#2563EB" strokeWidth="1.4" />
-        <path d="M9 5v8" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M7 7.5c0-.83.67-1.5 2-1.5h.5c1 0 1.5.5 1.5 1.2 0 .8-.7 1.3-2 1.8-1.4.5-2 1-2 1.8C7 11.6 7.7 12.5 9 12.5h.5c1.2 0 1.5-.5 1.5-1" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" />
-      </svg>
-    ),
-    cancelled: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="9" r="7" stroke="#2563EB" strokeWidth="1.4" />
-        <path d="M6.5 6.5l5 5M11.5 6.5l-5 5" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
-  };
-
-  return (
-    <div style={{
-      width: '36px',
-      height: '36px',
-      borderRadius: '10px',
-      background: '#DBEAFE',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    }}>
-      {icons[type]}
-    </div>
-  );
-}
-
-function Sparkline({ path, up, id }: { path: string; up: boolean; id: string }) {
-  const gradId = `sg-${id}`;
-  const bgColor = up ? '#a6d2f3' : '#2f80ed';
-  const lineColor = up ? '#2f80ed' : '#a6d2f3';
-  const fillColor = up ? '#2f80ed' : '#a6d2f3';
-
-  return (
-    <div style={{
-      width: '96px',
-      height: '32px',
-      borderRadius: '4px',
-      background: bgColor,
-      overflow: 'hidden',
-      flexShrink: 0,
-    }}>
-      <svg width="96" height="32" viewBox="0 0 96 32" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={fillColor} stopOpacity="0.6" />
-            <stop offset="100%" stopColor={fillColor} stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        <path d={`${path} L96 32 L0 32 Z`} fill={`url(#${gradId})`} />
-        <path d={path} stroke={lineColor} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
-}
 
 function TrendBadge({ trend, up }: { trend: string; up: boolean }) {
   return (
@@ -354,20 +265,12 @@ function AlertsPanel({ alerts }: { alerts: CommandCenterSnapshot['alerts'] }) {
 function DonutChart({ breakdown }: { breakdown: CommandCenterSnapshot['breakdown'] }) {
   const r = 56; const cx = 64; const cy = 64;
   const C = 2 * Math.PI * r;
-  const fallbackSegs = [
-    { pct: 0.65, color: '#0058be', label: 'Completed (65%)' },
-    { pct: 0.20, color: '#2f80ed', label: 'In Transit (20%)' },
-    { pct: 0.05, color: '#a6d2f3', label: 'Cancelled (5%)' },
-    { pct: 0.10, color: '#e2e8f0', label: 'Pending (10%)' },
-  ];
   const colors = ['#0058be', '#2f80ed', '#a6d2f3', '#e2e8f0', '#006947', '#fbbf24'];
-  const segs = breakdown.length
-    ? breakdown.map((item, index) => ({
-        pct: Math.max(item.pct, 1) / 100,
-        color: colors[index % colors.length],
-        label: `${item.status.replaceAll('_', ' ')} (${item.pct}%)`,
-      }))
-    : fallbackSegs;
+  const segs = breakdown.map((item, index) => ({
+    pct: Math.max(item.pct, 1) / 100,
+    color: colors[index % colors.length],
+    label: `${item.status.replaceAll('_', ' ')} (${item.pct}%)`,
+  }));
   const circles = segs.map((s, i) => {
     const len = s.pct * C;
     const off = segs.slice(0, i).reduce((sum, item) => sum + item.pct * C, 0);
@@ -382,15 +285,17 @@ function DonutChart({ breakdown }: { breakdown: CommandCenterSnapshot['breakdown
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
       <svg width="128" height="128" viewBox="0 0 128 128" style={{ flexShrink: 0 }}>
-        {circles}
+        {segs.length ? circles : <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e2e8f0" strokeWidth="16" />}
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {segs.map(s => (
+        {segs.length ? segs.map(s => (
           <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
             <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#191c1e' }}>{s.label}</span>
           </div>
-        ))}
+        )) : (
+          <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>No order data</span>
+        )}
       </div>
     </div>
   );
@@ -398,28 +303,21 @@ function DonutChart({ breakdown }: { breakdown: CommandCenterSnapshot['breakdown
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function CommandCenterPage() {
-  const [snapshot, setSnapshot] = useState<CommandCenterSnapshot | null>(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let alive = true;
-    async function loadSnapshot() {
-      try {
-        const res = await getCommandCenterSnapshot();
-        if (alive) setSnapshot(res.data);
-      } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Failed to load command center');
-      }
-    }
-    loadSnapshot();
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const commandState = useAdminPolling<CommandCenterSnapshot>(
+    async () => (await getCommandCenterSnapshot()).data,
+    { intervalMs: 45_000 }
+  );
+  const mapState = useAdminPolling<LiveOverviewSnapshot>(
+    async () => (await getLiveOverviewMap()).data,
+    { intervalMs: 15_000 }
+  );
+  const snapshot = commandState.data;
+  const mapSnapshot = mapState.data;
+  const loading = commandState.loading;
 
   const stats = useMemo(() => {
     const apiStats = snapshot?.stats || [];
-    return fallbackStats.map((fallback, index) => ({ ...fallback, ...(apiStats[index] || {}) }));
+    return statShells.map((fallback, index) => ({ ...fallback, ...(apiStats[index] || {}) }));
   }, [snapshot]);
   const weeklyMax = Math.max(...(snapshot?.weeklyOrders || []).map((item) => item.count), 1);
   const chartBars = snapshot?.weeklyOrders?.length
@@ -428,7 +326,9 @@ export default function CommandCenterPage() {
         color: index === 6 ? '#0058be' : `rgba(0,88,190,${0.1 + index * 0.1})`,
         day: item.day,
       }))
-    : barData;
+    : [];
+  const heatmapRows = snapshot?.demandHeatmap?.cells || [];
+  const heatmapColumns = snapshot?.demandHeatmap?.columns || [];
   const recentOrders = snapshot?.recentOrders || fallbackRecentOrders;
   const systemLogs = snapshot?.systemLogs || fallbackSystemLogs;
 
@@ -438,9 +338,10 @@ export default function CommandCenterPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
-          {error && (
-            <div style={{ marginBottom: '12px', color: '#DC2626', fontFamily: inter, fontSize: '13px' }}>
-              {error}
+          <AdminDataStatus error={commandState.error || mapState.error} stale={commandState.stale || mapState.stale} lastUpdated={commandState.lastUpdated || mapState.lastUpdated} />
+          {!commandState.error && (commandState.loading || commandState.lastUpdated) && (
+            <div style={{ marginBottom: '12px', color: '#64748b', fontFamily: inter, fontSize: '12px' }}>
+              {commandState.loading ? 'Loading command center data...' : `Last updated ${commandState.lastUpdated?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
             </div>
           )}
 
@@ -518,8 +419,24 @@ export default function CommandCenterPage() {
 
             {/* Map */}
             <div style={{ flex: 1, minWidth: 0, borderRadius: '12px', overflow: 'hidden', position: 'relative', minHeight: '310px', boxShadow: '0px 1px 2px rgba(0,0,0,0.05)' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/blue_map.png" alt="Live map" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: '310px' }} />
+              <MapSurface
+                minHeight={310}
+                markers={(mapSnapshot?.drivers || []).map((driver) => ({
+                  id: driver.id,
+                  position: driver.position,
+                  label: driver.vehicle?.type || 'D',
+                  tone: 'driver',
+                }))}
+                routes={(mapSnapshot?.bookings || []).map((booking) => ({
+                  id: booking.bookingId,
+                  path: [booking.route.pickup, booking.route.dropoff].filter(Boolean) as Array<{ lat: number; lng: number }>,
+                  tone: 'planned',
+                }))}
+                fallback={(
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src="/blue_map.png" alt="Live map" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: '310px' }} />
+                )}
+              />
 
               {/* Filter tabs — top center */}
               <div style={{
@@ -542,11 +459,7 @@ export default function CommandCenterPage() {
               </div>
 
               {/* Vehicle pins */}
-              {(snapshot?.fleet.pins || [
-                { id: 'fallback-1', top: 30, left: 28, vehicleType: 'CAR' },
-                { id: 'fallback-2', top: 55, left: 45, vehicleType: 'VAN_7FT' },
-                { id: 'fallback-3', top: 40, left: 62, vehicleType: 'BIKE' },
-              ]).map((pin, index) => (
+              {!mapSnapshot && (snapshot?.fleet.pins || []).map((pin, index) => (
               <div key={pin.id} style={{ position: 'absolute', top: `${pin.top}%`, left: `${pin.left}%`, width: '28px', height: '28px', borderRadius: '50%', background: ['#0058be', '#006947', '#fbbf24'][index % 3], border: '3px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
                   <rect x="0.5" y="2" width="8.5" height="6" rx="1" fill="#fff" />
@@ -635,11 +548,15 @@ export default function CommandCenterPage() {
               </div>
               {/* bars */}
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '150px' }}>
-                {chartBars.map((b, i) => (
+                {chartBars.length ? chartBars.map((b, i) => (
                   <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', height: '100%', justifyContent: 'flex-end' }}>
                     <div style={{ width: '100%', background: b.color, borderRadius: '2px 2px 0 0', height: `${(b.h / weeklyMax) * 130}px` }} />
                   </div>
-                ))}
+                )) : (
+                  <div style={{ alignSelf: 'center', width: '100%', textAlign: 'center', fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>
+                    {loading ? 'Loading orders' : 'No order data'}
+                  </div>
+                )}
               </div>
               {/* day labels */}
               <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
@@ -668,17 +585,29 @@ export default function CommandCenterPage() {
               </div>
               {/* 6×4 grid */}
               <div style={{ paddingTop: '8px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {heatmapGrid.map((row, ri) => (
+                {heatmapRows.length ? heatmapRows.map((row, ri) => (
                   <div key={ri} style={{ display: 'flex', gap: '4px', flex: 1 }}>
-                    {row.map((v, ci) => (
-                      <div key={ci} style={{ flex: 1, borderRadius: '4px', background: `rgba(0,88,190,${v})` }} />
+                    {row.map((cell, ci) => (
+                      <div
+                        key={ci}
+                        title={`${heatmapColumns[ci] || ''}: ${cell.count} orders`}
+                        style={{
+                          flex: 1,
+                          borderRadius: '4px',
+                          background: cell.count ? `rgba(0,88,190,${Math.max(0.18, cell.intensity)})` : '#e2e8f0',
+                        }}
+                      />
                     ))}
                   </div>
-                ))}
+                )) : (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>
+                    {loading ? 'Loading demand' : 'No demand data'}
+                  </div>
+                )}
               </div>
               {/* x-axis labels */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-                {['Morning', 'Peak', 'Evening'].map(l => (
+                {(heatmapColumns.length ? [heatmapColumns[0], heatmapColumns[2], heatmapColumns[5]] : ['00-04', '08-12', '20-24']).map(l => (
                   <span key={l} style={{ fontFamily: inter, fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>{l}</span>
                 ))}
               </div>

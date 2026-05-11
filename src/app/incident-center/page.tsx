@@ -3,95 +3,24 @@
 import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import MapSurface from '@/components/MapSurface';
+import AdminDataStatus from '@/components/AdminDataStatus';
+import { useAdminPolling } from '@/lib/useAdminPolling';
+import {
+  latestCoordinate,
+  toIncidentOperationsView,
+  type IncidentLogItem,
+  type IncidentOperationsView,
+  type IncidentQueueItem,
+} from '@/lib/adminOperations';
+import { getIncidentMap } from '@/lib/api';
+import type { IncidentMapSnapshot } from '@/types';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
 
-// ── Incident data ──────────────────────────────────────────────────────────────
-const incidents = [
-  {
-    id: 'sos',
-    type: 'CRITICAL SOS',
-    typeColor: '#DC2626',
-    typeBg: '#FEE2E2',
-    vehicle: 'Truck #BK-9921',
-    description: 'Collision reported: Broadway & W 42nd St',
-    driver: 'Marcus Jensen',
-    driverInitials: 'MJ',
-    driverBg: '#1E40AF',
-    time: '2m ago',
-    active: true,
-  },
-  {
-    id: 'deviation',
-    type: 'DEVIATION',
-    typeColor: '#2563EB',
-    typeBg: '#DBEAFE',
-    vehicle: 'Van #EV-402',
-    description: 'Off-route > 5 miles: I-95 Northbound',
-    driver: 'Sarah Chen',
-    driverInitials: 'SC',
-    driverBg: '#7C3AED',
-    time: '14m ago',
-    active: false,
-  },
-  {
-    id: 'mechanical',
-    type: 'MECHANICAL',
-    typeColor: '#F59E0B',
-    typeBg: '#FEF3C7',
-    vehicle: 'Heavy #RT-118',
-    description: 'Engine Temp Warning: Newark Depot',
-    driver: 'David Miller',
-    driverInitials: 'DM',
-    driverBg: '#059669',
-    time: '42m ago',
-    active: false,
-  },
-  {
-    id: 'delay',
-    type: 'DELAY',
-    typeColor: '#F59E0B',
-    typeBg: '#FEF3C7',
-    vehicle: 'Van #EV-887',
-    description: 'Traffic congestion: Lincoln Tunnel',
-    driver: 'James Wilson',
-    driverInitials: 'JW',
-    driverBg: '#B45309',
-    time: '1h ago',
-    active: false,
-  },
-];
-
-const incidentLog = [
-  {
-    time: '14:22:15',
-    title: 'SOS Triggered by Vehicle BK-9921',
-    desc: 'G-Force impact detected: 4.2G',
-    highlight: true,
-  },
-  {
-    time: '14:22:18',
-    title: 'Automated Alert Sent to Emergency Services',
-    desc: 'NYPD Precinct 18 Notified',
-    highlight: false,
-  },
-  {
-    time: '14:23:10',
-    title: 'Dispatcher Assigned: Admin_Console_4',
-    desc: 'War Room active for session #4920',
-    highlight: true,
-  },
-  {
-    time: '14:23:45',
-    title: 'Visual Link Established',
-    desc: 'Dashcam feed: Front-facing camera active',
-    highlight: false,
-  },
-];
-
 // ── Incident Card ──────────────────────────────────────────────────────────────
-function IncidentCard({ incident, active, onClick }: { incident: typeof incidents[0]; active: boolean; onClick: () => void }) {
+function IncidentCard({ incident, active, onClick }: { incident: IncidentQueueItem; active: boolean; onClick: () => void }) {
   return (
     <button
       suppressHydrationWarning
@@ -190,7 +119,14 @@ function IncidentCard({ incident, active, onClick }: { incident: typeof incident
 }
 
 // ── Map Info Bar ───────────────────────────────────────────────────────────────
-function MapInfoBar() {
+function MapInfoBar({ activeIncident }: { activeIncident: IncidentMapSnapshot['incidents'][number] | null }) {
+  const latest = activeIncident
+    ? latestCoordinate(activeIncident.actualPath, activeIncident.booking.driver?.position)
+    : null;
+  const coordinates = latest
+    ? `${latest.lat.toFixed(4)}°, ${latest.lng.toFixed(4)}°`
+    : '--';
+  const isActive = !!activeIncident;
   return (
     <div style={{
       position: 'absolute',
@@ -219,7 +155,7 @@ function MapInfoBar() {
             COORDINATES:
           </span>
           <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 700, color: '#0F172A' }}>
-            40.7580° N, 73.9855° W
+            {coordinates}
           </span>
         </div>
       </div>
@@ -228,12 +164,12 @@ function MapInfoBar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#64748B' }}>SPEED:</span>
-          <span style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#0F172A' }}>0.0</span>
+          <span style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#0F172A' }}>--</span>
           <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#64748B' }}>MPH</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#64748B' }}>FUEL:</span>
-          <span style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#0F172A' }}>64%</span>
+          <span style={{ fontFamily: manrope, fontSize: '12px', fontWeight: 800, color: '#0F172A' }}>--</span>
         </div>
       </div>
 
@@ -258,17 +194,17 @@ function MapInfoBar() {
           width: '6px',
           height: '6px',
           borderRadius: '50%',
-          background: '#DC2626',
+          background: isActive ? '#DC2626' : '#94A3B8',
         }} />
         <span style={{
           fontFamily: inter,
           fontSize: '9px',
           fontWeight: 800,
-          color: '#DC2626',
+          color: isActive ? '#DC2626' : '#64748B',
           letterSpacing: '0.5px',
           textTransform: 'uppercase',
         }}>
-          ACTIVE
+          {isActive ? 'ACTIVE' : 'CLEAR'}
         </span>
       </div>
     </div>
@@ -276,7 +212,8 @@ function MapInfoBar() {
 }
 
 // ── Map Component ──────────────────────────────────────────────────────────────
-function IncidentMap() {
+function IncidentMap({ snapshot, activeIncidentId }: { snapshot: IncidentMapSnapshot | null; activeIncidentId: string | null }) {
+  const activeIncident = snapshot?.incidents.find((incident) => incident.id === activeIncidentId) || snapshot?.incidents[0] || null;
   return (
     <div style={{
       flex: 1,
@@ -286,103 +223,29 @@ function IncidentMap() {
       minHeight: '420px',
       boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
     }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/blue_map.png"
-        alt="Incident map"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: '420px' }}
+      <MapSurface
+        minHeight={420}
+        markers={(snapshot?.incidents || []).flatMap((incident) => [
+          { id: `${incident.id}-driver`, position: incident.booking.driver?.position || null, label: incident.type, tone: 'incident' as const },
+          { id: `${incident.id}-pickup`, position: incident.booking.route.pickup, label: 'Pickup', tone: 'pickup' as const },
+          { id: `${incident.id}-dropoff`, position: incident.booking.route.dropoff, label: 'Drop', tone: 'dropoff' as const },
+        ])}
+        routes={activeIncident ? [
+          { id: `${activeIncident.id}-planned`, path: activeIncident.plannedRoute.geometry, tone: 'planned' },
+          { id: `${activeIncident.id}-actual`, path: activeIncident.actualPath.map((point) => point.position), tone: 'actual' },
+        ] : []}
+        fallback={(
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/blue_map.png"
+            alt="Incident map"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: '420px' }}
+          />
+        )}
       />
 
       {/* Info bar */}
-      <MapInfoBar />
-
-      {/* Selected vehicle marker - BK-9921 */}
-      <div style={{
-        position: 'absolute',
-        top: '38%',
-        left: '52%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 3,
-      }}>
-        {/* Marker with label popup */}
-        <div style={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
-          {/* Label above */}
-          <div style={{
-            background: '#0F172A',
-            color: '#FFFFFF',
-            fontFamily: inter,
-            fontSize: '10px',
-            fontWeight: 700,
-            padding: '4px 10px',
-            borderRadius: '6px',
-            whiteSpace: 'nowrap',
-            letterSpacing: '0.3px',
-            marginBottom: '6px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          }}>
-            BK-9921
-          </div>
-          {/* Marker */}
-          <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            background: '#1E40AF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(30, 64, 175, 0.4)',
-            border: '3px solid #FFFFFF',
-          }}>
-            <svg width="22" height="18" viewBox="0 0 22 18" fill="none">
-              <rect x="1" y="3" width="14" height="10" rx="2" fill="#FFFFFF" />
-              <path d="M15 7h4l3 4v2h-7V7z" fill="#FFFFFF" />
-              <circle cx="5" cy="15.5" r="2" fill="#FFFFFF" />
-              <circle cx="17" cy="15.5" r="2" fill="#FFFFFF" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* Other vehicle markers */}
-      {[
-        { top: '30%', left: '35%', color: '#2563EB', label: 'EV-402' },
-        { top: '55%', left: '42%', color: '#059669', label: 'RT-118' },
-        { top: '45%', left: '65%', color: '#7C3AED', label: 'BK-445' },
-        { top: '60%', left: '58%', color: '#2563EB', label: 'EV-221' },
-      ].map((marker, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          top: marker.top,
-          left: marker.left,
-          transform: 'translate(-50%, -50%)',
-          zIndex: 2,
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            background: marker.color,
-            border: '3px solid #FFFFFF',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-              <rect x="0.5" y="2" width="9" height="6" rx="1.5" fill="#FFFFFF" />
-              <path d="M9.5 4h4l2 3v1h-6V4Z" fill="#FFFFFF" />
-              <circle cx="3.5" cy="10" r="1.5" fill="#FFFFFF" />
-              <circle cx="12.5" cy="10" r="1.5" fill="#FFFFFF" />
-            </svg>
-          </div>
-        </div>
-      ))}
+      <MapInfoBar activeIncident={activeIncident} />
 
       {/* Zoom controls */}
       <div style={{
@@ -439,7 +302,7 @@ function IncidentMap() {
 }
 
 // ── Live Incident Log ──────────────────────────────────────────────────────────
-function LiveIncidentLog() {
+function LiveIncidentLog({ entries }: { entries: IncidentLogItem[] }) {
   return (
     <div style={{
       background: '#FFFFFF',
@@ -463,7 +326,9 @@ function LiveIncidentLog() {
 
       {/* Log entries */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-        {incidentLog.map((entry, i) => (
+        {entries.length === 0 ? (
+          <div style={{ fontFamily: inter, fontSize: '12px', color: '#64748B' }}>No live incident events found.</div>
+        ) : entries.map((entry, i) => (
           <div key={i} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
             {/* Time */}
             <span style={{
@@ -507,7 +372,8 @@ function LiveIncidentLog() {
 }
 
 // ── Critical Actions ───────────────────────────────────────────────────────────
-function CriticalActions() {
+function CriticalActions({ disabled }: { disabled: boolean }) {
+  const disabledStyle = disabled ? { opacity: 0.45, cursor: 'not-allowed' } : {};
   return (
     <div style={{
       background: '#FFFFFF',
@@ -536,6 +402,7 @@ function CriticalActions() {
       <button
         suppressHydrationWarning
         type="button"
+        disabled={disabled}
         style={{
           width: '100%',
           padding: '16px 20px',
@@ -547,6 +414,7 @@ function CriticalActions() {
           alignItems: 'center',
           justifyContent: 'space-between',
           boxShadow: '0 4px 12px rgba(15, 23, 42, 0.3)',
+          ...disabledStyle,
         }}
       >
         <span style={{
@@ -567,6 +435,7 @@ function CriticalActions() {
       <button
         suppressHydrationWarning
         type="button"
+        disabled={disabled}
         style={{
           width: '100%',
           padding: '16px 20px',
@@ -578,6 +447,7 @@ function CriticalActions() {
           alignItems: 'center',
           justifyContent: 'space-between',
           boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+          ...disabledStyle,
         }}
       >
         <span style={{
@@ -599,6 +469,7 @@ function CriticalActions() {
       <button
         suppressHydrationWarning
         type="button"
+        disabled={disabled}
         style={{
           width: '100%',
           padding: '16px 20px',
@@ -609,6 +480,7 @@ function CriticalActions() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          ...disabledStyle,
         }}
       >
         <span style={{
@@ -633,7 +505,16 @@ function CriticalActions() {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function IncidentCenterPage() {
-  const [selectedIncident, setSelectedIncident] = useState('sos');
+  const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
+  const incidentState = useAdminPolling<IncidentOperationsView>(
+    async () => { const res = await getIncidentMap(); return toIncidentOperationsView(res.data); },
+    { intervalMs: 15_000 },
+  );
+  const view = incidentState.data;
+  const queue = view?.queue || [];
+  const activeIncidentId = selectedIncident && queue.some((incident) => incident.id === selectedIncident)
+    ? selectedIncident
+    : view?.activeIncidentId || null;
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
@@ -641,6 +522,7 @@ export default function IncidentCenterPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
+          <AdminDataStatus error={incidentState.error} stale={incidentState.stale} lastUpdated={incidentState.lastUpdated} />
 
           {/* ── Top Row: Incident Queue + Map ─────────────────────────── */}
           <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
@@ -680,23 +562,27 @@ export default function IncidentCenterPage() {
                   color: '#FFFFFF',
                   letterSpacing: '0.5px',
                 }}>
-                  4 URGENT
+                  {view?.urgentCount || 0} URGENT
                 </span>
               </div>
 
               {/* Incident cards */}
-              {incidents.map((incident) => (
+              {queue.length === 0 ? (
+                <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '16px', fontFamily: inter, fontSize: '12px', color: '#64748B' }}>
+                  {incidentState.loading ? 'Loading incidents...' : 'No active incidents found.'}
+                </div>
+              ) : queue.map((incident) => (
                 <IncidentCard
                   key={incident.id}
                   incident={incident}
-                  active={selectedIncident === incident.id}
+                  active={activeIncidentId === incident.id}
                   onClick={() => setSelectedIncident(incident.id)}
                 />
               ))}
             </div>
 
             {/* Map */}
-            <IncidentMap />
+            <IncidentMap snapshot={view?.snapshot || null} activeIncidentId={activeIncidentId} />
           </div>
 
           {/* ── Bottom Row: Live Incident Log + Critical Actions ─────── */}
@@ -704,12 +590,12 @@ export default function IncidentCenterPage() {
 
             {/* Live Incident Log */}
             <div style={{ flex: 1.5, minWidth: 0 }}>
-              <LiveIncidentLog />
+              <LiveIncidentLog entries={view?.log || []} />
             </div>
 
             {/* Critical Actions */}
             <div style={{ width: '280px', flexShrink: 0 }}>
-              <CriticalActions />
+              <CriticalActions disabled={!view || incidentState.stale} />
             </div>
           </div>
 

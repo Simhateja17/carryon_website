@@ -24,301 +24,16 @@ export async function apiFetch<T>(
   return res.json();
 }
 
-// ── Types ───────────────────────────────────────────────────
-
-export interface Stats {
-  totalDrivers: number;
-  onlineDrivers: number;
-  totalBookings: number;
-  activeBookings: number;
-  totalNotifications: number;
-}
-
-export interface Driver {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  isOnline: boolean;
-  isVerified: boolean;
-  verificationStatus: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
-  totalTrips: number;
-  rating: number;
-  hasFcmToken: boolean;
-  createdAt: string;
-}
-
-export interface DriverListItem {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  photo: string | null;
-  isOnline: boolean;
-  hasFcmToken?: boolean;
-  isVerified: boolean;
-  verificationStatus: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
-  rating: number;
-  totalTrips: number;
-  emergencyContact: string;
-  createdAt: string;
-  documentsCount: number;
-  documentsApproved: number;
-  hasVehicle: boolean;
-  vehicleSummary: string | null;
-}
-
-export interface DriverDocument {
-  id: string;
-  driverId: string;
-  type:
-    | "DRIVERS_LICENSE"
-    | "DRIVERS_LICENSE_BACK"
-    | "GDL"
-    | "VEHICLE_REGISTRATION"
-    | "ROAD_TAX"
-    | "PUSPAKOM"
-    | "APAD_PERMIT"
-    | "VEHICLE_PHOTO_FRONT"
-    | "VEHICLE_PHOTO_BACK"
-    | "VEHICLE_PHOTO_LEFT"
-    | "VEHICLE_PHOTO_RIGHT"
-    | "VEHICLE_PHOTO_INTERIOR"
-    | "BANK_STATEMENT"
-    | "POLICE_CLEARANCE"
-    | "INSURANCE"
-    | "PROFILE_PHOTO"
-    | "ID_PROOF"
-    | "MYKAD_FRONT"
-    | "MYKAD_BACK"
-    | "SELFIE"
-    | "PASSPORT"
-    | "WORK_PERMIT_PLKS";
-  imageUrl: string;
-  expiryDate?: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  rejectionReason: string | null;
-  uploadedAt: string;
-}
-
-export interface DriverVehicle {
-  id: string;
-  driverId: string;
-  type:
-    | "BIKE"
-    | "CAR"
-    | "PICKUP"
-    | "VAN_7FT"
-    | "VAN_9FT"
-    | "LORRY_10FT"
-    | "LORRY_14FT"
-    | "LORRY_17FT";
-  make: string;
-  model: string;
-  year: number;
-  licensePlate: string;
-  color: string;
-  createdAt: string;
-}
-
-export interface DriverDetail {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  photo: string | null;
-  rating: number;
-  totalTrips: number;
-  isOnline: boolean;
-  isVerified: boolean;
-  verificationStatus: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
-  emergencyContact: string;
-  createdAt: string;
-  documents: DriverDocument[];
-  vehicle: DriverVehicle | null;
-}
-
-export interface Notification {
-  id: string;
-  driverId: string;
-  title: string;
-  message: string;
-  type: string;
-  isRead: boolean;
-  createdAt: string;
-  driver?: { id: string; name: string; email: string };
-}
-
-export interface SendNotificationPayload {
-  title: string;
-  message: string;
-  type: string;
-  audience: "all" | "online";
-}
-
-export interface DriverRef {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export interface PushResult {
-  attempted: number;
-  delivered: number;
-  failed: number;
-  driversWithoutToken: number;
-  deliveredDrivers: DriverRef[];
-  failedDrivers: DriverRef[];
-  noTokenDrivers: DriverRef[];
-}
-
-export interface SendNotificationResult {
-  sent: number;
-  audience: string;
-  driversCount: number;
-  push?: PushResult;
-}
-
-export interface RideLocationPayload {
-  address: string;
-  latitude: number;
-  longitude: number;
-  contactName?: string;
-  contactPhone?: string;
-  contactEmail?: string;
-  landmark?: string;
-}
-
-export interface CreateRideRequestPayload {
-  from: RideLocationPayload;
-  to: RideLocationPayload;
-  price: number;
-  vehicleType:
-    | "BIKE"
-    | "CAR"
-    | "PICKUP"
-    | "VAN_7FT"
-    | "VAN_9FT"
-    | "LORRY_10FT"
-    | "LORRY_14FT"
-    | "LORRY_17FT";
-  paymentMethod?: "CASH" | "UPI" | "CARD" | "WALLET";
-  driverIds?: string[];
-}
-
-export interface CreateRideRequestResult {
-  bookingId: string;
-  status: string;
-  vehicleType: string;
-  estimatedPrice: number;
-  distance: number;
-  duration: number;
-  targetedDrivers: DriverRef[];
-  targetingMode?: "selected_drivers" | "nearby_online_drivers";
-  push: PushResult;
-}
-
-export interface AdminRecipientOtpRecord {
-  bookingId: string;
-  orderCode: string;
-  bookingStatus: string;
-  dispatchSource: string;
-  recipientName: string;
-  recipientEmail: string;
-  deliveryOtp: string;
-  otpSentAt: string | null;
-  otpVerifiedAt: string | null;
-  createdAt: string | null;
-  driver: { id: string; name: string; email: string } | null;
-}
-
-export interface BookingExtraChargeRecord {
-  id: string;
-  bookingId: string;
-  driverId: string;
-  type: "TOLL" | "PARKING";
-  amount: number;
-  proofUrl: string;
-  note: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  createdAt: string;
-  reviewedAt: string | null;
-  booking?: {
-    id: string;
-    orderCode: string | null;
-    status: string;
-    pickupAddress?: { address?: string; label?: string };
-    deliveryAddress?: { address?: string; label?: string };
-  };
-  driver?: { id: string; name: string; phone: string };
-}
-
-export interface CommandCenterSnapshot {
-  stats: Array<{ label: string; value: string; trend: string; up: boolean }>;
-  weeklyOrders: Array<{ day: string; count: number }>;
-  breakdown: Array<{ status: string; count: number; pct: number }>;
-  fleet: {
-    inTransit: number;
-    delivering: number;
-    idle: number;
-    pins: Array<{ id: string; vehicleType: string; top: number; left: number }>;
-  };
-  alerts: Array<{ severity: string; label: string; title: string; detail: string }>;
-  recentOrders: Array<{
-    id: string;
-    customer: string;
-    route: string;
-    driver: string;
-    status: string;
-    etd: string;
-  }>;
-  systemLogs: Array<{ title: string; desc: string; badge: string }>;
-  notificationHealth: { deliveredLast24h: number };
-}
-
-export interface NotificationAlertSetting {
-  type: "delay" | "order" | "offline" | "fuel";
-  label: string;
-  sub: string;
-  sms: boolean;
-  push: boolean;
-  email: boolean;
-}
-
-export interface NotificationSettingsSnapshot {
-  settings: { alerts: NotificationAlertSetting[] };
-  groups: Array<{ type: "admin" | "dispatch" | "driver"; label: string; badge: string; sub: string }>;
-  health: { deliveryRate: number; deliveredLast24h: number };
-  auditItems: Array<{ icon: "edit" | "plus" | "warning"; text: string; time: string }>;
-}
-
-export interface AdminPricingVehicle {
-  id: string | null;
-  type: string;
-  name: string;
-  basePrice: number;
-  pricePerKm: number;
-  minimumFare: number;
-  isAvailable: boolean;
-}
-
-export interface AdminPricingSnapshot {
-  vehicles: AdminPricingVehicle[];
-  commissionRate: number;
-  coupons: Array<{ id: string; code: string; desc: string; status: string; expires: string; usage: string }>;
-  history: Array<{ time: string; user: string; action: string; status: string }>;
-}
-
 // ── API Functions ───────────────────────────────────────────
 
 export async function getStats() {
-  return apiFetch<{ success: boolean; data: Stats }>(
+  return apiFetch<{ success: boolean; data: import("@/types").Stats }>(
     "/api/admin/notifications/stats"
   );
 }
 
 export async function getDrivers() {
-  return apiFetch<{ success: boolean; data: Driver[] }>(
+  return apiFetch<{ success: boolean; data: import("@/types").Driver[] }>(
     "/api/admin/notifications/drivers"
   );
 }
@@ -326,27 +41,27 @@ export async function getDrivers() {
 export async function getNotifications(page = 1) {
   return apiFetch<{
     success: boolean;
-    data: Notification[];
+    data: import("@/types").Notification[];
     total: number;
     page: number;
     limit: number;
   }>(`/api/admin/notifications?page=${page}`);
 }
 
-export async function sendNotification(payload: SendNotificationPayload) {
+export async function sendNotification(payload: import("@/types").SendNotificationPayload) {
   return apiFetch<{
     success: boolean;
-    data: SendNotificationResult;
+    data: import("@/types").SendNotificationResult;
   }>("/api/admin/notifications/send", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export async function createRideRequest(payload: CreateRideRequestPayload) {
+export async function createRideRequest(payload: import("@/types").CreateRideRequestPayload) {
   return apiFetch<{
     success: boolean;
-    data: CreateRideRequestResult;
+    data: import("@/types").CreateRideRequestResult;
   }>("/api/admin/notifications/ride-request", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -359,22 +74,84 @@ export async function getRecipientOtps(
 ) {
   return apiFetch<{
     success: boolean;
-    data: AdminRecipientOtpRecord[];
+    data: import("@/types").AdminRecipientOtpRecord[];
   }>(`/api/admin/notifications/recipient-otps?status=${status}&limit=${limit}`);
+}
+
+// ── Admin Bookings / Orders ──────────────────────────────────
+
+export async function getAdminBookings(params: import("@/types").AdminOrdersParams = {}) {
+  const query = new URLSearchParams();
+  if (params.page != null) query.set("page", String(params.page));
+  if (params.limit != null) query.set("limit", String(params.limit));
+  if (params.status && params.status !== "all") query.set("status", params.status);
+  if (params.vehicleType && params.vehicleType !== "all") query.set("vehicleType", params.vehicleType);
+  if (params.search) query.set("search", params.search);
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
+  const qs = query.toString();
+  return apiFetch<import("@/types").AdminOrdersResponse>(`/api/admin/bookings${qs ? `?${qs}` : ""}`);
+}
+
+// ── Customers ───────────────────────────────────────────────
+// GET /api/admin/customers?page=N
+// Requires "customers" in ALLOWED_ADMIN_ROUTES (added to proxy).
+
+export async function getAdminCustomers(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<import("@/types").AdminCustomersPage> {
+  const q = new URLSearchParams({
+    page: String(params?.page ?? 1),
+    limit: String(params?.limit ?? 20),
+    ...(params?.search ? { search: params.search } : {}),
+  });
+  const res = await apiFetch<{ success: boolean; data: import("@/types").AdminCustomersPage }>(
+    `/api/admin/customers?${q}`
+  );
+  return res.data;
+}
+
+export async function getAdminCustomerStats(): Promise<import("@/types").AdminCustomerStats> {
+  const res = await apiFetch<{ success: boolean; data: import("@/types").AdminCustomerStats }>(
+    "/api/admin/customers/stats"
+  );
+  return res.data;
 }
 
 // ── Admin Driver Management ────────────────────────────────
 
 export async function getAdminDrivers() {
-  return apiFetch<{ success: boolean; data: DriverListItem[] }>(
+  return apiFetch<{ success: boolean; data: import("@/types").DriverListItem[] }>(
     "/api/admin/drivers"
   );
 }
 
+export async function getDriverOnboardingQueue() {
+  return apiFetch<{ success: boolean; data: import("@/types").DriverListItem[] }>(
+    "/api/admin/drivers/onboarding-queue"
+  );
+}
+
 export async function getDriverDetail(id: string) {
-  return apiFetch<{ success: boolean; data: DriverDetail }>(
+  return apiFetch<{ success: boolean; data: import("@/types").DriverDetail }>(
     `/api/admin/drivers/${id}`
   );
+}
+
+export async function revealDriverSensitiveField(
+  driverId: string,
+  field: import("@/types").DriverSensitiveField,
+  reason: string
+) {
+  return apiFetch<{
+    success: boolean;
+    data: { field: import("@/types").DriverSensitiveField; value: string; expiresAt: string };
+  }>(`/api/admin/drivers/${driverId}/pii/reveal`, {
+    method: "POST",
+    body: JSON.stringify({ field, reason }),
+  });
 }
 
 export async function reviewDocument(
@@ -383,7 +160,7 @@ export async function reviewDocument(
   status: "APPROVED" | "REJECTED",
   rejectionReason?: string
 ) {
-  return apiFetch<{ success: boolean; data: DriverDocument }>(
+  return apiFetch<{ success: boolean; data: import("@/types").DriverDocument }>(
     `/api/admin/drivers/${driverId}/documents/${docId}/review`,
     {
       method: "PUT",
@@ -394,13 +171,14 @@ export async function reviewDocument(
 
 export async function updateDriverVerification(
   driverId: string,
-  verificationStatus: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED"
+  verificationStatus: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED",
+  rejectionReason?: string
 ) {
-  return apiFetch<{ success: boolean; data: DriverDetail }>(
+  return apiFetch<{ success: boolean; data: import("@/types").DriverDetail }>(
     `/api/admin/drivers/${driverId}/verify`,
     {
       method: "PUT",
-      body: JSON.stringify({ verificationStatus }),
+      body: JSON.stringify({ verificationStatus, rejectionReason }),
     }
   );
 }
@@ -410,7 +188,7 @@ export async function updateDriverVerification(
 export async function getExtraCharges(
   status: "PENDING" | "APPROVED" | "REJECTED" | "ALL" = "PENDING"
 ) {
-  return apiFetch<{ success: boolean; data: BookingExtraChargeRecord[] }>(
+  return apiFetch<{ success: boolean; data: import("@/types").BookingExtraChargeRecord[] }>(
     `/api/admin/extra-charges?status=${status}`
   );
 }
@@ -420,7 +198,7 @@ export async function reviewExtraCharge(
   decision: "APPROVED" | "REJECTED",
   reason?: string
 ) {
-  return apiFetch<{ success: boolean; data: BookingExtraChargeRecord }>(
+  return apiFetch<{ success: boolean; data: import("@/types").BookingExtraChargeRecord }>(
     `/api/admin/extra-charges/${id}/review`,
     {
       method: "POST",
@@ -432,19 +210,19 @@ export async function reviewExtraCharge(
 // ── Admin Read Models ────────────────────────────────────────
 
 export async function getCommandCenterSnapshot() {
-  return apiFetch<{ success: boolean; data: CommandCenterSnapshot }>(
+  return apiFetch<{ success: boolean; data: import("@/types").CommandCenterSnapshot }>(
     "/api/admin/command-center"
   );
 }
 
 export async function getNotificationSettings() {
-  return apiFetch<{ success: boolean; data: NotificationSettingsSnapshot }>(
+  return apiFetch<{ success: boolean; data: import("@/types").NotificationSettingsSnapshot }>(
     "/api/admin/settings/notifications"
   );
 }
 
-export async function updateNotificationSettings(alerts: NotificationAlertSetting[]) {
-  return apiFetch<{ success: boolean; data: { alerts: NotificationAlertSetting[] } }>(
+export async function updateNotificationSettings(alerts: import("@/types").NotificationAlertSetting[]) {
+  return apiFetch<{ success: boolean; data: { alerts: import("@/types").NotificationAlertSetting[] } }>(
     "/api/admin/settings/notifications",
     {
       method: "PUT",
@@ -453,18 +231,88 @@ export async function updateNotificationSettings(alerts: NotificationAlertSettin
   );
 }
 
+export async function getFleetSettings() {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminFleetSettingsSnapshot }>(
+    "/api/admin/settings/fleet"
+  );
+}
+
+export async function updateFleetSettings(payload: import("@/types").AdminFleetSettingsUpdatePayload) {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminFleetSettingsUpdatePayload }>(
+    "/api/admin/settings/fleet",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
 export async function getPricingConfig() {
-  return apiFetch<{ success: boolean; data: AdminPricingSnapshot }>(
+  return apiFetch<{ success: boolean; data: import("@/types").AdminPricingSnapshot }>(
     "/api/admin/pricing"
   );
 }
 
-export async function updatePricingVehicles(vehicles: AdminPricingVehicle[]) {
-  return apiFetch<{ success: boolean; data: AdminPricingVehicle[] }>(
+export async function updatePricingVehicles(vehicles: import("@/types").AdminPricingVehicle[]) {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminPricingVehicle[] }>(
     "/api/admin/pricing/vehicles",
     {
       method: "PUT",
       body: JSON.stringify({ vehicles }),
+    }
+  );
+}
+
+export async function getLiveOverviewMap() {
+  return apiFetch<{ success: boolean; data: import("@/types").LiveOverviewSnapshot }>(
+    "/api/admin/maps/live-overview"
+  );
+}
+
+export async function getLiveMapDashboard() {
+  return apiFetch<{ success: boolean; data: import("@/types").LiveMapDashboardSnapshot }>(
+    "/api/admin/maps/live-dashboard"
+  );
+}
+
+export async function getIncidentMap() {
+  return apiFetch<{ success: boolean; data: import("@/types").IncidentMapSnapshot }>(
+    "/api/admin/maps/incidents"
+  );
+}
+
+export async function getDispatchMap(bookingId = "latest") {
+  return apiFetch<{ success: boolean; data: import("@/types").DispatchMapSnapshot }>(
+    `/api/admin/maps/dispatch/${encodeURIComponent(bookingId)}`
+  );
+}
+
+export async function getOptimizeQueueMap() {
+  return apiFetch<{ success: boolean; data: import("@/types").OptimizeQueueSnapshot }>(
+    "/api/admin/maps/optimize/queue"
+  );
+}
+
+export async function runRouteOptimization() {
+  return apiFetch<{ success: boolean; data: import("@/types").OptimizeRunResult }>(
+    "/api/admin/maps/optimize/run",
+    { method: "POST", body: JSON.stringify({}) }
+  );
+}
+
+// ── Route Distance ───────────────────────────────────────────
+// POST /api/admin/maps/distance
+// Calculates road distance between two coordinates.
+
+export async function getRouteDistance(
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number }
+) {
+  return apiFetch<{ success: boolean; data: import("@/types").RouteDistanceResult }>(
+    "/api/admin/maps/distance",
+    {
+      method: "POST",
+      body: JSON.stringify({ from, to }),
     }
   );
 }

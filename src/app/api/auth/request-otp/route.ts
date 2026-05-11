@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(request: NextRequest) {
-  const { email } = await request.json();
+const OtpRequestSchema = z.object({
+  email: z.string().email("Invalid email address").max(254, "Email too long"),
+});
 
-  if (!email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+export async function POST(request: NextRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
+
+  const result = OtpRequestSchema.safeParse(body);
+  if (!result.success) {
+    // Return same response shape as valid requests to prevent email enumeration
+    return NextResponse.json({ success: true });
+  }
+
+  const { email } = result.data;
 
   const supabase = await createClient();
 

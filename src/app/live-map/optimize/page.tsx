@@ -1,7 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
+import MapSurface from '@/components/MapSurface';
+import AdminDataStatus from '@/components/AdminDataStatus';
+import { useAdminPolling } from '@/lib/useAdminPolling';
+import type { OptimizeOperationsView } from '@/lib/adminOperations';
+import { getOptimizeQueueMap, runRouteOptimization } from '@/lib/api';
+import type { OptimizeQueueSnapshot, OptimizeRunResult } from '@/types';
 
 const inter = "'Inter', sans-serif";
 const manrope = "'Manrope', sans-serif";
@@ -108,7 +115,7 @@ function MapControls() {
 }
 
 /* ── Route Optimization Panel ───────────────────────────────── */
-function RouteOptimizationPanel() {
+function RouteOptimizationPanel({ onApply, result }: { onApply: () => void; result: OptimizeRunResult | null }) {
   return (
     <div style={{
       position: 'absolute',
@@ -133,7 +140,7 @@ function RouteOptimizationPanel() {
           Route Optimization
         </div>
         <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#3B82F6', letterSpacing: '0.5px' }}>
-          AI ENGINE V4.2
+          GOOGLE ROUTE ENGINE
         </div>
       </div>
 
@@ -146,10 +153,13 @@ function RouteOptimizationPanel() {
         <div style={{ width: '1px', height: '28px', background: '#E2E8F0' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Time</span>
-          <span style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#0F172A', lineHeight: '24px' }}>142h</span>
+          <span style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#0F172A', lineHeight: '24px' }}>
+            {result?.optimizedRoute ? `${Math.round(result.optimizedRoute.durationSeconds / 3600)}h` : '—'}
+          </span>
         </div>
         <button
           suppressHydrationWarning
+          onClick={onApply}
           style={{
             marginLeft: 'auto',
             height: '36px',
@@ -243,14 +253,12 @@ function StatusBadge({ status }: { status: 'OPTIMIZED' | 'CALCULATING' | 'PENDIN
 
 /* ── Fleet Card ─────────────────────────────────────────────── */
 function FleetCard({
-  icon,
   title,
   driver,
   status,
   metrics,
   progressColor,
 }: {
-  icon: 'truck' | 'van';
   title: string;
   driver: string;
   status: 'OPTIMIZED' | 'CALCULATING' | 'PENDING';
@@ -318,7 +326,8 @@ function FleetCard({
 }
 
 /* ── Optimization Priority Queue ────────────────────────────── */
-function OptimizationPriorityQueue() {
+function OptimizationPriorityQueue({ queue }: { queue: OptimizeQueueSnapshot | null }) {
+  const entries = (queue?.queue || []).slice(0, 3);
   return (
     <div style={{
       background: '#FFFFFF',
@@ -342,7 +351,7 @@ function OptimizationPriorityQueue() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Selected Fleet</span>
-            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>12 Vehicles Out of Range</span>
+            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{queue?.selectedCount || 0} Routes Selected</span>
           </div>
           <button
             suppressHydrationWarning
@@ -379,41 +388,22 @@ function OptimizationPriorityQueue() {
         </div>
       </div>
 
-      {/* Fleet cards */}
       <div style={{ display: 'flex', gap: '16px' }}>
-        <FleetCard
-          icon="truck"
-          title="Fleet Delta - Sector 4"
-          driver="Sam Rodriguez"
-          status="OPTIMIZED"
-          metrics={[
-            { label: 'Distance', value: <span>242km <span style={{ color: '#059669' }}>→ 198km</span></span> },
-            { label: 'Estimated Duration', value: <span>6h45m <span style={{ color: '#059669' }}>→ 4h52m</span></span> },
-          ]}
-          progressColor="#059669"
-        />
-        <FleetCard
-          icon="van"
-          title="Northside Express"
-          driver="Sarah Jenkins"
-          status="CALCULATING"
-          metrics={[
-            { label: 'Current Distance', value: '156km' },
-            { label: 'Projected Saving', value: <span style={{ color: '#2563EB' }}>~12% Reduction</span> },
-          ]}
-          progressColor="#2563EB"
-        />
-        <FleetCard
-          icon="truck"
-          title="Last-Mile Heavy-Duty"
-          driver="Mike Lawson"
-          status="PENDING"
-          metrics={[
-            { label: 'Efficiency Boost', value: <span style={{ color: '#059669' }}>+8.4%</span> },
-            { label: 'Fuel Savings', value: <span style={{ color: '#059669' }}>+14.2 gal</span> },
-          ]}
-          progressColor="#059669"
-        />
+        {entries.length === 0 ? (
+          <div style={{ fontFamily: inter, fontSize: '12px', color: '#64748B', padding: '16px 0' }}>No optimization candidates found.</div>
+        ) : entries.map((entry) => (
+          <FleetCard
+            key={entry.booking.bookingId}
+            title={entry.booking.orderCode || entry.booking.bookingId}
+            driver={entry.booking.driver?.name || 'Unassigned driver'}
+            status={entry.status}
+            metrics={[
+              { label: 'Priority', value: `#${entry.priority}` },
+              { label: 'ETA', value: entry.booking.etaMinutes != null ? `${entry.booking.etaMinutes} mins` : 'Unavailable' },
+            ]}
+            progressColor={entry.status === 'PENDING' ? '#F59E0B' : entry.status === 'CALCULATING' ? '#2563EB' : '#059669'}
+          />
+        ))}
       </div>
     </div>
   );
@@ -421,12 +411,27 @@ function OptimizationPriorityQueue() {
 
 /* ── Page ───────────────────────────────────────────────────── */
 export default function OptimizeRoutesPage() {
+  const [result, setResult] = useState<OptimizeRunResult | null>(null);
+  const queueState = useAdminPolling<OptimizeOperationsView>(
+    async () => { const res = await getOptimizeQueueMap(); return { snapshot: res.data }; },
+    { intervalMs: 15_000 },
+  );
+  const queue = result?.queue || queueState.data?.snapshot || null;
+
+  async function applyOptimization() {
+    const res = await runRouteOptimization();
+    setResult(res.data);
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F7F9FB' }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', minWidth: 0 }}>
+          <div style={{ width: '96%', margin: '12px auto 0' }}>
+            <AdminDataStatus error={queueState.error} stale={queueState.stale} lastUpdated={queueState.lastUpdated} />
+          </div>
           {/* Map area */}
           <div style={{
             height: '82vh',
@@ -438,30 +443,59 @@ export default function OptimizeRoutesPage() {
             position: 'relative',
             overflow: 'hidden',
             borderRadius: '12px',
-            background: 'url(/blue_map.png) lightgray 0px 0px / cover no-repeat',
+            background: '#DDEAF6',
           }}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <MapSurface
+                minHeight="100%"
+                markers={(queue?.queue || []).flatMap((entry) => [
+                  { id: `${entry.booking.bookingId}-driver`, position: entry.booking.driver?.position || null, label: entry.booking.driver?.name || 'D', tone: 'driver' as const },
+                  { id: `${entry.booking.bookingId}-dropoff`, position: entry.booking.route.dropoff, label: String(entry.priority), tone: 'optimized' as const },
+                ])}
+                routes={result?.optimizedRoute ? [
+                  {
+                    id: 'optimized',
+                    path: [
+                      result.optimizedRoute.origin,
+                      ...result.optimizedRoute.waypoints.map((waypoint) => waypoint.position),
+                      result.optimizedRoute.destination,
+                    ],
+                    tone: 'optimized' as const,
+                  },
+                ] : (queue?.queue || []).map((entry) => ({
+                  id: entry.booking.bookingId,
+                  path: [entry.booking.route.pickup, entry.booking.route.dropoff].filter(Boolean) as Array<{ lat: number; lng: number }>,
+                  tone: 'planned' as const,
+                }))}
+                fallback={<div style={{ width: '100%', height: '100%', background: 'url(/blue_map.png) lightgray 0px 0px / cover no-repeat' }} />}
+              />
+            </div>
             {/* Map controls */}
             <MapControls />
 
             {/* Route Optimization Panel */}
-            <RouteOptimizationPanel />
+            <RouteOptimizationPanel onApply={applyOptimization} result={result} />
 
             {/* Live Fleet Status */}
             <LiveFleetStatusCard />
 
             {/* Destination markers — positioned to match Figma */}
-            <DestinationMarker top="12%" left="46%" label="Costco Wholesale" />
-            <DestinationMarker top="30%" left="58%" label="Museum Of Contemporary Art" />
-            <DestinationMarker top="33%" left="72%" label="Navy Pier" />
-            <DestinationMarker top="42%" left="82%" label="Four Mile Crib" />
-            <DestinationMarker top="50%" left="54%" label="Field Museum" />
-            <DestinationMarker top="58%" left="44%" label="National Museum of Mexican Art" />
-            <DestinationMarker top="63%" left="68%" label="McCormick Place" />
-            <DestinationMarker top="16%" left="86%" label="William E. Dever Crib Lighthouse" />
+            {!queue && (
+              <>
+                <DestinationMarker top="12%" left="46%" label="Costco Wholesale" />
+                <DestinationMarker top="30%" left="58%" label="Museum Of Contemporary Art" />
+                <DestinationMarker top="33%" left="72%" label="Navy Pier" />
+                <DestinationMarker top="42%" left="82%" label="Four Kilometre Crib" />
+                <DestinationMarker top="50%" left="54%" label="Field Museum" />
+                <DestinationMarker top="58%" left="44%" label="National Museum of Mexican Art" />
+                <DestinationMarker top="63%" left="68%" label="McCormick Place" />
+                <DestinationMarker top="16%" left="86%" label="William E. Dever Crib Lighthouse" />
+              </>
+            )}
           </div>
 
           {/* Optimization Priority Queue */}
-          <OptimizationPriorityQueue />
+          <OptimizationPriorityQueue queue={queue} />
         </main>
       </div>
     </div>

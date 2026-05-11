@@ -161,7 +161,7 @@ export default function PaymentTaxPage() {
                 padding: '24px',
               }}>
                 <div style={{ color: '#9CA3AF', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>LAST PAYMENT</div>
-                <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: '32px', color: '#191C1E', marginBottom: '12px' }}>$12,450.00</div>
+                <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: '32px', color: '#191C1E', marginBottom: '12px' }}>RM 12,450.00</div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>

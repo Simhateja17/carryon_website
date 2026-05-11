@@ -19,7 +19,7 @@ const LOGS: LogRow[] = [
   { timestamp: 'Oct 24, 2023', time: '14:22:15.003', initials: 'JD', name: 'John Doe', contact: '+1 (555) 012-3456', type: 'Delay Alert', status: 'DELIVERED', snippet: '"Package #3921 is delayed by 45 mins due…' },
   { timestamp: 'Oct 24, 2023', time: '14:20:01.442', initials: 'AS', name: 'Alice Smith', contact: 'alice.s@company.com', type: 'New Order', status: 'COMPLETED', snippet: '"Order #ORD-8821 confirmed. Shipping lab…' },
   { timestamp: 'Oct 24, 2023', time: '14:15:33.210', initials: 'MB', name: 'Marcus Brown', contact: '+1 (555) 998-1122', type: 'Payment Failed', status: 'FAILED', snippet: '"Gateway error (502). Transaction for invoice…' },
-  { timestamp: 'Oct 24, 2023', time: '14:12:00.891', initials: 'LL', name: 'Lana Lee', contact: 'lana.lee@logistics.net', type: 'ETA Update', status: 'PENDING', snippet: '"Shipment #551 is now 5 miles from your location…' },
+  { timestamp: 'Oct 24, 2023', time: '14:12:00.891', initials: 'LL', name: 'Lana Lee', contact: 'lana.lee@logistics.net', type: 'ETA Update', status: 'PENDING', snippet: '"Shipment #551 is now 8 km from your location…' },
 ];
 
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {

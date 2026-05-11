@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getRecipientOtps, type AdminRecipientOtpRecord } from "@/lib/api";
+import { getRecipientOtps } from "@/lib/api";
+import type { AdminRecipientOtpRecord } from "@/types";
 
 const statusOptions = [
   { value: "all", label: "All" },

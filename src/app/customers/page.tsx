@@ -1,84 +1,78 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import { getAdminCustomers, getAdminCustomerStats } from '@/lib/api';
+import type { AdminCustomer, AdminCustomersPage, AdminCustomerStats } from '@/types';
+import { useAdminPolling } from '@/lib/useAdminPolling';
 
-/* ── Data ─────────────────────────────────────────────────────── */
-const customers = [
-  {
-    id: 'CO-8942',
-    est: 'EST. 2021',
-    initials: 'SV',
-    color: '#B7DAF5',
-    badgeWidth: '33.36px',
-    textColor: '#2563EB',
-    company: 'Swift Valley Retail',
-    category: 'Retail & Consumer Goods',
-    categoryWidth: '104.06px',
-    categoryHeight: '32px',
-    contact: 'Elena Rodriguez',
-    role: 'Logistics Director',
-    totalOrders: 1402,
-    active: 12,
-    activeBadgeWidth: '41.31px',
-    activeBadgeHeight: '28px',
-    activeBadgePadding: '2px 6px',
-    revenue: '$1.2M',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'CO-7712',
-    est: 'EST. 2022',
-    initials: 'AM',
-    color: '#B7DAF5',
-    badgeWidth: '31.13px',
-    textColor: '#2F80ED',
-    initialsFontSize: '16px',
-    initialsFontWeight: 600,
-    initialsWidth: '26.41px',
-    initialsHeight: '20px',
-    company: 'Apex Manufacturing',
-    category: 'Industrial Parts',
-    categoryWidth: '84.83px',
-    categoryHeight: '16px',
-    contact: 'Marcus Chen',
-    role: 'Operations Manager',
-    totalOrders: 890,
-    active: 0,
-    activeBadgeWidth: '50.44px',
-    activeBadgeHeight: '16px',
-    activeBadgePadding: '2px 6px',
-    revenue: '$740K',
-    status: 'INACTIVE',
-  },
-  {
-    id: 'CO-9011',
-    est: 'EST. 2023',
-    initials: 'NF',
-    color: '#B7DAF5',
-    badgeWidth: '29.58px',
-    textColor: '#2563EB',
-    company: 'Northern Fresh Foods',
-    category: 'Perishables',
-    categoryWidth: '65.89px',
-    categoryHeight: '16px',
-    contact: 'Sarah Jenkins',
-    role: 'Cold Chain Lead',
-    totalOrders: 2145,
-    active: 45,
-    activeBadgeWidth: '43.22px',
-    activeBadgeHeight: '28px',
-    activeBadgePadding: '2px 7.91px 2px 6px',
-    revenue: '$3.1M',
-    status: 'ACTIVE',
-  },
-];
+/* ── Helpers ──────────────────────────────────────────────────────── */
+function formatRevenue(amount: number): string {
+  if (amount >= 1_000_000) return `RM ${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `RM ${(amount / 1_000).toFixed(0)}K`;
+  return `RM ${amount.toFixed(0)}`;
+}
 
-/* ── Page ─────────────────────────────────────────────────────── */
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0] ?? '')
+    .join('')
+    .toUpperCase();
+}
+
+function shortId(id: string): string {
+  return id.slice(0, 8).toUpperCase();
+}
+
+function joinYear(dateStr: string): string {
+  return `EST. ${new Date(dateStr).getFullYear()}`;
+}
+
+/* ── Page ─────────────────────────────────────────────────────────── */
 export default function CustomersPage() {
-  const [searchVal, setSearchVal] = useState('');
   const router = useRouter();
+  const [page, setPage] = useState(1);
+  const [searchVal, setSearchVal] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search input (300 ms)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchVal);
+      setPage(1);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchVal]);
+
+  // Stats polling (60 s)
+  const statsLoader = useCallback(() => getAdminCustomerStats(), []);
+  const { data: statsData, loading: statsLoading } = useAdminPolling<AdminCustomerStats>(
+    statsLoader,
+    { intervalMs: 60_000 }
+  );
+
+  // Customers table polling (30 s)
+  const customersLoader = useCallback(
+    () => getAdminCustomers({ page, search: debouncedSearch }),
+    [page, debouncedSearch]
+  );
+  const {
+    data: pageData,
+    loading: tableLoading,
+    error: tableError,
+  } = useAdminPolling<AdminCustomersPage>(customersLoader, { intervalMs: 30_000 });
+
+  const customers: AdminCustomer[] = pageData?.customers ?? [];
+  const totalCustomers = pageData?.total ?? 0;
+  const limit = pageData?.limit ?? 20;
+  const totalPages = pageData?.totalPages ?? Math.max(1, Math.ceil(totalCustomers / limit));
 
   return (
     <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter, sans-serif' }}>
@@ -166,17 +160,19 @@ export default function CustomersPage() {
                 </span>
               </div>
               <div style={{ fontFamily: 'Inter', fontSize: '32px', fontWeight: 700, color: '#0F172A', lineHeight: '1' }}>
-                1,284
+                {statsLoading ? '—' : (statsData?.totalUsers ?? 0).toLocaleString()}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M6 9V3M3 6l3-3 3 3" stroke="#16A34A" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>+12% vs last month</span>
+                <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>
+                  {statsLoading ? '—' : `${statsData?.verifiedUsers ?? 0} verified`}
+                </span>
               </div>
             </div>
 
-            {/* Active Shipments — span 3 cols */}
+            {/* Active Users — span 3 cols */}
             <div style={{
               gridColumn: 'span 3',
               background: '#fff', borderRadius: '12px', padding: '20px 24px',
@@ -196,16 +192,18 @@ export default function CustomersPage() {
                   color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase',
                   lineHeight: '24px',
                 }}>
-                  Active Shipments
+                  Active Users (30d)
                 </span>
               </div>
               <div style={{ fontFamily: 'Inter', fontSize: '32px', fontWeight: 700, color: '#0F172A', lineHeight: '1' }}>
-                452
+                {statsLoading ? '—' : (statsData?.activeUsers ?? 0).toLocaleString()}
               </div>
-              <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>92% On-time delivery</span>
+              <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>
+                Active in the last 30 days
+              </span>
             </div>
 
-            {/* MRR Impact — span 3 cols */}
+            {/* Total Revenue — span 3 cols */}
             <div style={{
               gridColumn: 'span 3',
               background: '#fff', borderRadius: '12px', padding: '20px 24px',
@@ -224,17 +222,19 @@ export default function CustomersPage() {
                   color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase',
                   lineHeight: '24px',
                 }}>
-                  MRR Impact
+                  Total Revenue
                 </span>
               </div>
               <div style={{ fontFamily: 'Inter', fontSize: '32px', fontWeight: 700, color: '#0F172A', lineHeight: '1' }}>
-                $2.4M
+                {statsLoading ? '—' : formatRevenue(statsData?.totalRevenue ?? 0)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M6 9V3M3 6l3-3 3 3" stroke="#16A34A" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>4.2% Growth</span>
+                <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>
+                  Completed payments
+                </span>
               </div>
             </div>
 
@@ -296,7 +296,7 @@ export default function CustomersPage() {
                 type="text"
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
-                placeholder="Search customers by name, ID or contact..."
+                placeholder="Search customers by name, email or phone..."
                 style={{
                   width: '100%', height: '38px', paddingLeft: '36px', paddingRight: '12px',
                   background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px',
@@ -307,9 +307,8 @@ export default function CustomersPage() {
             </div>
             {/* Filters */}
             {[
-              { label: 'Industry: All', width: '80.27px' },
-              { label: 'Status: Active', width: '98px' },
-              { label: 'Region: All', width: '71.14px' },
+              { label: 'Status: All', width: '80px' },
+              { label: 'Verified: All', width: '88px' },
             ].map((f) => (
               <button suppressHydrationWarning key={f.label} style={{
                 height: '38px', padding: '0 14px', borderRadius: '8px',
@@ -345,6 +344,16 @@ export default function CustomersPage() {
             </button>
           </div>
 
+          {/* Error banner */}
+          {tableError && (
+            <div style={{
+              background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px',
+              padding: '12px 16px', fontFamily: 'Inter', fontSize: '13px', color: '#DC2626',
+            }}>
+              {tableError}
+            </div>
+          )}
+
           {/* Table */}
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
             {/* Table Header */}
@@ -356,12 +365,34 @@ export default function CustomersPage() {
               borderBottom: '1px solid #E2E8F0',
               background: '#F8FAFC',
             }}>
-              {['Customer ID', 'Company Name', 'Contact Person', 'Total Orders', 'Revenue', 'Status', 'Actions'].map((h) => (
+              {['Customer ID', 'Name', 'Contact', 'Total Orders', 'Total Spent', 'Status', 'Actions'].map((h) => (
                 <span key={h} style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                   {h}
                 </span>
               ))}
             </div>
+
+            {/* Loading skeleton */}
+            {tableLoading && customers.length === 0 && (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                  columnGap: '20px',
+                  padding: '18px 20px',
+                  borderBottom: '1px solid #F1F5F9',
+                  alignItems: 'center',
+                }}>
+                  {Array.from({ length: 7 }).map((__, j) => (
+                    <div key={j} style={{
+                      height: '14px', borderRadius: '4px',
+                      background: '#F1F5F9',
+                      width: j === 1 ? '80%' : j === 6 ? '60px' : '70%',
+                    }} />
+                  ))}
+                </div>
+              ))
+            )}
 
             {/* Rows */}
             {customers.map((c, i) => (
@@ -375,71 +406,64 @@ export default function CustomersPage() {
               }}>
                 {/* Customer ID */}
                 <div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.id}</div>
+                  <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                    {shortId(c.id)}
+                  </div>
                   <div style={{
-                    width: '73.14px',
-                    height: '12px',
                     marginTop: '2px',
                     fontFamily: 'Inter',
                     fontSize: '10px',
                     fontWeight: 500,
-                    lineHeight: '100%',
-                    letterSpacing: '0px',
                     color: '#2F80ED',
                   }}>
-                    {c.est}
+                    {joinYear(c.createdAt)}
                   </div>
                 </div>
 
-                {/* Company */}
+                {/* Name */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{
-                    width: (c as { badgeWidth?: string }).badgeWidth ?? '36px',
-                    height: '40px', borderRadius: '8px',
-                    background: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '36px',
+                    height: '36px', borderRadius: '8px',
+                    background: '#B7DAF5', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}>
                     <span style={{
                       fontFamily: 'Inter',
-                      fontSize: (c as { initialsFontSize?: string }).initialsFontSize ?? '12px',
-                      fontWeight: (c as { initialsFontWeight?: number }).initialsFontWeight ?? 700,
-                      lineHeight: '100%',
-                      width: (c as { initialsWidth?: string }).initialsWidth,
-                      height: (c as { initialsHeight?: string }).initialsHeight,
-                      textAlign: 'center',
-                      color: c.textColor,
-                    }}>{c.initials}</span>
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#2563EB',
+                    }}>{initials(c.name || c.email)}</span>
                   </div>
                   <div>
-                    <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.company}</div>
+                    <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.name || '—'}</div>
                     <div style={{
-                      width: (c as { categoryWidth?: string }).categoryWidth,
-                      height: (c as { categoryHeight?: string }).categoryHeight,
                       marginTop: '2px',
                       fontFamily: 'Inter',
                       fontSize: '12px',
                       fontWeight: 400,
                       lineHeight: '16px',
-                      letterSpacing: '0px',
                       color: '#2F80ED',
-                    }}>{c.category}</div>
+                    }}>{c.email}</div>
                   </div>
                 </div>
 
-                {/* Contact */}
+                {/* Contact / Phone */}
                 <div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#0F172A' }}>{c.contact}</div>
-                  <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#2563EB', marginTop: '2px' }}>{c.role}</div>
+                  <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#0F172A' }}>{c.phone || '—'}</div>
+                  <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                    {c.lastOrderAt ? `Last order ${new Date(c.lastOrderAt).toLocaleDateString()}` : 'No orders yet'}
+                  </div>
                 </div>
 
                 {/* Total Orders */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.totalOrders.toLocaleString()}</span>
-                  {c.active > 0 && (
+                  <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                    {c.totalOrders.toLocaleString()}
+                  </span>
+                  {c.activeOrders > 0 ? (
                     <span style={{
-                      width: (c as { activeBadgeWidth?: string }).activeBadgeWidth,
-                      height: (c as { activeBadgeHeight?: string }).activeBadgeHeight,
-                      padding: (c as { activeBadgePadding?: string }).activeBadgePadding ?? '2px 6px',
+                      padding: '2px 6px',
                       boxSizing: 'border-box',
                       borderRadius: '4px',
                       background: '#B7DAF5',
@@ -447,48 +471,48 @@ export default function CustomersPage() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#2563EB',
+                      whiteSpace: 'nowrap',
                     }}>
-                      +{c.active} active
+                      +{c.activeOrders} active
                     </span>
-                  )}
-                  {c.active === 0 && (
+                  ) : (
                     <span style={{
-                      width: (c as { activeBadgeWidth?: string }).activeBadgeWidth,
-                      height: (c as { activeBadgeHeight?: string }).activeBadgeHeight,
-                      padding: (c as { activeBadgePadding?: string }).activeBadgePadding ?? '2px 6px',
+                      padding: '2px 6px',
                       boxSizing: 'border-box',
                       borderRadius: '4px',
-                      background: '#B7DAF5',
+                      background: '#F1F5F9',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontFamily: 'Inter', fontSize: '10px', fontWeight: 600, color: '#94A3B8',
+                      whiteSpace: 'nowrap',
                     }}>
                       0 active
                     </span>
                   )}
                 </div>
 
-                {/* Revenue */}
-                <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.revenue}</div>
+                {/* Total Spent */}
+                <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                  {formatRevenue(c.totalSpent)}
+                </div>
 
                 {/* Status */}
                 <div>
                   <span style={{
-                    width: c.status === 'ACTIVE' ? '61.36px' : '71.66px',
-                    height: '22px',
                     padding: '4px 12px',
                     borderRadius: '9999px',
                     boxSizing: 'border-box',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: c.status === 'ACTIVE' ? '#2F80ED' : '#B7DAF5',
+                    background: c.isVerified ? '#2F80ED' : '#B7DAF5',
                     fontFamily: 'Inter', fontSize: '11px', fontWeight: 700,
-                    color: '#0F172A',
+                    color: c.isVerified ? '#fff' : '#64748B',
                     letterSpacing: '0.4px',
+                    whiteSpace: 'nowrap',
                   }}>
-                    {c.status}
+                    {c.isVerified ? 'VERIFIED' : 'UNVERIFIED'}
                   </span>
                 </div>
 
@@ -519,6 +543,16 @@ export default function CustomersPage() {
               </div>
             ))}
 
+            {/* Empty state */}
+            {!tableLoading && customers.length === 0 && !tableError && (
+              <div style={{
+                padding: '48px 20px', textAlign: 'center',
+                fontFamily: 'Inter', fontSize: '14px', color: '#64748B',
+              }}>
+                {debouncedSearch ? `No customers found for "${debouncedSearch}"` : 'No customers yet'}
+              </div>
+            )}
+
             {/* Pagination */}
             <div style={{
               padding: '14px 20px',
@@ -526,34 +560,51 @@ export default function CustomersPage() {
               borderTop: '1px solid #F1F5F9',
             }}>
               <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
-                Showing 1-10 of 1,284 customers
+                {tableLoading && customers.length === 0
+                  ? 'Loading...'
+                  : `Showing ${Math.min((page - 1) * limit + 1, totalCustomers)}–${Math.min(page * limit, totalCustomers)} of ${totalCustomers.toLocaleString()} customers`}
               </span>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <button suppressHydrationWarning style={{
-                  width: '32px', height: '32px', borderRadius: '6px',
-                  background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
+                <button
+                  suppressHydrationWarning
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '6px',
+                    background: '#fff', border: '1px solid #E2E8F0',
+                    cursor: page <= 1 ? 'default' : 'pointer',
+                    opacity: page <= 1 ? 0.4 : 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M7.5 9L4.5 6l3-3" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                {[1, 2, 3].map((p) => (
-                  <button suppressHydrationWarning key={p} style={{
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const p = i + 1;
+                  return (
+                    <button suppressHydrationWarning key={p} onClick={() => setPage(p)} style={{
+                      width: '32px', height: '32px', borderRadius: '6px',
+                      background: p === page ? '#2563EB' : '#fff',
+                      border: p === page ? 'none' : '1px solid #E2E8F0',
+                      fontFamily: 'Inter', fontSize: '13px', fontWeight: p === page ? 600 : 400,
+                      color: p === page ? '#fff' : '#374151', cursor: 'pointer',
+                    }}>
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  suppressHydrationWarning
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  style={{
                     width: '32px', height: '32px', borderRadius: '6px',
-                    background: p === 1 ? '#2563EB' : '#fff',
-                    border: p === 1 ? 'none' : '1px solid #E2E8F0',
-                    fontFamily: 'Inter', fontSize: '13px', fontWeight: p === 1 ? 600 : 400,
-                    color: p === 1 ? '#fff' : '#374151', cursor: 'pointer',
+                    background: '#fff', border: '1px solid #E2E8F0',
+                    cursor: page >= totalPages ? 'default' : 'pointer',
+                    opacity: page >= totalPages ? 0.4 : 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    {p}
-                  </button>
-                ))}
-                <button suppressHydrationWarning style={{
-                  width: '32px', height: '32px', borderRadius: '6px',
-                  background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M4.5 3L7.5 6l-3 3" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
