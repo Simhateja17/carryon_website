@@ -4,675 +4,535 @@ import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
-const inter = "'Inter', sans-serif";
-const manrope = "'Manrope', sans-serif";
+const configLogs = [
+  { label: 'iOS Version Bump', by: 'Admin (J. Doe)', time: '2h ago' },
+  { label: 'Security MFA enforced', by: 'System Security', time: '5h ago' },
+  { label: 'Timezone adjusted (UTC-5)', by: 'Admin (J. Doe)', time: '1d ago' },
+];
 
-/* ── Toggle ─────────────────────────────────────────────────── */
-function Toggle({ on }: { on: boolean }) {
-  return (
-    <div style={{
-      width: '44px', height: '24px', borderRadius: '999px',
-      background: on ? '#2563EB' : '#E2E8F0',
-      position: 'relative', flexShrink: 0, cursor: 'pointer',
-    }}>
-      <div style={{
-        position: 'absolute', top: '2px',
-        left: on ? '22px' : '2px',
-        width: '20px', height: '20px', borderRadius: '50%',
-        background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-        transition: 'left 0.15s ease',
-      }} />
-    </div>
-  );
-}
+const timezones = [
+  '(GMT-12:00) International Date Line West',
+  '(GMT-08:00) Pacific Time',
+  '(GMT-07:00) Mountain Time',
+  '(GMT-06:00) Central Time',
+  '(GMT-05:00) Eastern Time',
+  '(GMT+00:00) UTC',
+  '(GMT+01:00) Central European Time',
+  '(GMT+05:30) India Standard Time',
+  '(GMT+08:00) China Standard Time',
+];
 
-/* ── Tab Switcher ───────────────────────────────────────────── */
-function TabSwitcher({ active, onChange }: { active: string; onChange: (t: string) => void }) {
-  const tabs = ['Alerts', 'Fraud', 'Safety', 'Logs'];
-  return (
-    <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-      {tabs.map((tab) => {
-        const isActive = active === tab;
-        return (
-          <button
-            suppressHydrationWarning
-            key={tab}
-            onClick={() => onChange(tab)}
-            style={{
-              background: 'none', border: 'none', borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
-              padding: '8px 0', cursor: 'pointer',
-              fontFamily: inter, fontSize: '14px', fontWeight: isActive ? 700 : 500,
-              color: isActive ? '#2563EB' : '#64748B',
-              lineHeight: '20px',
-            }}
-          >
-            {tab}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+const languages = ['English (US)', 'English (UK)', 'Spanish', 'French', 'German', 'Portuguese'];
 
-/* ── SOS Card ───────────────────────────────────────────────── */
-function SOSCard() {
-  return (
-    <div style={{
-      flex: 1.3, minWidth: 0,
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', gap: '12px',
-    }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: '#FEE2E2', color: '#DC2626',
-          fontFamily: inter, fontSize: '12px', fontWeight: 800,
-        }}>
-          SOS
-        </span>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>
-              SOS Triggered: #C-9011
-            </span>
-            <span style={{
-              padding: '3px 8px', borderRadius: '9999px',
-              background: '#DC2626', color: '#FFFFFF',
-              fontFamily: inter, fontSize: '9px', fontWeight: 700,
-              letterSpacing: '0.5px', textTransform: 'uppercase',
-            }}>
-              Active Emergency
-            </span>
-          </div>
-          <div style={{ fontFamily: inter, fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
-            Driver: Marco Rossi • Vehicle: BX-901-LK
-          </div>
-        </div>
-      </div>
-
-      {/* Body: map + info */}
-      <div style={{ display: 'flex', gap: '12px' }}>
-        {/* Map thumbnail */}
-        <div style={{
-          width: '120px', height: '100px', borderRadius: '10px',
-          background: '#1F2937', overflow: 'hidden', position: 'relative', flexShrink: 0,
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/dark_map.png" alt="SOS location" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '16px', height: '16px', borderRadius: '50%',
-            background: '#DC2626', border: '2px solid white',
-            boxShadow: '0 0 8px rgba(220,38,38,0.6)',
-          }} />
-        </div>
-
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
-          <div>
-            <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Location</div>
-            <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>Lower Manhattan, 5th Ave</div>
-          </div>
-          <div>
-            <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Time Active</div>
-            <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>04m 22s</div>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-            <button suppressHydrationWarning style={{
-              flex: 1, height: '32px', borderRadius: '8px',
-              background: '#1F2937', border: 'none',
-              fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#FFFFFF',
-              cursor: 'pointer',
-            }}>
-              Contact
-            </button>
-            <button suppressHydrationWarning style={{
-              flex: 1, height: '32px', borderRadius: '8px',
-              background: '#DC2626', border: 'none',
-              fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#FFFFFF',
-              cursor: 'pointer',
-            }}>
-              Notify Authorities
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Fraud Trend Card ───────────────────────────────────────── */
-function FraudTrendCard() {
-  const bars = [28, 42, 35, 58, 82];
-  return (
-    <div style={{
-      flex: 1, minWidth: 0,
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-    }}>
-      <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-        Fraud Trend
-      </div>
-      <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#2563EB', lineHeight: '36px', marginTop: '8px' }}>
-        +12.4%
-      </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '60px', marginTop: '12px' }}>
-        {bars.map((h, i) => (
-          <div key={i} style={{
-            flex: 1,
-            height: `${h}%`,
-            borderRadius: '3px 3px 0 0',
-            background: i === bars.length - 1 ? '#2563EB' : '#DBEAFE',
-          }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── High Risk Zone Card ────────────────────────────────────── */
-function HighRiskZoneCard() {
-  return (
-    <div style={{
-      flex: 1, minWidth: 0,
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-    }}>
-      <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-        High Risk Zone
-      </div>
-      <div style={{ marginTop: '8px' }}>
-        <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Brooklyn, NY</div>
-        <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#DC2626', lineHeight: '32px' }}>42%</div>
-      </div>
-      <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '12px', lineHeight: '16px' }}>
-        Concentration of coupon misuse and identity spoofing reported.
-      </div>
-    </div>
-  );
-}
-
-/* ── Prevention Rate Card ───────────────────────────────────── */
-function PreventionRateCard() {
-  return (
-    <div style={{
-      flex: 1, minWidth: 0,
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-    }}>
-      <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-        Prevention Rate
-      </div>
-      <div style={{ marginTop: '8px' }}>
-        <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#059669', lineHeight: '36px' }}>94.8%</div>
-        <div style={{
-          height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden', marginTop: '8px',
-        }}>
-          <div style={{ width: '94.8%', height: '100%', borderRadius: '9999px', background: '#059669' }} />
-        </div>
-      </div>
-      <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '8px' }}>
-        Target: 98%
-      </div>
-    </div>
-  );
-}
-
-/* ── Severity Badge ─────────────────────────────────────────── */
-function SeverityBadge({ level }: { level: 'Critical' | 'Warning' | 'Info' }) {
-  const styles = {
-    Critical: { bg: '#FEE2E2', color: '#DC2626', dot: '#DC2626' },
-    Warning: { bg: '#FEF3C7', color: '#D97706', dot: '#F59E0B' },
-    Info: { bg: '#DBEAFE', color: '#2563EB', dot: '#3B82F6' },
-  };
-  const s = styles[level];
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '6px',
-      padding: '4px 10px', borderRadius: '9999px',
-      background: s.bg,
-      fontFamily: inter, fontSize: '11px', fontWeight: 700, color: s.color,
-    }}>
-      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.dot }} />
-      {level}
-    </span>
-  );
-}
-
-/* ── Alert Icon ─────────────────────────────────────────────── */
-function AlertIcon({ type }: { type: 'sos' | 'suspicious' | 'payment' }) {
-  if (type === 'sos') {
-    return (
-      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M9 2l7 13H2L9 2z" stroke="#DC2626" strokeWidth="1.4" strokeLinejoin="round" />
-          <path d="M9 7v3.5M9 12.2v.1" stroke="#DC2626" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-      </div>
-    );
-  }
-  if (type === 'suspicious') {
-    return (
-      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <circle cx="9" cy="9" r="6" stroke="#2563EB" strokeWidth="1.4" />
-          <path d="M9 6v4M9 12v.01" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-      </div>
-    );
-  }
-  return (
-    <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="5" width="14" height="9" rx="1.5" stroke="#D97706" strokeWidth="1.3" />
-        <path d="M2 8h14" stroke="#D97706" strokeWidth="1" />
-        <circle cx="12" cy="11" r="1.5" fill="#D97706" />
-        <path d="M5 11h3" stroke="#D97706" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    </div>
-  );
-}
-
-/* ── Real-time Alerts Feed ──────────────────────────────────── */
-function RealTimeAlertsFeed() {
-  const alerts = [
-    { type: 'sos' as const, title: 'SOS Triggered', user: 'Marco Rossi', id: 'DR-9082', location: 'Manhattan, NY', time: '14:22:10', severity: 'Critical' as const },
-    { type: 'suspicious' as const, title: 'Suspicious booking', user: 'Elena Fisher', id: 'US-1142', location: 'Remote (API)', time: '14:19:45', severity: 'Warning' as const },
-    { type: 'payment' as const, title: 'Payment fraud', user: 'Victor Sullivan', id: 'US-9920', location: 'Los Angeles, CA', time: '14:15:02', severity: 'Critical' as const },
-  ];
+export default function GeneralSettingsPage() {
+  const [appName, setAppName] = useState('Carry On');
+  const [language, setLanguage] = useState('English (US)');
+  const [timezone, setTimezone] = useState('(GMT-05:00) Eastern Time');
+  const [maintenanceOn, setMaintenanceOn] = useState(false);
+  const [iosForce, setIosForce] = useState(true);
+  const [androidForce, setAndroidForce] = useState(false);
+  const [mfaScope, setMfaScope] = useState('All Staff & Admins');
+  const [sessionTimeout, setSessionTimeout] = useState('30');
+  const [passwordExpiry, setPasswordExpiry] = useState('90');
 
   return (
-    <div style={{
-      flex: 1, minWidth: 0,
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', gap: '16px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>Real-time Alerts Feed</span>
-        <span style={{
-          padding: '4px 10px', borderRadius: '9999px',
-          background: '#D1FAE5', color: '#059669',
-          fontFamily: inter, fontSize: '10px', fontWeight: 700,
-          letterSpacing: '0.5px', textTransform: 'uppercase',
-        }}>
-          Live Feed
-        </span>
-      </div>
+    <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', background: '#F7F9FB' }}>
+      <Sidebar />
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            {['Alert Type', 'User/Driver', 'Location', 'Time', 'Severity'].map((h) => (
-              <th key={h} style={{
-                padding: '10px 12px', textAlign: 'left',
-                fontFamily: inter, fontSize: '10px', fontWeight: 700,
-                color: '#94A3B8', letterSpacing: '0.8px', textTransform: 'uppercase',
-                borderBottom: '1px solid #F1F5F9',
-              }}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {alerts.map((a, i) => (
-            <tr key={i}>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <AlertIcon type={a.type} />
-                  <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{a.title}</span>
-                </div>
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{a.user}</div>
-                <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>ID: {a.id}</div>
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', color: '#475569' }}>
-                {a.location}
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', color: '#475569' }}>
-                {a.time}
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <SeverityBadge level={a.severity} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'hidden' }}>
+        <Navbar />
 
-/* ── Top Risk Profiles ──────────────────────────────────────── */
-function TopRiskProfiles() {
-  const profiles = [
-    { name: 'Jack Drake', score: 92, max: 100, level: 'HIGH RISK', color: '#DC2626', detail: 'Cancellation: 88%', avatar: '#1F2937' },
-    { name: 'Sarah Chen', score: 54, max: 100, level: 'MED RISK', color: '#475569', detail: 'Failed Pay: 3 in 30d', avatar: '#334155' },
-    { name: 'Liam Brown', score: 12, max: 100, level: 'LOW RISK', color: '#059669', detail: 'Reports: Clean', avatar: '#1E293B' },
-  ];
+        <main style={{ flex: 1, padding: '32px 36px 48px', overflowY: 'auto' }}>
 
-  return (
-    <div style={{
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', gap: '14px',
-    }}>
-      <div style={{ fontFamily: manrope, fontSize: '20px', fontWeight: 700, color: '#0F172A' }}>Top Risk Profiles</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {profiles.map((p, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '12px 14px 12px 0', borderRadius: '10px', background: '#F8FAFC',
-            overflow: 'hidden',
-          }}>
-            <div style={{ width: '3px', alignSelf: 'stretch', borderRadius: '0 2px 2px 0', background: p.color, flexShrink: 0 }} />
+          {/* Page header */}
+          <h1 style={{ margin: '0 0 6px', fontFamily: "'Manrope', Inter, sans-serif", fontSize: '28px', fontWeight: 800, color: '#191C1E' }}>
+            General Settings
+          </h1>
+          <p style={{ margin: '0 0 28px', fontFamily: 'Inter', fontSize: '14px', color: '#64748B' }}>
+            Configure global platform behavior, branding, and security protocols.
+          </p>
+
+          {/* Two-column layout */}
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+
+            {/* LEFT: Platform Identity */}
             <div style={{
-              width: '40px', height: '40px', borderRadius: '50%',
-              background: p.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
+              flex: 1, background: '#fff', borderRadius: '16px',
+              border: '1px solid #E2E8F0', padding: '28px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.3" />
-                <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{p.name}</span>
-                <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: p.color }}>{p.score}/{p.max}</span>
-              </div>
-              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{p.detail}</div>
-              <div style={{
-                marginTop: '4px',
-                fontFamily: inter, fontSize: '9px', fontWeight: 700,
-                color: p.color, letterSpacing: '0.5px', textTransform: 'uppercase',
-              }}>
-                {p.level}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button suppressHydrationWarning style={{
-        width: '100%', height: '34px', borderRadius: '8px',
-        background: '#F1F5F9', border: '1px solid #E2E8F0',
-        fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#2563EB',
-        cursor: 'pointer',
-      }}>
-        View All Risk Scores
-      </button>
-    </div>
-  );
-}
-
-/* ── Fraud Status Badge ─────────────────────────────────────── */
-function FraudStatusBadge({ status }: { status: 'Pending Review' | 'Watchlist' | 'Resolved' }) {
-  const styles = {
-    'Pending Review': { bg: '#DBEAFE', color: '#2563EB' },
-    'Watchlist': { bg: '#D1FAE5', color: '#059669' },
-    'Resolved': { bg: '#F1F5F9', color: '#64748B' },
-  };
-  const s = styles[status];
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      padding: '4px 12px', borderRadius: '9999px',
-      background: s.bg,
-      fontFamily: inter, fontSize: '11px', fontWeight: 600, color: s.color,
-    }}>
-      {status}
-    </span>
-  );
-}
-
-/* ── Fraud Detection Pipeline ───────────────────────────────── */
-function FraudDetectionPipeline() {
-  const cases = [
-    { id: 'FR-88029', user: 'Arthur Morgan', ip: '192.168.1.1', type: 'Coupon misuse', score: 82, status: 'Pending Review' as const },
-    { id: 'FR-88031', user: 'Sadie Adler', ip: '104.22.11.0', type: 'Fake booking', score: 45, status: 'Watchlist' as const },
-  ];
-
-  return (
-    <div style={{
-      background: '#FFFFFF', borderRadius: '12px',
-      border: '1px solid #E2E8F0', padding: '20px',
-      display: 'flex', flexDirection: 'column', gap: '16px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 700, color: '#0F172A' }}>Fraud Detection Pipeline</div>
-          <div style={{ fontFamily: inter, fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>Automated risk analysis of recent transactions</div>
-        </div>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          padding: '6px 12px', borderRadius: '9999px',
-          background: '#D1FAE5', color: '#059669',
-          fontFamily: inter, fontSize: '11px', fontWeight: 700,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="5" stroke="#059669" strokeWidth="1.3" />
-            <path d="M7 4.5v3l2 1.5" stroke="#059669" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-          AI GUARD ACTIVE
-        </span>
-      </div>
-
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            {['Case ID', 'User/Driver', 'Fraud Type', 'Risk Score', 'Status'].map((h) => (
-              <th key={h} style={{
-                padding: '10px 12px', textAlign: 'left',
-                fontFamily: inter, fontSize: '10px', fontWeight: 700,
-                color: '#94A3B8', letterSpacing: '0.8px', textTransform: 'uppercase',
-                borderBottom: '1px solid #F1F5F9',
-              }}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {cases.map((c, i) => (
-            <tr key={i}>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
-                {c.id}
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{c.user}</div>
-                <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>IP: {c.ip}</div>
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <span style={{
-                  padding: '4px 10px', borderRadius: '6px',
-                  background: '#F1F5F9',
-                  fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#475569',
+              {/* Section header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '8px',
+                  background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  {c.type}
+                  <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                    <rect x="1" y="3" width="15" height="11" rx="2" stroke="#2563EB" strokeWidth="1.4" />
+                    <path d="M4 7h9M4 10h5" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <span style={{ fontFamily: "'Manrope', Inter, sans-serif", fontSize: '17px', fontWeight: 800, color: '#191C1E' }}>
+                  Platform Identity
                 </span>
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '60px', height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden' }}>
-                    <div style={{
-                      width: `${c.score}%`, height: '100%', borderRadius: '9999px',
-                      background: c.score >= 70 ? '#DC2626' : c.score >= 40 ? '#D97706' : '#059669',
-                    }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+                {/* Left form fields */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '22px' }}>
+
+                  {/* App Name */}
+                  <div>
+                    <label style={{ display: 'block', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>
+                      APP NAME
+                    </label>
+                    <input
+                      suppressHydrationWarning
+                      type="text"
+                      value={appName}
+                      onChange={e => setAppName(e.target.value)}
+                      style={{
+                        width: '100%', padding: '11px 14px', borderRadius: '10px',
+                        border: '1px solid #E2E8F0', background: '#F1F6FB',
+                        fontFamily: 'Inter', fontSize: '14px', color: '#191C1E', outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
                   </div>
-                  <span style={{
-                    fontFamily: inter, fontSize: '12px', fontWeight: 700,
-                    color: c.score >= 70 ? '#DC2626' : c.score >= 40 ? '#D97706' : '#059669',
+
+                  {/* System Language */}
+                  <div>
+                    <label style={{ display: 'block', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>
+                      SYSTEM LANGUAGE
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        suppressHydrationWarning
+                        value={language}
+                        onChange={e => setLanguage(e.target.value)}
+                        style={{
+                          width: '100%', padding: '11px 36px 11px 14px', borderRadius: '10px',
+                          border: '1px solid #E2E8F0', background: '#F1F6FB',
+                          fontFamily: 'Inter', fontSize: '14px', color: '#191C1E',
+                          appearance: 'none', outline: 'none', cursor: 'pointer',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        {languages.map(l => <option key={l}>{l}</option>)}
+                      </select>
+                      <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="7" viewBox="0 0 12 7" fill="none">
+                        <path d="M1 1l5 5 5-5" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Default Timezone */}
+                  <div>
+                    <label style={{ display: 'block', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>
+                      DEFAULT TIMEZONE
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        suppressHydrationWarning
+                        value={timezone}
+                        onChange={e => setTimezone(e.target.value)}
+                        style={{
+                          width: '100%', padding: '11px 36px 11px 14px', borderRadius: '10px',
+                          border: '1px solid #E2E8F0', background: '#F1F6FB',
+                          fontFamily: 'Inter', fontSize: '14px', color: '#191C1E',
+                          appearance: 'none', outline: 'none', cursor: 'pointer',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        {timezones.map(t => <option key={t}>{t}</option>)}
+                      </select>
+                      <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="7" viewBox="0 0 12 7" fill="none">
+                        <path d="M1 1l5 5 5-5" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Platform Logo upload */}
+                <div style={{ width: '220px', flexShrink: 0 }}>
+                  <label style={{ display: 'block', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>
+                    PLATFORM LOGO
+                  </label>
+                  <button
+                    suppressHydrationWarning
+                    style={{
+                      width: '100%', height: '148px', borderRadius: '12px',
+                      border: '2px dashed #93C5FD', background: '#F0F8FF',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      gap: '10px', cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '50%', background: '#DBEAFE',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 14V4M6 8l4-4 4 4" stroke="#2563EB" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M3 17h14" stroke="#2563EB" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#2563EB', textAlign: 'center' }}>
+                        Click to upload SVG or PNG
+                      </div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', textAlign: 'center', marginTop: 4 }}>
+                        Recommended: 512×512px (Max 2MB)
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT column */}
+            <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Maintenance Mode card */}
+              <div style={{
+                background: '#EFF6FF', borderRadius: '16px',
+                border: '1px solid #BFDBFE', padding: '22px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '10px',
+                    background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    {c.score}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M15 3l-2 2-3-3 2-2s2 0 3 3z" stroke="#2563EB" strokeWidth="1.3" strokeLinejoin="round" />
+                      <path d="M13 5L6 12l-1 2-2 1 1-2 7-7" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="4.5" cy="13.5" r="1" fill="#2563EB" />
+                    </svg>
+                  </div>
+                  <span style={{ fontFamily: "'Manrope', Inter, sans-serif", fontSize: '16px', fontWeight: 800, color: '#2563EB' }}>
+                    Maintenance Mode
                   </span>
                 </div>
-              </td>
-              <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
-                <FraudStatusBadge status={c.status} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
-/* ── Page ───────────────────────────────────────────────────── */
-export default function SafetyFraudPage() {
-  const [activeTab, setActiveTab] = useState('Alerts');
+                <p style={{ margin: '0 0 18px', fontFamily: 'Inter', fontSize: '13px', color: '#374151', lineHeight: '1.6' }}>
+                  Enabling this will restrict all driver and user access. The platform will display a maintenance message while you perform system updates.
+                </p>
 
-  return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <Navbar />
-        <main style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
+                <button
+                  suppressHydrationWarning
+                  onClick={() => setMaintenanceOn(v => !v)}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: '10px',
+                    background: maintenanceOn ? '#DC2626' : '#2563EB',
+                    border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    fontFamily: 'Inter', fontSize: '12px', fontWeight: 800,
+                    color: '#fff', letterSpacing: '0.8px', textTransform: 'uppercase',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="5.5" stroke="white" strokeWidth="1.4" />
+                    <path d="M7 4.5V7" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+                    <path d="M4.5 3.5A5.5 5.5 0 0 0 7 12.5" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  {maintenanceOn ? 'DISABLE MAINTENANCE MODE' : 'ENABLE MAINTENANCE MODE'}
+                </button>
+              </div>
 
-          {/* ── Header Row ─────────────────────────────────────────── */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-              <div>
-                <div style={{ fontFamily: manrope, fontSize: '22px', fontWeight: 800, color: '#2563EB', lineHeight: '28px' }}>
-                  Logistics Safety & Fraud
+              {/* Configuration Logs */}
+              <div style={{
+                background: '#fff', borderRadius: '16px',
+                border: '1px solid #E2E8F0', padding: '22px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6.5" stroke="#2563EB" strokeWidth="1.3" />
+                      <path d="M8 4.5v4l2.5 1.5" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span style={{ fontFamily: "'Manrope', Inter, sans-serif", fontSize: '14px', fontWeight: 800, color: '#191C1E' }}>
+                      Configuration Logs
+                    </span>
+                  </div>
+                  <button suppressHydrationWarning style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontFamily: 'Inter', fontSize: '11px', fontWeight: 700,
+                    color: '#2563EB', letterSpacing: '0.3px', whiteSpace: 'nowrap',
+                  }}>
+                    VIEW FULL AUDIT
+                  </button>
                 </div>
-                <div style={{ fontFamily: manrope, fontSize: '22px', fontWeight: 800, color: '#2563EB', lineHeight: '28px' }}>
-                  Pro
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {configLogs.map((log) => (
+                    <div key={log.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                      <span style={{
+                        width: 8, height: 8, borderRadius: '50%', background: '#2563EB',
+                        flexShrink: 0, marginTop: 4,
+                      }} />
+                      <div>
+                        <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#191C1E' }}>
+                          {log.label}
+                        </div>
+                        <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', marginTop: 2 }}>
+                          by {log.by} • {log.time}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <TabSwitcher active={activeTab} onChange={setActiveTab} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button suppressHydrationWarning style={{
-                height: '40px', padding: '0 20px',
-                borderRadius: '9999px',
-                background: '#DC2626', border: 'none',
-                display: 'flex', alignItems: 'center', gap: '8px',
-                fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#FFFFFF',
-                cursor: 'pointer',
-              }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1l1.8 4.2L14 6l-3.5 2.8L11.5 13 8 10.5 4.5 13l1-4.2L2 6l4.2-.8L8 1z" fill="white" />
-                </svg>
-                Emergency SOS
-              </button>
+
             </div>
           </div>
 
-          {/* ── KPI Cards Row ──────────────────────────────────────── */}
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-            <SOSCard />
-            <FraudTrendCard />
-            <HighRiskZoneCard />
-            <PreventionRateCard />
-          </div>
-
-          {/* ── Filters Bar ────────────────────────────────────────── */}
+          {/* ── App Version Control ─────────────────────────────── */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            marginBottom: '24px', flexWrap: 'wrap',
+            marginTop: '24px', background: '#EFF6FF', borderRadius: '16px',
+            border: '1px solid #BFDBFE', padding: '28px',
           }}>
-            {[
-              { label: 'Risk Level: All', icon: 'filter' },
-              { label: 'Alert Type: All', icon: 'filter' },
-              { label: 'Oct 20, 2023 - Today', icon: 'calendar' },
-            ].map((f) => (
-              <button
-                suppressHydrationWarning
-                key={f.label}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  height: '40px', padding: '0 14px',
-                  borderRadius: '8px',
-                  background: '#FFFFFF', border: '1px solid #E2E8F0',
-                  fontFamily: inter, fontSize: '13px', fontWeight: 500, color: '#475569',
-                  cursor: 'pointer',
-                }}
-              >
-                {f.icon === 'calendar' ? (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="#94A3B8" strokeWidth="1.2" />
-                    <path d="M1.5 5.5h11M4 1v2.5M9 1v2.5" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" />
-                  </svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M1 3.5h12M3 7h8M5 10.5h4" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" />
-                  </svg>
-                )}
-                {f.label}
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                  <path d="M1 1.5l4 3 4-3" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            ))}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <button suppressHydrationWarning style={{
-                width: '40px', height: '40px', borderRadius: '8px',
-                background: '#FFFFFF', border: '1px solid #E2E8F0',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-              }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1v10M4 7l4 4 4-4M2 15h12" stroke="#475569" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="4" y="1" width="8" height="14" rx="2" stroke="#2563EB" strokeWidth="1.4" />
+                  <path d="M6 12h4" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+              </div>
+              <span style={{ fontFamily: "'Manrope', Inter, sans-serif", fontSize: '17px', fontWeight: 800, color: '#191C1E' }}>
+                App Version Control
+              </span>
+            </div>
+            <p style={{ margin: '0 0 20px', fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+              Manage production builds and enforcement policies for mobile platforms.
+            </p>
+
+            {/* Platform cards */}
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {[
+                { name: 'iOS Production', version: 'v4.8.2', deployed: 'Oct 24, 2023', forceOn: iosForce, setForce: setIosForce },
+                { name: 'Android Production', version: 'v4.7.9', deployed: 'Oct 12, 2023', forceOn: androidForce, setForce: setAndroidForce },
+              ].map((p) => (
+                <div key={p.name} style={{
+                  flex: 1, background: '#fff', borderRadius: '12px',
+                  border: '1px solid #DBEAFE', padding: '18px 20px',
+                  display: 'flex', flexDirection: 'column', gap: '10px',
+                }}>
+                  {/* Top row */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+                          <rect x="2" y="1" width="14" height="20" rx="3" stroke="#2563EB" strokeWidth="1.4" />
+                          <path d="M7 18h4" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+                          <path d="M6 4h6" stroke="#2563EB" strokeWidth="1.2" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#191C1E' }}>{p.name}</span>
+                          <span style={{ padding: '2px 8px', borderRadius: '9999px', background: '#2563EB', fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.3px' }}>
+                            ACTIVE
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: "'Manrope', Inter, sans-serif", fontSize: '22px', fontWeight: 800, color: '#2563EB', lineHeight: '1.2', marginTop: 4 }}>
+                          {p.version}
+                        </div>
+                        <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', marginTop: 2 }}>
+                          Last deployed: {p.deployed}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Force Update toggle */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
+                      <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                        FORCE UPDATE
+                      </span>
+                      <button
+                        suppressHydrationWarning
+                        onClick={() => p.setForce(v => !v)}
+                        style={{
+                          width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                          background: p.forceOn ? '#2563EB' : '#D1D5DB', position: 'relative',
+                        }}
+                      >
+                        <span style={{
+                          position: 'absolute', top: 2, borderRadius: '50%',
+                          width: 20, height: 20, background: '#fff',
+                          left: p.forceOn ? 22 : 2, transition: 'left 0.15s',
+                          display: 'block',
+                        }} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Edit Config button */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button suppressHydrationWarning style={{
+                      padding: '7px 16px', borderRadius: '8px',
+                      border: '1px solid #BFDBFE', background: '#EFF6FF',
+                      fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#2563EB', cursor: 'pointer',
+                    }}>
+                      Edit Config
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Security Protocols ──────────────────────────────── */}
+          <div style={{
+            marginTop: '24px', background: '#fff', borderRadius: '16px',
+            border: '1px solid #E2E8F0', padding: '28px',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
+                      <path d="M8 1L2 4v5c0 4.1 2.6 7.9 6 9 3.4-1.1 6-4.9 6-9V4L8 1z" stroke="#2563EB" strokeWidth="1.4" strokeLinejoin="round" />
+                      <path d="M5.5 9l2 2 3-3" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span style={{ fontFamily: "'Manrope', Inter, sans-serif", fontSize: '17px', fontWeight: 800, color: '#191C1E' }}>
+                    Security Protocols
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+                  Define authentication and session management policies.
+                </p>
+              </div>
+              <button suppressHydrationWarning style={{
+                padding: '10px 20px', borderRadius: '10px', border: 'none',
+                background: '#2563EB', fontFamily: 'Inter', fontSize: '12px', fontWeight: 800,
+                color: '#fff', letterSpacing: '0.8px', textTransform: 'uppercase', cursor: 'pointer',
+                whiteSpace: 'nowrap', flexShrink: 0,
+              }}>
+                SAVE ALL CHANGES
+              </button>
+            </div>
+
+            {/* Three protocol cards */}
+            <div style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
+
+              {/* MFA Enforcement */}
+              <div style={{ flex: 1, background: '#F8FBFF', borderRadius: '12px', border: '1px solid #DBEAFE', padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1L2 4v4c0 3.28 2.08 6.33 6 7.5C11.92 14.33 14 11.28 14 8V4L8 1z" stroke="#2563EB" strokeWidth="1.3" strokeLinejoin="round" />
+                    <path d="M5 8l2 2 4-4" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 800, color: '#2563EB', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                    MFA ENFORCEMENT
+                  </span>
+                </div>
+                <p style={{ margin: '0 0 16px', fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '1.6' }}>
+                  Require Multi-Factor Authentication for all administrative roles.
+                </p>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    suppressHydrationWarning
+                    value={mfaScope}
+                    onChange={e => setMfaScope(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px 32px 10px 12px', borderRadius: '8px',
+                      border: '1px solid #DBEAFE', background: '#fff',
+                      fontFamily: 'Inter', fontSize: '13px', color: '#191C1E',
+                      appearance: 'none', outline: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    {['All Staff & Admins', 'Admins Only', 'Disabled'].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                  <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="11" height="7" viewBox="0 0 11 7" fill="none">
+                    <path d="M1 1l4.5 5 4.5-5" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Session Timeout */}
+              <div style={{ flex: 1, background: '#F8FBFF', borderRadius: '12px', border: '1px solid #DBEAFE', padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="#2563EB" strokeWidth="1.3" />
+                    <path d="M8 4.5V8.5l3 1.5" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 800, color: '#2563EB', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                    SESSION TIMEOUT
+                  </span>
+                </div>
+                <p style={{ margin: '0 0 16px', fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '1.6' }}>
+                  Automatic logout after period of inactivity. Value in minutes.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #DBEAFE', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
+                  <input
+                    suppressHydrationWarning
+                    type="number"
+                    value={sessionTimeout}
+                    onChange={e => setSessionTimeout(e.target.value)}
+                    style={{
+                      flex: 1, padding: '10px 12px', border: 'none', outline: 'none',
+                      fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#191C1E',
+                      background: 'transparent',
+                    }}
+                  />
+                  <span style={{ padding: '0 12px', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#2563EB', letterSpacing: '0.5px' }}>
+                    MINUTES
+                  </span>
+                </div>
+              </div>
+
+              {/* Password Expiry */}
+              <div style={{ flex: 1, background: '#F8FBFF', borderRadius: '12px', border: '1px solid #DBEAFE', padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="3.5" cy="10" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
+                    <circle cx="8" cy="10" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
+                    <circle cx="12.5" cy="10" r="1.5" stroke="#2563EB" strokeWidth="1.2" />
+                    <path d="M3.5 8.5V6a4.5 4.5 0 0 1 9 0v2.5" stroke="#2563EB" strokeWidth="1.2" strokeLinecap="round" />
+                  </svg>
+                  <span style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 800, color: '#2563EB', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                    PASSWORD EXPIRY
+                  </span>
+                </div>
+                <p style={{ margin: '0 0 16px', fontFamily: 'Inter', fontSize: '12px', color: '#64748B', lineHeight: '1.6' }}>
+                  Force password reset after specified duration. 0 to disable.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #DBEAFE', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
+                  <input
+                    suppressHydrationWarning
+                    type="number"
+                    value={passwordExpiry}
+                    onChange={e => setPasswordExpiry(e.target.value)}
+                    style={{
+                      flex: 1, padding: '10px 12px', border: 'none', outline: 'none',
+                      fontFamily: 'Inter', fontSize: '16px', fontWeight: 700, color: '#191C1E',
+                      background: 'transparent',
+                    }}
+                  />
+                  <span style={{ padding: '0 12px', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#2563EB', letterSpacing: '0.5px' }}>
+                    DAYS
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Footer ──────────────────────────────────────────── */}
+          <div style={{ marginTop: '28px', textAlign: 'center' }}>
+            <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+              Need help with advanced configuration?{' '}
+              <button suppressHydrationWarning style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#2563EB', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                View Documentation
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 10L10 2M10 2H5M10 2v5" stroke="#2563EB" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-              <button suppressHydrationWarning style={{
-                height: '40px', padding: '0 20px',
-                borderRadius: '8px',
-                background: '#2563EB', border: 'none',
-                fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#FFFFFF',
-                cursor: 'pointer',
-              }}>
-                Search Database
-              </button>
-            </div>
+            </span>
           </div>
 
-          {/* ── Two Column: Alerts Feed + Risk Profiles ──────────── */}
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1.5 1 0', minWidth: '500px' }}>
-              <RealTimeAlertsFeed />
-            </div>
-            <div style={{ flex: '1 1 0', minWidth: '280px' }}>
-              <TopRiskProfiles />
-            </div>
-          </div>
-
-          {/* ── Fraud Detection Pipeline ──────────────────────────── */}
-          <FraudDetectionPipeline />
-
-          {/* ── Footer ────────────────────────────────────────────── */}
-          <div style={{
-            marginTop: '24px', paddingTop: '16px',
-            borderTop: '1px solid #E2E8F0',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            flexWrap: 'wrap', gap: '12px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                Carry On Logistics Admin V4.2.0
-              </span>
-              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                System Uptime: 99.98%
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#059669', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                Server Node: NYC-PROD-01
-              </span>
-              <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                Security Token Expires in 4h 12m
-              </span>
-            </div>
-          </div>
         </main>
       </div>
     </div>

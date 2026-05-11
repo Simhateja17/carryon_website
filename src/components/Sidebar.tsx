@@ -383,7 +383,7 @@ export default function Sidebar() {
               <button
                 suppressHydrationWarning
                 type="button"
-                onClick={() => toggle('settings')}
+                onClick={() => { setOpenSection('settings'); router.push('/settings'); }}
                 style={{ display: 'flex', alignItems: 'center', width: '239px', padding: '16px', borderRadius: '4px', border: 'none', cursor: 'pointer', textAlign: 'left', background: 'transparent', boxSizing: 'border-box' }}
               >
                 <span style={{ display: 'flex', width: '34px', justifyContent: 'flex-start', flexShrink: 0 }}>

@@ -5,48 +5,11 @@ import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
 /* ── Vehicle icon ────────────────────────────────────────────── */
-function VehicleIcon({ type }: { type: 'bike' | 'car' | 'van' | 'truck' }) {
-  const icons: Record<string, React.ReactNode> = {
-    bike: (
-      <svg width="22" height="20" viewBox="0 0 22 20" fill="none">
-        <circle cx="4.5" cy="15" r="3.5" stroke="#2563EB" strokeWidth="1.5"/>
-        <circle cx="17.5" cy="15" r="3.5" stroke="#2563EB" strokeWidth="1.5"/>
-        <path d="M4.5 15L9 6h4l4 9" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M9 6h5" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="11" cy="5" r="1.5" fill="#2563EB"/>
-      </svg>
-    ),
-    car: (
-      <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-        <rect x="1" y="6" width="20" height="7" rx="2" stroke="#2563EB" strokeWidth="1.5"/>
-        <path d="M4 6l2.5-4h9l2.5 4" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="5.5" cy="13.5" r="2" fill="#2563EB"/>
-        <circle cx="16.5" cy="13.5" r="2" fill="#2563EB"/>
-        <path d="M8 6h6" stroke="#2563EB" strokeWidth="1.2"/>
-      </svg>
-    ),
-    van: (
-      <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-        <rect x="1" y="4" width="14" height="9" rx="1.5" stroke="#2563EB" strokeWidth="1.5"/>
-        <path d="M15 6.5h4l2 4H15V6.5Z" stroke="#2563EB" strokeWidth="1.5" strokeLinejoin="round"/>
-        <circle cx="5" cy="14" r="1.8" fill="#2563EB"/>
-        <circle cx="14" cy="14" r="1.8" fill="#2563EB"/>
-        <circle cx="19" cy="14" r="1.8" fill="#2563EB"/>
-      </svg>
-    ),
-    truck: (
-      <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-        <rect x="1" y="3" width="12" height="10" rx="1.5" stroke="#2563EB" strokeWidth="1.5"/>
-        <path d="M13 5.5h5l3 5H13V5.5Z" stroke="#2563EB" strokeWidth="1.5" strokeLinejoin="round"/>
-        <circle cx="4.5" cy="14" r="1.8" fill="#2563EB"/>
-        <circle cx="10.5" cy="14" r="1.8" fill="#2563EB"/>
-        <circle cx="18" cy="14" r="1.8" fill="#2563EB"/>
-      </svg>
-    ),
-  };
+function VehicleIcon({ icon }: { icon: string }) {
   return (
-    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      {icons[type]}
+    <div style={{ width: '56px', height: '56px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/vehicles/${icon}.png`} alt="" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
     </div>
   );
 }
@@ -62,10 +25,13 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 
 /* ── Vehicle categories data ─────────────────────────────────── */
 const vehicles = [
-  { type: 'bike'  as const, label: 'Bikes',  active: 12, desc: 'Urban last-mile delivery. Max payload 25kg.' },
-  { type: 'car'   as const, label: 'Cars',   active: 48, desc: 'Standard courier routes. Max payload 400kg.' },
-  { type: 'van'   as const, label: 'Vans',   active: 32, desc: 'Large parcel routes. Max payload 1,200kg.' },
-  { type: 'truck' as const, label: 'Trucks', active: 8,  desc: 'Inter-city logistics. Max payload 8,000kg.' },
+  { icon: 'motorcycle', label: 'Motorcycle', active: 24, desc: 'Documents, groceries, small parcels. Max payload 10kg.' },
+  { icon: 'car', label: 'Car', active: 48, desc: 'Groceries, parcels, fragile goods. Max payload 200kg.' },
+  { icon: 'pickup', label: 'Pickup (4x4)', active: 18, desc: 'Small boxes, small furniture, bicycle. Max payload 500kg.' },
+  { icon: 'van', label: 'Van', active: 32, desc: 'Appliances, fridge, washing machine. Max payload 1,200kg.' },
+  { icon: 'small-lorry', label: 'Small Lorry', active: 14, desc: 'Furniture, sofa, bed frame. Max payload 2,000kg.' },
+  { icon: 'large-lorry', label: 'Large Lorry', active: 8, desc: 'Heavy freight, warehouse goods. Max payload 5,000kg.' },
+  { icon: 'skip-truck', label: 'Skip Truck', active: 6, desc: 'Bulk materials, construction waste. Max payload 3,000kg.' },
 ];
 
 /* ── Page ────────────────────────────────────────────────────── */
@@ -106,7 +72,7 @@ export default function FleetSettingsPage() {
                   {vehicles.map((v) => (
                     <div key={v.label} style={{ background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', padding: '16px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                        <VehicleIcon type={v.type} />
+                        <VehicleIcon icon={v.icon} />
                         <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: '999px', background: '#DBEAFE', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#1D4ED8' }}>
                           {v.active} Active
                         </span>

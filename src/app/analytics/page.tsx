@@ -60,9 +60,9 @@ const zoneData = [
 ];
 
 const drivers = [
-  { name: 'Alex Thompson', id: '#DR-90210', avatar: '/driver-avatar.png', fleet: 'Pickup Truck', acceptance: '98.2%', cancel: '0.5%', cancelUp: false, ontime: '99.1%', rating: '4.9', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
-  { name: 'Sarah Jenkins', id: '#DR-90455', avatar: '/driver-sarah.png', fleet: 'Delivery Bike', acceptance: '94.5%', cancel: '1.2%', cancelUp: false, ontime: '95.8%', rating: '4.8', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
-  { name: 'Michael Ross', id: '#DR-88123', avatar: '/driver-michael.png', fleet: 'Heavy Truck', acceptance: '82.1%', cancel: '8.4%', cancelUp: true, ontime: '84.2%', rating: '4.2', status: 'ON BREAK', statusBg: '#FEF3C7', statusColor: '#D97706' },
+  { name: 'Alex Thompson', id: '#DR-90210', avatar: '/driver-avatar.png', fleet: 'Pickup (4x4)', acceptance: '98.2%', cancel: '0.5%', cancelUp: false, ontime: '99.1%', rating: '4.9', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
+  { name: 'Sarah Jenkins', id: '#DR-90455', avatar: '/driver-sarah.png', fleet: 'Motorcycle', acceptance: '94.5%', cancel: '1.2%', cancelUp: false, ontime: '95.8%', rating: '4.8', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
+  { name: 'Michael Ross', id: '#DR-88123', avatar: '/driver-michael.png', fleet: 'Large Lorry', acceptance: '82.1%', cancel: '8.4%', cancelUp: true, ontime: '84.2%', rating: '4.2', status: 'ON BREAK', statusBg: '#FEF3C7', statusColor: '#D97706' },
 ];
 
 const operationalLog = [

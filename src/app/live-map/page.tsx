@@ -359,7 +359,7 @@ function DriverPopup({ onMessage }: { onMessage: () => void }) {
 }
 
 /* ── Vehicle Markers on map ─────────────────────────────────── */
-function VehicleMarker({ top, left, color, icon }: { top: string; left: string; color: string; icon: 'truck' | 'van' }) {
+function VehicleMarker({ top, left, color, icon }: { top: string; left: string; color: string; icon: 'motorcycle' | 'car' | 'pickup' | 'van' | 'small-lorry' | 'large-lorry' | 'skip-truck' }) {
   return (
     <div style={{ position: 'absolute', top, left, transform: 'translate(-50%, -50%)' }}>
       <div style={{
@@ -368,21 +368,8 @@ function VehicleMarker({ top, left, color, icon }: { top: string; left: string; 
         boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {icon === 'truck' ? (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="4" width="9" height="7" rx="1.2" stroke="white" strokeWidth="1.3" />
-            <path d="M10 6h3l2 4H10V6Z" stroke="white" strokeWidth="1.3" strokeLinejoin="round" />
-            <circle cx="4" cy="12" r="1.5" fill="white" />
-            <circle cx="11.5" cy="12" r="1.5" fill="white" />
-          </svg>
-        ) : (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="5" width="14" height="7" rx="1.5" stroke="white" strokeWidth="1.3" />
-            <path d="M1 8h14" stroke="white" strokeWidth="1" opacity="0.5" />
-            <circle cx="4" cy="13" r="1.5" fill="white" />
-            <circle cx="12" cy="13" r="1.5" fill="white" />
-          </svg>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/vehicles/${icon}.png`} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
       </div>
     </div>
   );
@@ -481,9 +468,9 @@ export default function LiveMapPage() {
           <DriverPopup onMessage={() => router.push('/fleet-messenger')} />
 
           {/* Vehicle markers */}
-          <VehicleMarker top="38%" left="52%" color="#22C55E" icon="truck" />
-          <VehicleMarker top="54%" left="64%" color="#22C55E" icon="truck" />
-          <VehicleMarker top="62%" left="73%" color="#EF4444" icon="van" />
+          <VehicleMarker top="38%" left="52%" color="#22C55E" icon="large-lorry" />
+          <VehicleMarker top="54%" left="64%" color="#22C55E" icon="van" />
+          <VehicleMarker top="62%" left="73%" color="#EF4444" icon="pickup" />
 
           {/* Map controls */}
           <MapControls />
