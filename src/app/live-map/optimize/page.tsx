@@ -50,15 +50,12 @@ function DestinationMarker({ top, left, label }: { top: string; left: string; la
   );
 }
 
-function TruckIcon({ color = '#2F80ED' }: { color?: string }) {
+function TruckIcon({ vehicleType = 'van' }: { vehicleType?: string }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="2" y="5" width="14" height="10" rx="1.5" stroke={color} strokeWidth="1.5" />
-      <path d="M16 8h4l3 5h-7V8Z" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx="6.5" cy="17.5" r="2" stroke={color} strokeWidth="1.5" />
-      <circle cx="17.5" cy="17.5" r="2" stroke={color} strokeWidth="1.5" />
-      <path d="M8.5 17.5h7" stroke={color} strokeWidth="1.5" />
-    </svg>
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/vehicles/${vehicleType}.png`} alt="" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+    </>
   );
 }
 
@@ -259,6 +256,7 @@ function FleetCard({
   metrics,
   progressColor,
 }: {
+  icon?: string;
   title: string;
   driver: string;
   status: 'OPTIMIZED' | 'CALCULATING' | 'PENDING';
@@ -286,7 +284,7 @@ function FleetCard({
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <TruckIcon color="#3B82F6" />
+          <TruckIcon vehicleType={icon} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 700, color: '#0F172A', lineHeight: '20px' }}>

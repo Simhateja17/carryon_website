@@ -80,7 +80,7 @@ function VehicleTile({
 
 export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
   const [driverStatus, setDriverStatus] = useState<DriverStatusOpt>('Active');
-  const [vehicle, setVehicle] = useState({ truck: true, van: false, bike: true, evCar: false });
+  const [vehicle, setVehicle] = useState({ motorcycle: true, car: false, pickup: true, van: false, smallLorry: false, largeLorry: false, skipTruck: false });
   const [minRating, setMinRating] = useState(4.5);
   const [sector, setSector] = useState<'A1' | 'B2' | 'C4'>('B2');
   const [license, setLicense] = useState({ commercialA: true, hazmat: false, international: false });
@@ -109,7 +109,7 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
 
   const reset = () => {
     setDriverStatus('Active');
-    setVehicle({ truck: true, van: false, bike: true, evCar: false });
+    setVehicle({ motorcycle: true, car: false, pickup: true, van: false, smallLorry: false, largeLorry: false, skipTruck: false });
     setMinRating(4.5);
     setSector('B2');
     setLicense({ commercialA: true, hazmat: false, international: false });
@@ -348,57 +348,46 @@ export default function DriverAdvancedFiltersPanel({ open, onClose }: Props) {
               }}
             >
               <VehicleTile
-                id="truck"
-                label="Truck"
-                selected={vehicle.truck}
-                onToggle={toggleVehicle}
-                icon={
-                  <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden>
-                    <rect x="1" y="4" width="12" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
-                    <path d="M13 6h3.5l2.5 4H13V6Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                    <circle cx="5.5" cy="13" r="1.5" fill="currentColor" />
-                    <circle cx="15.5" cy="13" r="1.5" fill="currentColor" />
-                  </svg>
-                }
+                id="motorcycle"
+                label="Motorcycle"
+                selected={vehicle.motorcycle}
+                icon="motorcycle"
+              />
+              <VehicleTile
+                id="car"
+                label="Car"
+                selected={vehicle.car}
+                icon="car"
+              />
+              <VehicleTile
+                id="pickup"
+                label="Pickup (4x4)"
+                selected={vehicle.pickup}
+                icon="pickup"
               />
               <VehicleTile
                 id="van"
                 label="Van"
                 selected={vehicle.van}
-                onToggle={toggleVehicle}
-                icon={
-                  <svg width="22" height="14" viewBox="0 0 22 14" fill="none" aria-hidden>
-                    <rect x="1" y="3" width="14" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
-                    <path d="M15 5h4l2 4h-6V5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                    <circle cx="6" cy="12" r="1.3" fill="currentColor" />
-                    <circle cx="16" cy="12" r="1.3" fill="currentColor" />
-                  </svg>
-                }
+                icon="van"
               />
               <VehicleTile
-                id="bike"
-                label="Bike"
-                selected={vehicle.bike}
-                onToggle={toggleVehicle}
-                icon={
-                  <svg width="24" height="16" viewBox="0 0 24 16" fill="none" aria-hidden>
-                    <circle cx="6" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.3" />
-                    <circle cx="18" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.3" />
-                    <path d="M9 12l4-8 3 4M13 4l2 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
-                }
+                id="smallLorry"
+                label="Small Lorry"
+                selected={vehicle.smallLorry}
+                icon="small-lorry"
               />
               <VehicleTile
-                id="evCar"
-                label="EV Car"
-                selected={vehicle.evCar}
-                onToggle={toggleVehicle}
-                icon={
-                  <svg width="18" height="22" viewBox="0 0 18 22" fill="none" aria-hidden>
-                    <path d="M4 8h10v8H4V8Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                    <path d="M6 8V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3M9 14v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
-                }
+                id="largeLorry"
+                label="Large Lorry"
+                selected={vehicle.largeLorry}
+                icon="large-lorry"
+              />
+              <VehicleTile
+                id="skipTruck"
+                label="Skip Truck"
+                selected={vehicle.skipTruck}
+                icon="skip-truck"
               />
             </div>
           </div>

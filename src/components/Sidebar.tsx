@@ -206,6 +206,7 @@ function SettingsSubLink({ label, active, onClick, first }: { label: string; act
 
 // ── Settings sub-items data ────────────────────────────────────────────────────
 const settingsSubItems = [
+  { label: 'GENERAL SETTINGS', href: '/settings', match: (p: string) => p === '/settings' },
   { label: 'FLEET MANAGEMENT', href: '/settings/fleet-settings', match: (p: string) => p.startsWith('/settings/fleet-settings') },
   { label: 'PAYMENTS & EARNINGS', href: '/settings/revenue', match: (p: string) => p.startsWith('/settings/revenue') },
   { label: 'REPORTS & ANALYTICS', href: '/settings/analytics', match: (p: string) => p.startsWith('/settings/analytics') },
@@ -377,7 +378,7 @@ export default function Sidebar() {
               <button
                 suppressHydrationWarning
                 type="button"
-                onClick={() => toggle('settings')}
+                onClick={() => { setOpenSection('settings'); router.push('/settings'); }}
                 style={{ display: 'flex', alignItems: 'center', width: '239px', padding: '16px', borderRadius: '4px', border: 'none', cursor: 'pointer', textAlign: 'left', background: 'transparent', boxSizing: 'border-box' }}
               >
                 <span style={{ display: 'flex', width: '34px', justifyContent: 'flex-start', flexShrink: 0 }}>
