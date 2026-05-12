@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { getFleetSettings, updateFleetSettings } from '@/lib/api';
+import { getFleetSettings, updateFleetSettings, geocodeCity } from '@/lib/api';
 import { formatMoney, ADMIN_DISTANCE_UNIT } from '@/lib/format';
-import type { AdminFleetSettingsSnapshot, AdminFleetSettingsUpdatePayload, AdminFleetVehicleClass } from '@/types';
+import type { AdminFleetSettingsSnapshot, AdminFleetSettingsUpdatePayload, AdminFleetVehicleClass, AdminFleetRegion } from '@/types';
 
 const inter = "'Inter', sans-serif";
 
@@ -77,8 +77,8 @@ const fallbackSettings: AdminFleetSettingsUpdatePayload = {
     criticalNotification: 'Fleet Sync Pending',
   },
   regions: [
-    { id: 'klang-valley', name: 'Klang Valley', hubCount: 42, zone: 'Greater Kuala Lumpur', enabled: true },
-    { id: 'penang', name: 'Penang', hubCount: 15, zone: 'Island and Mainland', enabled: true },
+    { id: 'klang-valley', name: 'Klang Valley', hubCount: 42, zone: 'Greater Kuala Lumpur', enabled: true, latitude: 3.139, longitude: 101.6869, radiusKm: 40 },
+    { id: 'penang', name: 'Penang', hubCount: 15, zone: 'Island and Mainland', enabled: true, latitude: 5.4164, longitude: 100.3327, radiusKm: 25 },
   ],
   vehicleClasses: [
     { type: 'BIKE', label: 'Bikes', description: 'Bike routes. Max payload 25kg.', enabled: true, active: 0 },
@@ -152,6 +152,30 @@ export default function FleetSettingsPage() {
     }));
   }
 
+  function updateRegion(index: number, patch: Partial<AdminFleetRegion>) {
+    setSettings((prev) => ({
+      ...prev,
+      regions: prev.regions.map((r, i) => i === index ? { ...r, ...patch } : r),
+    }));
+  }
+
+  function addRegion() {
+    setSettings((prev) => ({
+      ...prev,
+      regions: [
+        ...prev.regions,
+        { id: `region-${Date.now()}`, name: '', hubCount: 0, zone: '', enabled: true, latitude: null, longitude: null, radiusKm: 30 },
+      ],
+    }));
+  }
+
+  function deleteRegion(index: number) {
+    setSettings((prev) => ({
+      ...prev,
+      regions: prev.regions.filter((_, i) => i !== index),
+    }));
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F8FAFC', fontFamily: inter }}>
       <Sidebar />
@@ -205,19 +229,29 @@ export default function FleetSettingsPage() {
               <section style={cardStyle}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <span style={sectionTitleStyle}>Operational Regions</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{enabledRegions.length} enabled</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{enabledRegions.length} enabled</span>
+                    <button type="button" onClick={addRegion} disabled={saving || settings.regions.length >= 50} style={{ padding: '6px 14px', borderRadius: 8, background: '#EFF6FF', border: '1px solid #BFDBFE', fontSize: 12, fontWeight: 800, color: '#2563EB', cursor: 'pointer' }}>
+                      + Add Region
+                    </button>
+                  </div>
                 </div>
                 {settings.regions.map((region, index) => (
-                  <div key={region.id} style={{ display: 'grid', gridTemplateColumns: '38px 1fr 86px 120px 56px', alignItems: 'center', gap: 12, padding: '14px 0', borderTop: index === 0 ? '1px solid #F1F5F9' : 'none', borderBottom: index < settings.regions.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1C6.239 1 4 3.239 4 6c0 4.5 5 11 5 11s5-6.5 5-11c0-2.761-2.239-5-5-5Z" stroke="#2563EB" strokeWidth="1.5"/><circle cx="9" cy="6" r="2" fill="#2563EB"/></svg>
-                    </div>
-                    <input suppressHydrationWarning value={region.name} onChange={(e) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, name: e.target.value, id: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || r.id } : r) }))} style={textInputStyle} />
-                    <input suppressHydrationWarning type="number" value={region.hubCount} onChange={(e) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, hubCount: Number(e.target.value) } : r) }))} style={textInputStyle} />
-                    <input suppressHydrationWarning value={region.zone} onChange={(e) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, zone: e.target.value } : r) }))} style={textInputStyle} />
-                    <Toggle on={region.enabled} onChange={(enabled) => setSettings((prev) => ({ ...prev, regions: prev.regions.map((r, i) => i === index ? { ...r, enabled } : r) }))} disabled={saving} />
-                  </div>
+                  <RegionRow
+                    key={`${region.id}-${index}`}
+                    region={region}
+                    index={index}
+                    total={settings.regions.length}
+                    saving={saving}
+                    onUpdate={(patch) => updateRegion(index, patch)}
+                    onDelete={() => deleteRegion(index)}
+                  />
                 ))}
+                {settings.regions.length === 0 && (
+                  <div style={{ padding: '24px 0', textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>
+                    No regions configured. Add a region to define your service area.
+                  </div>
+                )}
               </section>
             </div>
 
@@ -278,6 +312,108 @@ export default function FleetSettingsPage() {
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+function RegionRow({
+  region,
+  index,
+  total,
+  saving,
+  onUpdate,
+  onDelete,
+}: {
+  region: AdminFleetRegion;
+  index: number;
+  total: number;
+  saving: boolean;
+  onUpdate: (patch: Partial<AdminFleetRegion>) => void;
+  onDelete: () => void;
+}) {
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const hasGeo = region.latitude != null && region.longitude != null;
+
+  function handleNameChange(value: string) {
+    const id = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || region.id;
+    onUpdate({ name: value, id });
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) return;
+
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      setSearchError('');
+      try {
+        const res = await geocodeCity(value.trim());
+        onUpdate({
+          name: value,
+          id,
+          latitude: res.data.latitude,
+          longitude: res.data.longitude,
+          zone: res.data.region || res.data.country || region.zone,
+        });
+      } catch {
+        setSearchError('Could not resolve location');
+      } finally {
+        setSearching(false);
+      }
+    }, 800);
+  }
+
+  return (
+    <div style={{ padding: '16px 0', borderTop: index === 0 ? '1px solid #F1F5F9' : 'none', borderBottom: index < total - 1 ? '1px solid #F1F5F9' : 'none' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '38px 1fr 100px 56px 32px', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 38, height: 38, borderRadius: 10, background: hasGeo ? '#DCFCE7' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1C6.239 1 4 3.239 4 6c0 4.5 5 11 5 11s5-6.5 5-11c0-2.761-2.239-5-5-5Z" stroke={hasGeo ? '#16A34A' : '#2563EB'} strokeWidth="1.5"/><circle cx="9" cy="6" r="2" fill={hasGeo ? '#16A34A' : '#2563EB'}/></svg>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <input
+            suppressHydrationWarning
+            value={region.name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            placeholder="Type a city name..."
+            style={textInputStyle}
+          />
+          {searching && <span style={{ fontSize: 11, color: '#64748B' }}>Resolving location...</span>}
+          {searchError && <span style={{ fontSize: 11, color: '#EF4444' }}>{searchError}</span>}
+        </div>
+        <input
+          suppressHydrationWarning
+          type="number"
+          min={1}
+          max={200}
+          value={region.radiusKm ?? 30}
+          onChange={(e) => onUpdate({ radiusKm: Number(e.target.value) || 30 })}
+          title="Radius in km"
+          style={{ ...textInputStyle, textAlign: 'center' }}
+        />
+        <Toggle on={region.enabled} onChange={(enabled) => onUpdate({ enabled })} disabled={saving} />
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={saving}
+          title="Remove region"
+          style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #FCA5A5', background: '#FEF2F2', color: '#DC2626', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+        >
+          x
+        </button>
+      </div>
+      {hasGeo && (
+        <div style={{ marginTop: 8, marginLeft: 50, display: 'flex', gap: 16, fontSize: 11, color: '#64748B' }}>
+          <span>{region.latitude!.toFixed(4)}, {region.longitude!.toFixed(4)}</span>
+          <span>{region.radiusKm ?? 30} km radius</span>
+          {region.zone && <span>{region.zone}</span>}
+        </div>
+      )}
+      {!hasGeo && region.name && (
+        <div style={{ marginTop: 6, marginLeft: 50, fontSize: 11, color: '#F59E0B', fontWeight: 700 }}>
+          No coordinates — type a city name to auto-resolve
+        </div>
+      )}
     </div>
   );
 }

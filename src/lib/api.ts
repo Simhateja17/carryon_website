@@ -247,6 +247,23 @@ export async function updateFleetSettings(payload: import("@/types").AdminFleetS
   );
 }
 
+export async function geocodeCity(query: string) {
+  return apiFetch<{
+    success: boolean;
+    data: {
+      latitude: number;
+      longitude: number;
+      formattedAddress: string;
+      city: string;
+      region: string;
+      country: string;
+    };
+  }>("/api/admin/settings/geocode-city", {
+    method: "POST",
+    body: JSON.stringify({ query }),
+  });
+}
+
 export async function getPricingConfig() {
   return apiFetch<{ success: boolean; data: import("@/types").AdminPricingSnapshot }>(
     "/api/admin/pricing"
@@ -281,24 +298,6 @@ export async function getIncidentMap() {
   );
 }
 
-export async function getDispatchMap(bookingId = "latest") {
-  return apiFetch<{ success: boolean; data: import("@/types").DispatchMapSnapshot }>(
-    `/api/admin/maps/dispatch/${encodeURIComponent(bookingId)}`
-  );
-}
-
-export async function getOptimizeQueueMap() {
-  return apiFetch<{ success: boolean; data: import("@/types").OptimizeQueueSnapshot }>(
-    "/api/admin/maps/optimize/queue"
-  );
-}
-
-export async function runRouteOptimization() {
-  return apiFetch<{ success: boolean; data: import("@/types").OptimizeRunResult }>(
-    "/api/admin/maps/optimize/run",
-    { method: "POST", body: JSON.stringify({}) }
-  );
-}
 
 // ── Route Distance ───────────────────────────────────────────
 // POST /api/admin/maps/distance
@@ -314,5 +313,105 @@ export async function getRouteDistance(
       method: "POST",
       body: JSON.stringify({ from, to }),
     }
+  );
+}
+
+// ── Revenue / Payments & Earnings ──────────────────────────
+
+export async function getRevenueStats(period: "weekly" | "monthly" = "weekly") {
+  return apiFetch<{ success: boolean; data: import("@/types").RevenueStats }>(
+    `/api/admin/revenue/stats?period=${period}`
+  );
+}
+
+export async function getRevenueChart(period: "weekly" | "monthly" = "weekly") {
+  return apiFetch<{ success: boolean; data: import("@/types").RevenueChartPoint[] }>(
+    `/api/admin/revenue/chart?period=${period}`
+  );
+}
+
+export async function getRevenueTransactions(params: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  paymentMethod?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  minAmount?: string;
+  maxAmount?: string;
+} = {}) {
+  const query = new URLSearchParams();
+  if (params.page != null) query.set("page", String(params.page));
+  if (params.limit != null) query.set("limit", String(params.limit));
+  if (params.status && params.status !== "all") query.set("status", params.status);
+  if (params.paymentMethod && params.paymentMethod !== "all") query.set("paymentMethod", params.paymentMethod);
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
+  if (params.minAmount) query.set("minAmount", params.minAmount);
+  if (params.maxAmount) query.set("maxAmount", params.maxAmount);
+  const qs = query.toString();
+  return apiFetch<{
+    success: boolean;
+    data: import("@/types").RevenueTransaction[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>(`/api/admin/revenue/transactions${qs ? `?${qs}` : ""}`);
+}
+
+export async function getRevenueTransactionDetail(id: string) {
+  return apiFetch<{ success: boolean; data: import("@/types").RevenueTransactionDetail }>(
+    `/api/admin/revenue/transactions/${encodeURIComponent(id)}`
+  );
+}
+
+export async function getDriverEarnings(params: {
+  page?: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+} = {}) {
+  const query = new URLSearchParams();
+  if (params.page != null) query.set("page", String(params.page));
+  if (params.limit != null) query.set("limit", String(params.limit));
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
+  const qs = query.toString();
+  return apiFetch<{
+    success: boolean;
+    data: import("@/types").DriverEarningRow[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>(`/api/admin/revenue/driver-earnings${qs ? `?${qs}` : ""}`);
+}
+
+export async function getRefunds(params: {
+  page?: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+} = {}) {
+  const query = new URLSearchParams();
+  if (params.page != null) query.set("page", String(params.page));
+  if (params.limit != null) query.set("limit", String(params.limit));
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
+  const qs = query.toString();
+  return apiFetch<{
+    success: boolean;
+    data: import("@/types").RefundRow[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>(`/api/admin/revenue/refunds${qs ? `?${qs}` : ""}`);
+}
+
+export async function getRevenueIssues() {
+  return apiFetch<{ success: boolean; data: import("@/types").RevenueIssues }>(
+    "/api/admin/revenue/issues"
   );
 }

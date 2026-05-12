@@ -107,19 +107,6 @@ export default function CustomersPage() {
               </svg>
               Export Data
             </button>
-            <button suppressHydrationWarning style={{
-              height: '38px', padding: '0 16px', borderRadius: '8px',
-              background: '#2563EB', border: 'none',
-              fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#fff',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-            }} onClick={() => router.push('/customers/new')}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="9" cy="5" r="3" stroke="white" strokeWidth="1.3" />
-                <path d="M1 13c0-2.761 2.239-5 5-5" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
-                <path d="M11 8v4M9 10h4" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-              Add New Customer
-            </button>
           </div>
         </div>
 

@@ -385,6 +385,9 @@ export interface AdminFleetRegion {
   hubCount: number;
   zone: string;
   enabled: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  radiusKm?: number | null;
 }
 
 export interface AdminFleetSettingsUpdatePayload {

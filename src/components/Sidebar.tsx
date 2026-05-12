@@ -305,22 +305,16 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* ── LIVE ROUTING (expandable) ── */}
+          {/* ── LIVE ROUTING ── */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <SectionRow
               active={liveActive}
               icon={<IconLiveRouting active={liveActive} />}
               label="LIVE ROUTING"
-              open={openSection === 'live'}
-              onClick={() => toggle('live', '/live-map')}
+              open={false}
+              onClick={() => router.push('/live-map')}
             />
           </div>
-          {openSection === 'live' && (
-            <div style={{ paddingLeft: '48px', paddingRight: '16px' }}>
-              <SubLink label="NEW DISPATCHES" onClick={() => router.push('/live-map/dispatches')} active={liveActive && pathname.startsWith('/live-map/dispatches')} />
-              <SubLink label="OPTIMIZE ALL ROUTES" onClick={() => router.push('/live-map/optimize')} active={liveActive && pathname === '/live-map/optimize'} />
-            </div>
-          )}
 
           {/* ── ORDERS (expandable) ── */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -355,21 +349,16 @@ export default function Sidebar() {
             </div>
           )}
 
-          {/* ── CUSTOMERS (expandable) ── */}
+          {/* ── CUSTOMERS ── */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <SectionRow
               active={customersActive}
               icon={<IconCustomers active={customersActive} />}
               label="CUSTOMERS"
-              open={openSection === 'customers'}
-              onClick={() => toggle('customers', '/customers')}
+              open={false}
+              onClick={() => router.push('/customers')}
             />
           </div>
-          {openSection === 'customers' && (
-            <div style={{ paddingLeft: '48px', paddingRight: '16px' }}>
-              <SubLink label="ADD NEW CUSTOMER" onClick={() => router.push('/customers/new')} active={pathname === '/customers/new'} />
-            </div>
-          )}
 
 
           {/* ── SETTINGS (expandable) ── */}
@@ -378,7 +367,7 @@ export default function Sidebar() {
               <button
                 suppressHydrationWarning
                 type="button"
-                onClick={() => { setOpenSection('settings'); router.push('/settings'); }}
+                onClick={() => toggle('settings', '/settings')}
                 style={{ display: 'flex', alignItems: 'center', width: '239px', padding: '16px', borderRadius: '4px', border: 'none', cursor: 'pointer', textAlign: 'left', background: 'transparent', boxSizing: 'border-box' }}
               >
                 <span style={{ display: 'flex', width: '34px', justifyContent: 'flex-start', flexShrink: 0 }}>

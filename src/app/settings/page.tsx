@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+'use client';
 
 import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';

@@ -675,3 +675,92 @@ export interface AdminFleetSettingsSnapshot {
   distanceUnit: "km";
   auditItems: Array<{ icon: "edit" | "plus" | "warning"; text: string; time: string }>;
 }
+
+// ── Revenue / Payments & Earnings ─────────────────────────────────────────
+
+export interface RevenueStats {
+  totalRevenue: number;
+  totalCommission: number;
+  avgCommissionPerOrder: number;
+  orderCount: number;
+  period: "weekly" | "monthly";
+  startDate: string;
+  endDate: string;
+}
+
+export interface RevenueChartPoint {
+  date: string;
+  revenue: number;
+}
+
+export interface RevenueTransaction {
+  id: string;
+  orderCode: string;
+  customerName: string;
+  customerEmail: string;
+  amount: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  createdAt: string;
+}
+
+export interface RevenueTransactionDetail {
+  id: string;
+  orderCode: string;
+  status: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  createdAt: string;
+  deliveredAt: string | null;
+  customer: { name: string; email: string; phone: string };
+  driver: { name: string; phone: string } | null;
+  pickup: string;
+  delivery: string;
+  feeBreakdown: {
+    grossAmount: number;
+    distance: number;
+    waitTimeCharge: number;
+    discountAmount: number;
+    platformCommission: number;
+    platformCommissionRate: number;
+    driverPayout: number;
+  };
+  timeline: Array<{
+    command: string;
+    fromStatus: string | null;
+    toStatus: string | null;
+    createdAt: string;
+  }>;
+}
+
+export interface DriverEarningRow {
+  id: string;
+  driverName: string;
+  driverId: string;
+  bookingId: string | null;
+  grossAmount: number;
+  platformFee: number;
+  driverEarning: number;
+  createdAt: string;
+}
+
+export interface RefundRow {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  bookingId: string | null;
+  orderCode: string | null;
+  amount: number;
+  description: string;
+  createdAt: string;
+}
+
+export interface RevenueIssues {
+  failedByMethod: Array<{ paymentMethod: string; count: number }>;
+  failedPayouts: number;
+  successRate: number;
+  refundRate: number;
+  totalDelivered: number;
+  totalFailed: number;
+  totalRefunded: number;
+}

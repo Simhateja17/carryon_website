@@ -2,11 +2,9 @@ import type {
   ActualPathPoint,
   AdminOrder,
   BookingStatus,
-  DispatchMapSnapshot,
   IncidentMapSnapshot,
   LiveOverviewSnapshot,
   MapCoordinate,
-  OptimizeQueueSnapshot,
 } from '@/types';
 
 export interface IncidentQueueItem {
@@ -36,25 +34,10 @@ export interface IncidentOperationsView {
   urgentCount: number;
 }
 
-export interface DispatchOperationsView {
-  snapshot: DispatchMapSnapshot;
-  events: Array<{
-    id: string;
-    title: string;
-    description: string;
-    time: string;
-    success: boolean;
-  }>;
-}
-
 export interface LiveOverviewOperationsView {
   snapshot: LiveOverviewSnapshot;
   fleetStatus: Array<{ label: string; value: string }>;
   alerts: Array<{ type: string; title: string; sub: string; time: string }>;
-}
-
-export interface OptimizeOperationsView {
-  snapshot: OptimizeQueueSnapshot;
 }
 
 export function adminOpsReadModelEnabled() {
@@ -86,19 +69,6 @@ export function toIncidentOperationsView(snapshot: IncidentMapSnapshot): Inciden
     log: activeIncident ? incidentLogFor(activeIncident) : [],
     activeIncidentId: activeIncident?.id || null,
     urgentCount: snapshot.incidents.filter((incident) => incident.severity === 'critical').length,
-  };
-}
-
-export function toDispatchOperationsView(snapshot: DispatchMapSnapshot): DispatchOperationsView {
-  return {
-    snapshot,
-    events: snapshot.events.map((event) => ({
-      id: event.id,
-      title: event.command.replaceAll('_', ' '),
-      description: event.message || eventDistanceDescription(event.distanceToExpectedMeters),
-      time: timeOfDay(event.createdAt),
-      success: event.success,
-    })),
   };
 }
 

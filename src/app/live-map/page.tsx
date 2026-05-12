@@ -146,10 +146,9 @@ function ActiveAlertsCard({ alerts }: { alerts: LiveMapAlert[] }) {
   );
 }
 
-function DriverPopup({ dispatch, onMessage, onLog, onNewDispatch }: {
+function DriverPopup({ dispatch, onMessage, onNewDispatch }: {
   dispatch: LiveMapFeaturedDispatch | null;
   onMessage: () => void;
-  onLog: () => void;
   onNewDispatch: () => void;
 }) {
   if (!dispatch) return null;
@@ -241,9 +240,6 @@ function DriverPopup({ dispatch, onMessage, onLog, onNewDispatch }: {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
-          <button suppressHydrationWarning onClick={onLog} style={{ flex: '1 0 0', height: '40px', borderRadius: '10px', background: '#E2E8F0', border: 'none', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#191C1E', cursor: 'pointer' }}>
-            View Log
-          </button>
           <button suppressHydrationWarning onClick={onMessage} style={{ flex: '1 0 0', height: '40px', borderRadius: '10px', background: '#2563EB', border: 'none', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#FFFFFF', cursor: 'pointer' }}>
             Message
           </button>
@@ -325,21 +321,11 @@ export default function LiveMapPage() {
           <DriverPopup
             dispatch={snapshot?.featuredDispatch || null}
             onMessage={() => router.push('/fleet-messenger')}
-            onLog={() => router.push('/live-map/dispatches')}
             onNewDispatch={() => router.push('/orders/create')}
           />
 
           <MapControls />
 
-          <button
-            suppressHydrationWarning
-            onClick={() => router.push('/live-map/optimize')}
-            style={{ position: 'absolute', bottom: '24px', right: '24px', height: '56px', paddingLeft: '24px', paddingRight: '24px', borderRadius: '9999px', background: '#2563EB', border: 'none', boxShadow: '0 18px 36px rgba(37,99,235,0.24)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap' }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/optimize-routes-icon.png" alt="" style={{ width: '20px', height: '20px', display: 'block' }} />
-            Optimize All Routes
-          </button>
         </div>
       </div>
     </div>

@@ -135,7 +135,6 @@ const MUTATION_SCHEMAS: Array<{ method: string; pattern: RegExp; schema: z.ZodTy
   { method: "PUT",  pattern: /^settings\/fleet$/, schema: FleetSettingsSchema },
   { method: "PUT",  pattern: /^pricing\/vehicles$/, schema: PricingVehiclesSchema },
   { method: "POST", pattern: /^maps\/distance$/, schema: RouteDistanceSchema },
-  // maps/optimize/run accepts empty body — no schema needed
 ];
 
 const PRODUCTION_URL = "https://api.carryon.my";
@@ -149,6 +148,7 @@ const ALLOWED_ADMIN_ROUTES: Record<string, Set<string>> = {
   settings: new Set(["GET", "PUT"]),
   bookings: new Set(["GET"]),
   customers: new Set(["GET"]),
+  revenue: new Set(["GET"]),
 };
 
 function backendBaseUrl() {
