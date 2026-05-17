@@ -5,24 +5,19 @@ import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 import { getPricingConfig, updatePricingVehicles } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
-import type { AdminPricingSnapshot, AdminPricingVehicle } from '@/types';
+import {
+  calculatePricingPreview,
+  platformCommissionPercent,
+  toEditablePricingVehicles,
+  toPricingVehiclePayload,
+  type EditablePricingVehicle,
+} from '@/lib/pricingModel';
+import type { AdminPricingSnapshot } from '@/types';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
 
 const tabs = ['Base Fare', 'Surge Pricing', 'Zone Pricing', 'Coupons', 'Commission', 'Charges'];
-
-const fallbackVehicleFares: AdminPricingVehicle[] = [
-  { id: null, type: 'BIKE', name: 'Bike', basePrice: 2.5, pricePerKm: 0.45, minimumFare: 5, isAvailable: true },
-  { id: null, type: 'PICKUP', name: 'Pickup', basePrice: 8, pricePerKm: 1.2, minimumFare: 15, isAvailable: true },
-  { id: null, type: 'LORRY_10FT', name: 'Truck', basePrice: 25, pricePerKm: 3.5, minimumFare: 45, isAvailable: true },
-];
-
-const surgeItems = [
-  { name: 'Time-based Surge', multiplier: '1.5x', desc: 'Active during configured peak hours (20:00 - 04:00).', active: true },
-  { name: 'Demand-based Surge', multiplier: '1.0x', desc: 'Applies when demand exceeds driver supply by 20%.', active: false },
-  { name: 'Area-based Surge', multiplier: '1.2x', desc: 'Triggers in Central Business District during gridlock alerts.', active: true },
-];
 
 function VehicleIcon({ type }: { type: string }) {
   const icons: Record<string, React.ReactNode> = {
@@ -56,19 +51,25 @@ function VehicleIcon({ type }: { type: string }) {
 export default function PricingPage() {
   const [activeTab, setActiveTab] = useState('Base Fare');
   const [pricing, setPricing] = useState<AdminPricingSnapshot | null>(null);
-  const [vehicles, setVehicles] = useState<AdminPricingVehicle[]>(fallbackVehicleFares);
+  const [vehicles, setVehicles] = useState<EditablePricingVehicle[]>([]);
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
 
   async function loadPricing() {
     setError('');
+    setLoading(true);
     try {
       const res = await getPricingConfig();
       setPricing(res.data);
-      setVehicles(res.data.vehicles.length ? res.data.vehicles : fallbackVehicleFares);
+      setVehicles(toEditablePricingVehicles(res.data.vehicles));
+      setSelectedVehicleType((current) => current || res.data.vehicles.find((vehicle) => vehicle.isAvailable)?.type || res.data.vehicles[0]?.type || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load pricing');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -76,12 +77,9 @@ export default function PricingPage() {
     loadPricing();
   }, []);
 
-  function updateVehicle(index: number, key: keyof AdminPricingVehicle, value: string) {
+  function updateVehicle(index: number, key: keyof EditablePricingVehicle, value: string) {
     setVehicles((prev) => prev.map((vehicle, i) => {
       if (i !== index) return vehicle;
-      if (key === 'basePrice' || key === 'pricePerKm' || key === 'minimumFare') {
-        return { ...vehicle, [key]: Number(value) };
-      }
       return { ...vehicle, [key]: value };
     }));
   }
@@ -91,7 +89,7 @@ export default function PricingPage() {
     setError('');
     setStatus('');
     try {
-      await updatePricingVehicles(vehicles);
+      await updatePricingVehicles(toPricingVehiclePayload(vehicles));
       setStatus('Pricing saved.');
       await loadPricing();
     } catch (err) {
@@ -103,6 +101,8 @@ export default function PricingPage() {
 
   const coupons = pricing?.coupons || [];
   const history = pricing?.history || [];
+  const persistedVehicles = pricing?.vehicles || [];
+  const preview = pricing ? calculatePricingPreview(pricing, selectedVehicleType) : null;
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
@@ -115,12 +115,12 @@ export default function PricingPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <div>
               <h1 style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '6px' }}>Pricing & Fare Management</h1>
-              <p style={{ fontFamily: inter, fontSize: '13px', fontWeight: 500, color: '#64748B', margin: 0 }}>Configure global pricing rules, surge multipliers, and simulated cost breakdowns.</p>
+              <p style={{ fontFamily: inter, fontSize: '13px', fontWeight: 500, color: '#64748B', margin: 0 }}>Configure live vehicle fares, coupon visibility, and commission-backed fare previews.</p>
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button suppressHydrationWarning type="button" style={{
+              <button suppressHydrationWarning type="button" disabled style={{
                 padding: '10px 18px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#FFFFFF',
-                fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#374151', cursor: 'pointer',
+                fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#94A3B8', cursor: 'not-allowed',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}>
                 Export Rules
@@ -130,7 +130,7 @@ export default function PricingPage() {
                 fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#FFFFFF', cursor: saving ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
               }}>
-                {saving ? 'SAVING...' : 'PREVIEW & CONFIRM'}
+                {saving ? 'SAVING...' : 'SAVE LIVE FARES'}
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
@@ -198,9 +198,9 @@ export default function PricingPage() {
                     </svg>
                     <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Base Fare Configuration</span>
                   </div>
-                  <button suppressHydrationWarning type="button" style={{
-                    fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#3B82F6',
-                    background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.5px', textTransform: 'uppercase',
+                  <button suppressHydrationWarning type="button" disabled style={{
+                    fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#94A3B8',
+                    background: 'none', border: 'none', cursor: 'not-allowed', letterSpacing: '0.5px', textTransform: 'uppercase',
                   }}>
                     + ADD VEHICLE TYPE
                   </button>
@@ -223,8 +223,20 @@ export default function PricingPage() {
                   ))}
                 </div>
 
+                {loading && (
+                  <div style={{ padding: '24px 0', fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#64748B' }}>
+                    Loading live vehicle fares...
+                  </div>
+                )}
+
+                {!loading && vehicles.length === 0 && (
+                  <div style={{ padding: '24px 0', fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#64748B' }}>
+                    No vehicle fares are available from the admin API.
+                  </div>
+                )}
+
                 {/* Vehicle rows */}
-                {vehicles.map((v, index) => (
+                {!loading && vehicles.map((v, index) => (
                   <div key={`${v.id || v.type}-${index}`} style={{
                     display: 'grid',
                     gridTemplateColumns: '40px 1fr 100px 100px 100px 60px',
@@ -234,22 +246,39 @@ export default function PricingPage() {
                     borderBottom: '1px solid #F8FAFC',
                   }}>
                     <VehicleIcon type={v.type.toLowerCase().includes('bike') ? 'bike' : v.type.toLowerCase().includes('pickup') ? 'pickup' : 'truck'} />
-                    <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{v.name}</span>
-                    <input suppressHydrationWarning type="number" value={v.basePrice} onChange={(e) => updateVehicle(index, 'basePrice', e.target.value)} style={{
+                    <button
+                      suppressHydrationWarning
+                      type="button"
+                      onClick={() => setSelectedVehicleType(v.type)}
+                      style={{
+                        fontFamily: inter,
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: selectedVehicleType === v.type ? '#3B82F6' : '#0F172A',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {v.name}
+                    </button>
+                    <input suppressHydrationWarning type="number" min="0" step="0.01" value={v.basePrice} onChange={(e) => updateVehicle(index, 'basePrice', e.target.value)} style={{
                       width: '70px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
                       fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A', background: '#F8FAFC',
                     }} />
-                    <input suppressHydrationWarning type="number" value={v.pricePerKm} onChange={(e) => updateVehicle(index, 'pricePerKm', e.target.value)} style={{
+                    <input suppressHydrationWarning type="number" min="0" step="0.01" value={v.pricePerKm} onChange={(e) => updateVehicle(index, 'pricePerKm', e.target.value)} style={{
                       width: '70px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
                       fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A', background: '#F8FAFC',
                     }} />
-                    <input suppressHydrationWarning type="number" value={v.minimumFare} onChange={(e) => updateVehicle(index, 'minimumFare', e.target.value)} style={{
+                    <input suppressHydrationWarning type="number" min="0" step="0.01" value={v.minimumFare} onChange={(e) => updateVehicle(index, 'minimumFare', e.target.value)} style={{
                       width: '70px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
                       fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A', background: '#F8FAFC',
                     }} />
-                    <button suppressHydrationWarning type="button" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <button suppressHydrationWarning type="button" disabled style={{ background: 'none', border: 'none', cursor: 'not-allowed' }}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M8 3v10M3 8h10" stroke="#64748B" strokeWidth="1.4" strokeLinecap="round" />
+                        <path d="M8 3v10M3 8h10" stroke="#CBD5E1" strokeWidth="1.4" strokeLinecap="round" />
                       </svg>
                     </button>
                   </div>
@@ -276,12 +305,12 @@ export default function PricingPage() {
                   </div>
                   <div>
                     <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>PLATFORM EARNINGS</div>
-                    <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>{Math.round((1 - (pricing?.commissionRate ?? 0.88)) * 100)}% commission per order</div>
+                    <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>{pricing ? platformCommissionPercent(pricing.commissionRate) : 0}% commission per order</div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>EST. REVENUE (SIMULATED)</div>
-                  <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#FFFFFF' }}>{formatMoney(4.37)}</div>
+                  <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>PREVIEW COMMISSION</div>
+                  <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#FFFFFF' }}>{formatMoney(preview?.platformCommission ?? 0)}</div>
                 </div>
               </div>
 
@@ -303,39 +332,18 @@ export default function PricingPage() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {surgeItems.map((s) => (
-                      <div key={s.name} style={{
-                        background: '#F8FAFC',
-                        borderRadius: '10px',
-                        padding: '14px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                      }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{s.name}</span>
-                            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 800, color: '#EF4444' }}>{s.multiplier}</span>
-                          </div>
-                          <p style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#64748B', margin: 0, lineHeight: '16px' }}>{s.desc}</p>
-                        </div>
-                        <div style={{
-                          width: '36px',
-                          height: '20px',
-                          borderRadius: '9999px',
-                          background: s.active ? '#3B82F6' : '#CBD5E1',
-                          position: 'relative',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                        }}>
-                          <div style={{
-                            width: '16px', height: '16px', borderRadius: '50%', background: '#FFFFFF',
-                            position: 'absolute', top: '2px', left: s.active ? '18px' : '2px',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                          }} />
-                        </div>
+                    <div style={{
+                      background: '#F8FAFC',
+                      borderRadius: '10px',
+                      padding: '14px',
+                    }}>
+                      <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
+                        No live surge rules returned
                       </div>
-                    ))}
+                      <p style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#64748B', margin: 0, lineHeight: '16px' }}>
+                        The current admin pricing API exposes vehicle fares, coupons, commission, and history. Surge rules need a backend read model before this panel can edit them.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -354,9 +362,9 @@ export default function PricingPage() {
                       </svg>
                       <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Zone Pricing</span>
                     </div>
-                    <button suppressHydrationWarning type="button" style={{
-                      fontFamily: inter, fontSize: '10px', fontWeight: 700, color: '#3B82F6',
-                      background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.5px', textTransform: 'uppercase',
+                    <button suppressHydrationWarning type="button" disabled style={{
+                      fontFamily: inter, fontSize: '10px', fontWeight: 700, color: '#94A3B8',
+                      background: 'none', border: 'none', cursor: 'not-allowed', letterSpacing: '0.5px', textTransform: 'uppercase',
                     }}>
                       DRAW NEW ZONE
                     </button>
@@ -387,7 +395,7 @@ export default function PricingPage() {
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}>
-                      ZONE A: ACTIVE
+                      NO ZONE API
                     </div>
                     <div style={{
                       position: 'absolute',
@@ -401,16 +409,16 @@ export default function PricingPage() {
                       fontWeight: 700,
                       color: '#3B82F6',
                     }}>
-                      4 ACTIVE ZONES
+                      LIVE DATA UNAVAILABLE
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {['Edit Zone Rules', 'Assign Pricing'].map((btn) => (
-                      <button key={btn} suppressHydrationWarning type="button" style={{
+                      <button key={btn} suppressHydrationWarning type="button" disabled style={{
                         flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #E2E8F0',
                         background: '#FFFFFF', fontFamily: inter, fontSize: '11px', fontWeight: 700,
-                        color: '#3B82F6', cursor: 'pointer',
+                        color: '#94A3B8', cursor: 'not-allowed',
                       }}>{btn}</button>
                     ))}
                   </div>
@@ -433,15 +441,20 @@ export default function PricingPage() {
                     </svg>
                     <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Active Coupons & Discounts</span>
                   </div>
-                  <button suppressHydrationWarning type="button" style={{
-                    fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#3B82F6',
-                    background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.5px', textTransform: 'uppercase',
+                  <button suppressHydrationWarning type="button" disabled style={{
+                    fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#94A3B8',
+                    background: 'none', border: 'none', cursor: 'not-allowed', letterSpacing: '0.5px', textTransform: 'uppercase',
                   }}>
                     + CREATE PROMO
                   </button>
                 </div>
 
                 <div style={{ display: 'flex', gap: '16px' }}>
+                  {coupons.length === 0 && (
+                    <div style={{ flex: 1, background: '#F8FAFC', borderRadius: '10px', padding: '16px', fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#64748B' }}>
+                      No coupons were returned by the admin pricing API.
+                    </div>
+                  )}
                   {coupons.map((c) => (
                     <div key={c.code} style={{
                       flex: 1,
@@ -498,6 +511,12 @@ export default function PricingPage() {
                   textTransform: 'uppercase',
                   marginBottom: '16px',
                 }}>RECENT MODIFICATION HISTORY</div>
+
+                {history.length === 0 && (
+                  <div style={{ padding: '12px 0', fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#64748B' }}>
+                    No pricing changes have been recorded yet.
+                  </div>
+                )}
 
                 {history.map((h, i) => (
                   <div key={i} style={{
@@ -560,17 +579,17 @@ export default function PricingPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>Downtown Business District</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>Preview origin</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>North Suburb Terminal</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>Preview destination</span>
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>VEHICLE TYPE</div>
-                    <div style={{
+                    <label style={{
                       display: 'flex', alignItems: 'center', gap: '8px',
                       padding: '8px 10px', borderRadius: '6px', border: '1px solid #E2E8F0',
                     }}>
@@ -580,9 +599,18 @@ export default function PricingPage() {
                         <circle cx="4.5" cy="12" r="1.2" fill="#64748B" />
                         <circle cx="12" cy="12" r="1.2" fill="#64748B" />
                       </svg>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#0F172A', flex: 1 }}>Pickup Truck</span>
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
+                      <select
+                        suppressHydrationWarning
+                        value={selectedVehicleType || ''}
+                        onChange={(event) => setSelectedVehicleType(event.target.value || null)}
+                        style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#0F172A', flex: 1, border: 'none', outline: 'none', background: 'transparent' }}
+                      >
+                        {persistedVehicles.length === 0 && <option value="">No vehicles</option>}
+                        {persistedVehicles.map((vehicle) => (
+                          <option key={vehicle.type} value={vehicle.type}>{vehicle.name}</option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
@@ -593,20 +621,20 @@ export default function PricingPage() {
                     <div>
                       <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>DETECTED ZONE</div>
                       <span style={{
-                        display: 'inline-block', padding: '2px 8px', borderRadius: '4px', background: '#DBEAFE',
-                        fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#3B82F6',
-                      }}>ZONE A</span>
+                        display: 'inline-block', padding: '2px 8px', borderRadius: '4px', background: '#F1F5F9',
+                        fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#64748B',
+                      }}>NOT APPLIED</span>
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                     <div>
                       <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>DISTANCE (KM)</div>
-                      <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>12.5</span>
+                      <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{preview?.distanceKm.toFixed(1) ?? '--'}</span>
                     </div>
                     <div>
                       <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>EST. TIME (MIN)</div>
-                      <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>34</span>
+                      <span style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>--</span>
                     </div>
                   </div>
                 </div>
@@ -622,20 +650,24 @@ export default function PricingPage() {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Base Fare (Pickup)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{formatMoney(8)}</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Base Fare ({preview?.vehicle.name ?? '--'})</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{formatMoney(preview?.baseFare ?? 0)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Distance (12.5 km x MYR 1.20)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{formatMoney(15)}</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>Distance ({preview?.distanceKm.toFixed(1) ?? '--'} km x {formatMoney(preview?.vehicle.pricePerKm ?? 0)})</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{formatMoney(preview?.distanceFare ?? 0)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#EF4444' }}>⚡ Surge Multiplier (1.2x)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#EF4444' }}>+{formatMoney(4.6)}</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Minimum fare adjustment</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>+{formatMoney(preview?.minimumFareAdjustment ?? 0)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#10B981' }}>☐ Discount (SAVE25)</span>
-                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#10B981' }}>-{formatMoney(5.75)}</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#10B981' }}>Driver payout</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#10B981' }}>{formatMoney(preview?.driverPayout ?? 0)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#3B82F6' }}>Platform commission</span>
+                      <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{formatMoney(preview?.platformCommission ?? 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -648,7 +680,7 @@ export default function PricingPage() {
                   marginBottom: '12px',
                 }}>
                   <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>FINAL ESTIMATED TOTAL</div>
-                  <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#FFFFFF' }}>{formatMoney(21.85)}</div>
+                  <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#FFFFFF' }}>{formatMoney(preview?.total ?? 0)}</div>
                   <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -656,7 +688,7 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                <button suppressHydrationWarning type="button" style={{
+                <button suppressHydrationWarning type="button" onClick={() => setSelectedVehicleType(persistedVehicles.find((vehicle) => vehicle.isAvailable)?.type || persistedVehicles[0]?.type || null)} style={{
                   width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E2E8F0',
                   background: '#FFFFFF', fontFamily: inter, fontSize: '12px', fontWeight: 700,
                   color: '#64748B', cursor: 'pointer', letterSpacing: '0.5px', textTransform: 'uppercase',

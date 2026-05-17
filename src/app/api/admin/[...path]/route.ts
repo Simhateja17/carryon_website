@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac, randomUUID } from "crypto";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { FleetSettingsSchema, VEHICLE_TYPES } from "@/lib/fleetSettingsContract";
+import { NotificationSettingsSchema } from "@/lib/notificationSettingsContract";
 
 // ── Input validation schemas ─────────────────────────────────
-
-const VEHICLE_TYPES = ["BIKE", "CAR", "PICKUP", "VAN_7FT", "VAN_9FT", "LORRY_10FT", "LORRY_14FT", "LORRY_17FT"] as const;
 
 const RideLocationSchema = z.object({
   address: z.string().min(1, "Address is required"),
@@ -58,59 +58,109 @@ const DriverPiiRevealSchema = z.object({
   reason: z.string().trim().min(3).max(160),
 }).strict();
 
+const DriverRegistrationSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().min(3).max(40),
+  dateOfBirth: z.string().trim().max(40).optional(),
+  governmentId: z.string().trim().max(80).optional(),
+  addressLine1: z.string().trim().max(320).optional(),
+  addressLine2: z.string().trim().max(320).optional(),
+  city: z.string().trim().max(80).optional(),
+  postcode: z.string().trim().max(20).optional(),
+  state: z.string().trim().max(80).optional(),
+  driversLicenseNumber: z.string().trim().max(80).optional(),
+  licenseClass: z.string().trim().max(40).optional(),
+  licenseExpiry: z.string().trim().max(40).optional(),
+  emergencyContactName: z.string().trim().max(160).optional(),
+  emergencyContactRelation: z.string().trim().max(80).optional(),
+  emergencyContactPhone: z.string().trim().max(40).optional(),
+  pdpaConsent: z.boolean().optional(),
+  backgroundCheckConsent: z.boolean().optional(),
+  noOffencesDeclared: z.boolean().optional(),
+  vehicle: z.object({
+    type: z.enum(VEHICLE_TYPES),
+    make: z.string().trim().max(80).optional(),
+    model: z.string().trim().max(80).optional(),
+    year: z.number().int().min(1980).max(2100),
+    licensePlate: z.string().trim().max(40).optional(),
+    color: z.string().trim().max(40).optional(),
+    chassisNumber: z.string().trim().max(80).optional(),
+    engineNumber: z.string().trim().max(80).optional(),
+    ownership: z.string().trim().max(40).optional(),
+    ownerName: z.string().trim().max(160).optional(),
+    roadTaxExpiry: z.string().trim().max(40).optional(),
+    insurerName: z.string().trim().max(160).optional(),
+    insurancePolicyNumber: z.string().trim().max(120).optional(),
+    insuranceExpiry: z.string().trim().max(40).optional(),
+    hasCommercialCover: z.boolean().optional(),
+  }).strict().optional(),
+  documents: z.array(z.object({
+    type: z.enum([
+      "DRIVERS_LICENSE",
+      "DRIVERS_LICENSE_BACK",
+      "GDL",
+      "VEHICLE_REGISTRATION",
+      "ROAD_TAX",
+      "PUSPAKOM",
+      "APAD_PERMIT",
+      "VEHICLE_PHOTO_FRONT",
+      "VEHICLE_PHOTO_BACK",
+      "VEHICLE_PHOTO_LEFT",
+      "VEHICLE_PHOTO_RIGHT",
+      "VEHICLE_PHOTO_INTERIOR",
+      "BANK_STATEMENT",
+      "POLICE_CLEARANCE",
+      "INSURANCE",
+      "PROFILE_PHOTO",
+      "ID_PROOF",
+      "MYKAD_FRONT",
+      "MYKAD_BACK",
+      "SELFIE",
+      "PASSPORT",
+      "WORK_PERMIT_PLKS",
+    ]),
+    imageUrl: z.string().trim().min(1).max(500).refine((value) => !value.startsWith("http"), {
+      message: "Use a storage object path, not a public URL",
+    }),
+    expiryDate: z.string().trim().max(40).optional(),
+  }).strict()).max(32).optional(),
+}).strict();
+
 const ExtraChargeReviewSchema = z.object({
   decision: z.enum(["APPROVED", "REJECTED"]),
   reason: z.string().optional(),
 });
 
-const NotificationSettingsSchema = z.object({
-  alerts: z.array(z.object({
-    type: z.enum(["delay", "order", "offline", "fuel"]),
-    label: z.string(),
-    sub: z.string(),
-    sms: z.boolean(),
-    push: z.boolean(),
-    email: z.boolean(),
-  }).strict()),
+const SupportReplySchema = z.object({
+  message: z.string().max(5000).optional(),
+  internal: z.boolean().optional(),
+  attachments: z.array(z.object({
+    fileUrl: z.string().min(1),
+    storagePath: z.string().min(1).optional(),
+    mimeType: z.string().min(1),
+    fileSize: z.number().int().positive().max(5 * 1024 * 1024),
+  }).strict()).max(5).optional(),
 }).strict();
 
-const FleetSettingsSchema = z.object({
-  payout: z.object({
-    baseRatePerKm: z.number().min(0).max(10000),
-    peakMultiplier: z.number().min(1).max(10),
-  }).strict(),
-  maintenance: z.object({
-    mileageThresholdEnabled: z.boolean(),
-    mileageThresholdKm: z.number().int().min(100).max(1000000),
-    emissionCheckEnabled: z.boolean(),
-    telematicsFaultsEnabled: z.boolean(),
-    criticalNotification: z.string().min(1).max(120),
-  }).strict(),
-  regions: z.array(z.object({
-    id: z.string().min(1).max(80),
-    name: z.string().min(1).max(80),
-    hubCount: z.number().int().min(0).max(10000),
-    zone: z.string().min(1).max(120),
-    enabled: z.boolean(),
-  }).strict()).max(50),
-  vehicleClasses: z.array(z.object({
-    type: z.enum(VEHICLE_TYPES),
-    label: z.string().min(1).max(80),
-    description: z.string().min(1).max(180),
-    enabled: z.boolean(),
-  }).strict()),
+const SupportStatusSchema = z.object({
+  status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]),
+}).strict();
+
+const CitySuggestionsSchema = z.object({
+  query: z.string().trim().min(2).max(120),
 }).strict();
 
 const PricingVehiclesSchema = z.object({
   vehicles: z.array(z.object({
     id: z.string().nullable(),
     type: z.enum(VEHICLE_TYPES),
-    name: z.string().min(1),
-    basePrice: z.number().min(0),
-    pricePerKm: z.number().min(0),
-    minimumFare: z.number().min(0),
+    name: z.string().trim().min(1).max(80),
+    basePrice: z.number().finite().min(0).max(100000),
+    pricePerKm: z.number().finite().min(0).max(10000),
+    minimumFare: z.number().finite().min(0).max(100000),
     isAvailable: z.boolean(),
-  }).strict()),
+  }).strict()).max(20),
 }).strict();
 
 const CoordinateSchema = z.object({ lat: z.number(), lng: z.number() });
@@ -120,6 +170,13 @@ const RouteDistanceSchema = z.object({
   to: CoordinateSchema,
 });
 
+const AdminSecuritySettingsSchema = z.object({
+  twoFactorRequired: z.boolean(),
+  loginAlertsEnabled: z.boolean(),
+  suspiciousActivityDetectionEnabled: z.boolean(),
+  ipRestrictedAccessEnabled: z.boolean(),
+}).strict();
+
 // ── Mutation validation map ──────────────────────────────────
 // Maps "METHOD path-pattern" → Zod schema.  Path patterns use * for
 // dynamic segments (e.g. "PUT drivers/*/verify").
@@ -127,14 +184,19 @@ const RouteDistanceSchema = z.object({
 const MUTATION_SCHEMAS: Array<{ method: string; pattern: RegExp; schema: z.ZodTypeAny }> = [
   { method: "POST", pattern: /^notifications\/send$/, schema: SendNotificationSchema },
   { method: "POST", pattern: /^notifications\/ride-request$/, schema: RideRequestSchema },
+  { method: "POST", pattern: /^drivers$/, schema: DriverRegistrationSchema },
   { method: "PUT",  pattern: /^drivers\/[^/]+\/documents\/[^/]+\/review$/, schema: DocumentReviewSchema },
   { method: "PUT",  pattern: /^drivers\/[^/]+\/verify$/, schema: DriverVerifySchema },
   { method: "POST", pattern: /^drivers\/[^/]+\/pii\/reveal$/, schema: DriverPiiRevealSchema },
   { method: "POST", pattern: /^extra-charges\/[^/]+\/review$/, schema: ExtraChargeReviewSchema },
+  { method: "POST", pattern: /^support\/tickets\/[^/]+\/reply$/, schema: SupportReplySchema },
+  { method: "POST", pattern: /^support\/tickets\/[^/]+\/status$/, schema: SupportStatusSchema },
   { method: "PUT",  pattern: /^settings\/notifications$/, schema: NotificationSettingsSchema },
+  { method: "POST", pattern: /^settings\/city-suggestions$/, schema: CitySuggestionsSchema },
   { method: "PUT",  pattern: /^settings\/fleet$/, schema: FleetSettingsSchema },
   { method: "PUT",  pattern: /^pricing\/vehicles$/, schema: PricingVehiclesSchema },
   { method: "POST", pattern: /^maps\/distance$/, schema: RouteDistanceSchema },
+  { method: "PUT",  pattern: /^users\/security$/, schema: AdminSecuritySettingsSchema },
 ];
 
 const PRODUCTION_URL = "https://api.carryon.my";
@@ -143,13 +205,17 @@ const ALLOWED_ADMIN_ROUTES: Record<string, Set<string>> = {
   drivers: new Set(["GET", "PUT", "POST"]),
   notifications: new Set(["GET", "POST"]),
   "extra-charges": new Set(["GET", "POST"]),
+  "safety-fraud": new Set(["GET"]),
   maps: new Set(["GET", "POST"]),
   pricing: new Set(["GET", "PUT"]),
-  settings: new Set(["GET", "PUT"]),
+  settings: new Set(["GET", "POST", "PUT"]),
   bookings: new Set(["GET"]),
   customers: new Set(["GET"]),
   revenue: new Set(["GET"]),
-};
+  analytics: new Set(["GET"]),
+  support: new Set(["GET", "POST"]),
+  users: new Set(["GET", "PUT"]),
+}
 
 function backendBaseUrl() {
   return (
@@ -216,12 +282,19 @@ async function proxyAdminRequest(
   }
 
   const adminEmail = user.email || "";
-  const { data: isAdmin, error: adminLookupError } = await supabase.rpc(
-    "is_admin_email",
-    { check_email: adminEmail }
-  );
+  const appMetadata = user.app_metadata as Record<string, unknown>;
+  let isAdmin = appMetadata.role === "admin" || appMetadata.admin === true;
+  if (!isAdmin && adminEmail) {
+    const { data: legacyAdmin, error: legacyAdminError } = await supabase.rpc(
+      "is_admin_email",
+      { check_email: adminEmail }
+    );
+    if (!legacyAdminError && legacyAdmin === true) {
+      isAdmin = true;
+    }
+  }
 
-  if (adminLookupError || !isAdmin) {
+  if (!isAdmin) {
     return NextResponse.json(
       { success: false, message: "Forbidden: admin access required" },
       { status: 403 }
@@ -237,6 +310,7 @@ async function proxyAdminRequest(
   }
 
   const params = await context.params;
+  const requestId = request.headers.get("x-request-id") || randomUUID();
   if (params.path.some((segment) => segment === "." || segment === "..")) {
     return NextResponse.json(
       { success: false, message: "Invalid admin path" },
@@ -255,6 +329,13 @@ async function proxyAdminRequest(
 
   // ── Validate mutation payloads ───────────────────────────────
   const joinedPath = params.path.join("/");
+  if (request.method === "POST" && routeRoot === "settings" && joinedPath !== "settings/city-suggestions") {
+    return NextResponse.json(
+      { success: false, message: "Admin route is not allowed" },
+      { status: 404 }
+    );
+  }
+
   const matchedSchema = MUTATION_SCHEMAS.find(
     (entry) => entry.method === request.method && entry.pattern.test(joinedPath)
   );
@@ -271,11 +352,13 @@ async function proxyAdminRequest(
     }
     const result = matchedSchema.schema.safeParse(body);
     if (!result.success) {
+      const flattened = result.error.flatten();
       return NextResponse.json(
         {
           success: false,
           message: "Validation failed",
-          errors: result.error.flatten().fieldErrors,
+          errors: flattened.fieldErrors,
+          formErrors: flattened.formErrors,
         },
         { status: 422 }
       );
@@ -325,7 +408,7 @@ async function proxyAdminRequest(
   headers.set("x-admin-expires-at", String(expiresAt));
   headers.set("x-admin-nonce", nonce);
   headers.set("x-admin-signature", signature);
-  headers.set("x-admin-request-id", request.headers.get("x-request-id") || randomUUID());
+  headers.set("x-admin-request-id", requestId);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);

@@ -1,281 +1,145 @@
 'use client';
 
+import { useCallback, useMemo, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import { getAdminAnalyticsSnapshot } from '@/lib/api';
+import { useAdminPolling } from '@/lib/useAdminPolling';
+import {
+  analyticsPeriods,
+  emptyAnalyticsSnapshot,
+  formatCurrency,
+  formatMetricValue,
+  formatNumber,
+  formatTrend,
+} from '@/lib/adminAnalytics';
+import type { AdminAnalyticsSnapshot, AnalyticsPeriod } from '@/types';
 
 const manrope = "'Manrope', sans-serif";
 const inter = "'Inter', sans-serif";
+const colors = {
+  text: '#0F172A',
+  muted: '#64748B',
+  faint: '#94A3B8',
+  border: '#E2E8F0',
+  blue: '#3B82F6',
+  green: '#10B981',
+  red: '#EF4444',
+  amber: '#F59E0B',
+};
 
-// ── Data ───────────────────────────────────────────────────────────────────────
-const stats = [
-  { label: 'TOTAL ORDERS', value: '12,482', trend: '+12.5%', trendLabel: 'vs last week', trendUp: true },
-  { label: 'TOTAL REVENUE', value: 'RM 84.2k', trend: '+8.2%', trendLabel: 'vs last week', trendUp: true },
-  { label: 'ACTIVE DRIVERS', value: '1,204', trend: '-2.1%', trendLabel: 'vs prev. period', trendUp: false },
-  { label: 'AVG DELIVERY', value: '24m', trend: '-4s', trendLabel: 'vs prev. week', trendUp: true },
-  { label: 'CANCEL RATE', value: '1.8%', trend: 'Optimal', trendLabel: 'vs 2.4% avg', trendUp: true, isOptimal: true },
-  { label: 'AVG RATING', value: '4.8', trend: '+0.1', trendLabel: 'vs last month', trendUp: true },
+const metricLabels: Array<{ key: keyof AdminAnalyticsSnapshot['metrics']; label: string }> = [
+  { key: 'totalOrders', label: 'TOTAL ORDERS' },
+  { key: 'totalRevenue', label: 'TOTAL REVENUE' },
+  { key: 'activeDrivers', label: 'ACTIVE DRIVERS' },
+  { key: 'avgDeliveryMinutes', label: 'AVG DELIVERY' },
+  { key: 'cancelRatePct', label: 'CANCEL RATE' },
+  { key: 'avgRating', label: 'AVG RATING' },
 ];
 
-const trendData = [
-  { day: '01 May', orders: 35, revenue: 28 },
-  { day: '05 May', orders: 55, revenue: 42 },
-  { day: '10 May', orders: 48, revenue: 38 },
-  { day: '15 May', orders: 85, revenue: 72 },
-  { day: '20 May', orders: 42, revenue: 35 },
-  { day: '25 May', orders: 58, revenue: 48 },
-  { day: '30 May', orders: 38, revenue: 30 },
-];
+const breakdownColors: Record<string, string> = {
+  DELIVERED: colors.blue,
+  PENDING: colors.green,
+  CANCELLED: colors.red,
+};
 
-const insights = [
-  {
-    icon: 'alert',
-    title: 'Critical: Cancellation Spike',
-    desc: 'Zone A cancellations up 15% due to roadwork. Dynamic rerouting active.',
-    iconColor: '#EF4444',
-    bgColor: '#FEF2F2',
-  },
-  {
-    icon: 'info',
-    title: 'Peak Demand Forecast',
-    desc: 'Demand expected to hit 2.5x normal at 7 PM. 40 additional drivers recommended.',
-    iconColor: '#3B82F6',
-    bgColor: '#EFF6FF',
-  },
-  {
-    icon: 'check',
-    title: 'Efficiency Milestone',
-    desc: 'Jersey City drivers reached 98% on-time delivery rate this morning.',
-    iconColor: '#10B981',
-    bgColor: '#ECFDF5',
-  },
-];
+function cardStyle(extra: React.CSSProperties = {}): React.CSSProperties {
+  return {
+    background: '#FFFFFF',
+    borderRadius: '14px',
+    padding: '20px',
+    boxShadow: '0px 1px 2px rgba(15,23,42,0.06)',
+    border: '1px solid #F1F5F9',
+    ...extra,
+  };
+}
 
-const supplyDemandData = [0.7, 0.3, 0.8, 0.4, 0.9, 0.6];
-
-const zoneData = [
-  { name: 'DOWNTOWN', value: '4,829', status: 'High', statusColor: '#10B981' },
-  { name: 'WEST SIDE', value: '2,105', status: 'Normal', statusColor: '#64748B' },
-  { name: 'EAST RIVER', value: '1,942', status: 'Normal', statusColor: '#64748B' },
-  { name: 'UPTOWN', value: '3,211', status: 'Hot', statusColor: '#3B82F6' },
-];
-
-const drivers = [
-  { name: 'Alex Thompson', id: '#DR-90210', avatar: '/driver-avatar.png', fleet: 'Pickup Truck', acceptance: '98.2%', cancel: '0.5%', cancelUp: false, ontime: '99.1%', rating: '4.9', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
-  { name: 'Sarah Jenkins', id: '#DR-90455', avatar: '/driver-sarah.png', fleet: 'Delivery Bike', acceptance: '94.5%', cancel: '1.2%', cancelUp: false, ontime: '95.8%', rating: '4.8', status: 'ACTIVE', statusBg: '#D1FAE5', statusColor: '#059669' },
-  { name: 'Michael Ross', id: '#DR-88123', avatar: '/driver-michael.png', fleet: 'Heavy Truck', acceptance: '82.1%', cancel: '8.4%', cancelUp: true, ontime: '84.2%', rating: '4.2', status: 'ON BREAK', statusBg: '#FEF3C7', statusColor: '#D97706' },
-];
-
-const operationalLog = [
-  { date: 'May 24, 2024', volume: '1,402', grossRev: 'RM 12,490', resources: '842 Units', avgTat: '22m 14s' },
-  { date: 'May 23, 2024', volume: '1,291', grossRev: 'RM 11,842', resources: '790 Units', avgTat: '24m 05s' },
-  { date: 'May 22, 2024', volume: '1,510', grossRev: 'RM 14,102', resources: '866 Units', avgTat: '21m 58s' },
-];
-
-// ── Components ─────────────────────────────────────────────────────────────────
-
-function FilterBar() {
+function FilterBar({ period, setPeriod, lastUpdated, stale, loading, refresh }: {
+  period: AnalyticsPeriod;
+  setPeriod: (period: AnalyticsPeriod) => void;
+  lastUpdated: Date | null;
+  stale: boolean;
+  loading: boolean;
+  refresh: () => Promise<void>;
+}) {
   return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '12px',
-      padding: '16px 20px',
-      marginBottom: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Time tabs */}
-        <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: '8px', padding: '2px' }}>
-          {['Today', 'Weekly', 'Monthly'].map((tab, i) => (
-            <button key={tab} suppressHydrationWarning type="button" style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
+    <div style={cardStyle({ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '16px 20px' })}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
+          {analyticsPeriods.map((item) => (
+            <button key={item} type="button" onClick={() => setPeriod(item)} style={{
+              padding: '7px 16px',
+              borderRadius: 8,
               border: 'none',
-              background: i === 0 ? '#FFFFFF' : 'transparent',
+              background: period === item ? '#FFFFFF' : 'transparent',
               fontFamily: inter,
-              fontSize: '12px',
-              fontWeight: i === 0 ? 700 : 500,
-              color: i === 0 ? '#2563EB' : '#64748B',
+              fontSize: 12,
+              fontWeight: 800,
+              color: period === item ? '#2563EB' : colors.muted,
               cursor: 'pointer',
-              boxShadow: i === 0 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
-            }}>{tab}</button>
+              textTransform: 'capitalize',
+              boxShadow: period === item ? '0 1px 2px rgba(15,23,42,0.08)' : 'none',
+            }}>{item}</button>
           ))}
-          <button suppressHydrationWarning type="button" style={{
-            padding: '6px 14px',
-            borderRadius: '6px',
-            border: 'none',
-            background: 'transparent',
-            fontFamily: inter,
-            fontSize: '12px',
-            fontWeight: 500,
-            color: '#64748B',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-          }}>
-            Custom
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1" stroke="#94A3B8" strokeWidth="1.2"/><path d="M1 5h10M4 1v2M8 1v2" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round"/></svg>
-          </button>
         </div>
-
-        {/* Dropdowns */}
-        {[
-          { label: 'All Cities', icon: true },
-          { label: 'Driver Type: All', icon: true },
-          { label: 'Payment: All', icon: true },
-          { label: 'Status: All', icon: true },
-        ].map((dd) => (
-          <button key={dd.label} suppressHydrationWarning type="button" style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #E2E8F0',
-            background: '#FFFFFF',
-            fontFamily: inter,
-            fontSize: '12px',
-            fontWeight: 500,
-            color: '#374151',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}>
-            {dd.label}
-            {dd.icon && <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-          </button>
-        ))}
+        <span style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, color: stale ? colors.amber : colors.faint }}>
+          {loading ? 'Loading live analytics...' : lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Live analytics'}
+        </span>
       </div>
-
-      <button suppressHydrationWarning type="button" style={{
-        padding: '8px 16px',
-        borderRadius: '8px',
-        border: '1px solid #E2E8F0',
+      <button type="button" onClick={() => void refresh()} style={{
+        padding: '9px 16px',
+        borderRadius: 10,
+        border: `1px solid ${colors.border}`,
         background: '#FFFFFF',
         fontFamily: inter,
-        fontSize: '11px',
-        fontWeight: 700,
+        fontSize: 11,
+        fontWeight: 800,
         color: '#374151',
         cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        letterSpacing: '0.5px',
+        letterSpacing: 0.5,
         textTransform: 'uppercase',
-      }}>
-        <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 1h12M3 5h8M5 9h4" stroke="#64748B" strokeWidth="1.3" strokeLinecap="round"/></svg>
-        More Filters
-      </button>
+      }}>Refresh data</button>
     </div>
   );
 }
 
-function StatsCards() {
+function StatsCards({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px', marginBottom: '16px' }}>
-      {stats.map((s, i) => (
-        <div key={i} style={{
-          background: '#FFFFFF',
-          borderRadius: '12px',
-          padding: '16px',
-          boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-        }}>
-          <div style={{
-            fontFamily: inter,
-            fontSize: '10px',
-            fontWeight: 700,
-            color: '#94A3B8',
-            letterSpacing: '0.8px',
-            textTransform: 'uppercase',
-            marginBottom: '8px',
-          }}>{s.label}</div>
-          <div style={{
-            fontFamily: manrope,
-            fontSize: '24px',
-            fontWeight: 800,
-            color: '#0F172A',
-            lineHeight: '28px',
-            marginBottom: '8px',
-          }}>{s.value}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {s.isOptimal ? (
-              <>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#10B981" strokeWidth="1.5"/><path d="M4 6l1.5 1.5L8 5" stroke="#10B981" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 700, color: '#10B981' }}>{s.trend}</span>
-              </>
-            ) : (
-              <span style={{
-                fontFamily: inter,
-                fontSize: '11px',
-                fontWeight: 700,
-                color: s.trendUp ? '#10B981' : '#EF4444',
-              }}>{s.trendUp ? '↗' : '↘'} {s.trend}</span>
-            )}
-            <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#94A3B8' }}>{s.trendLabel}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function TrendChart() {
-  const maxVal = 100;
-  return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      flex: 1,
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-        <div>
-          <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>Orders & Revenue Trend</div>
-          <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Daily performance comparison with hover insights</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
-            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Orders</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#E2E8F0' }} />
-            <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8' }}>Revenue</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px', paddingBottom: '30px' }}>
-        {trendData.map((d, i) => (
-          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', width: '100%', justifyContent: 'center' }}>
-              {/* Orders bar - blue */}
-              <div style={{
-                width: '14px',
-                height: `${(d.orders / maxVal) * 160}px`,
-                background: '#3B82F6',
-                borderRadius: '3px 3px 0 0',
-                transition: 'height 0.3s ease',
-              }} />
-              {/* Revenue bar - light gray */}
-              <div style={{
-                width: '14px',
-                height: `${(d.revenue / maxVal) * 160}px`,
-                background: '#F1F5F9',
-                borderRadius: '3px 3px 0 0',
-                transition: 'height 0.3s ease',
-              }} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 16 }}>
+      {metricLabels.map(({ key, label }) => {
+        const metric = snapshot.metrics[key];
+        const trend = formatTrend(metric);
+        return (
+          <div key={key} style={cardStyle({ padding: 16 })}>
+            <div style={{ fontFamily: inter, fontSize: 10, fontWeight: 800, color: colors.faint, letterSpacing: 0.8, marginBottom: 8 }}>{label}</div>
+            <div style={{ fontFamily: manrope, fontSize: 26, fontWeight: 900, color: colors.text, lineHeight: '30px', marginBottom: 8 }}>
+              {formatMetricValue(key, metric.value)}
             </div>
-            <span style={{
-              fontFamily: inter,
-              fontSize: '10px',
-              fontWeight: 600,
-              color: '#94A3B8',
-              whiteSpace: 'nowrap',
-            }}>{d.day}</span>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+              <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 800, color: trend.favorable ? colors.green : colors.red }}>{trend.text}</span>
+              <span style={{ fontFamily: inter, fontSize: 10, fontWeight: 600, color: colors.faint }}>{trend.label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TrendChart({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
+  const maxOrders = Math.max(...snapshot.trend.map((point) => point.orders), 1);
+  const maxRevenue = Math.max(...snapshot.trend.map((point) => point.revenue), 1);
+  return (
+    <div style={cardStyle({ flex: 1, minHeight: 360 })}>
+      <SectionTitle title="Orders & Revenue Trend" subtitle="Real bookings and non-cancelled gross revenue by operations day" />
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 240, padding: '24px 8px 4px' }}>
+        {snapshot.trend.map((point) => (
+          <div key={point.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, justifyContent: 'flex-end', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 180 }} title={`${point.orders} orders, ${formatCurrency(point.revenue)}`}>
+              <div style={{ width: 15, minHeight: 2, height: `${(point.orders / maxOrders) * 170}px`, background: colors.blue, borderRadius: '4px 4px 0 0' }} />
+              <div style={{ width: 15, minHeight: 2, height: `${(point.revenue / maxRevenue) * 170}px`, background: '#E2E8F0', borderRadius: '4px 4px 0 0' }} />
+            </div>
+            <span style={{ fontFamily: inter, fontSize: 10, fontWeight: 700, color: colors.faint, whiteSpace: 'nowrap' }}>{point.label}</span>
           </div>
         ))}
       </div>
@@ -283,462 +147,105 @@ function TrendChart() {
   );
 }
 
-function OrdersAnalytics() {
-  const data = [
-    { day: 'MON', value: 35 },
-    { day: 'TUE', value: 50 },
-    { day: 'WED', value: 40 },
-    { day: 'THU', value: 70 },
-    { day: 'FRI', value: 85 },
-    { day: 'SAT', value: 60 },
-    { day: 'SUN', value: 45 },
-  ];
-
-  const colors = [
-    '#E8F0FE',
-    '#D2E3FC',
-    '#A8C7FA',
-    '#669DF6',
-    '#1A73E8',
-    '#669DF6',
-    '#A8C7FA',
-  ];
-
-  const maxValue = 100;
-
+function InsightsPanel({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
+  const styleBySeverity = {
+    critical: { bg: '#FEF2F2', color: colors.red },
+    warning: { bg: '#FFFBEB', color: colors.amber },
+    info: { bg: '#EFF6FF', color: colors.blue },
+    success: { bg: '#ECFDF5', color: colors.green },
+  } as const;
   return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      border: '1px solid #E2E8F0',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div style={{
-          fontFamily: manrope,
-          fontSize: '18px',
-          fontWeight: 800,
-          color: '#64748B',
-          letterSpacing: '1px',
-          textTransform: 'uppercase',
-          lineHeight: '1.3',
-        }}>
-          ORDERS<br />ANALYTICS
+    <div style={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={cardStyle()}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <span style={{ fontFamily: manrope, fontSize: 14, fontWeight: 900, color: colors.blue }}>AI Smart Insights</span>
         </div>
-        <button suppressHydrationWarning type="button" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 16px',
-          borderRadius: '8px',
-          border: '1px solid #E2E8F0',
-          background: '#F8FAFC',
-          fontFamily: inter,
-          fontSize: '13px',
-          fontWeight: 600,
-          color: '#1E293B',
-          cursor: 'pointer',
-        }}>
-          Last 7 Days
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5l3 3 3-3" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px', paddingBottom: '32px' }}>
-        {data.map((d, i) => (
-          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', height: '100%', justifyContent: 'flex-end' }}>
-            <div style={{
-              width: '100%',
-              maxWidth: '48px',
-              height: `${(d.value / maxValue) * 160}px`,
-              background: colors[i],
-              borderRadius: '4px 4px 0 0',
-              transition: 'height 0.3s ease',
-            }} />
-            <span style={{
-              fontFamily: inter,
-              fontSize: '12px',
-              fontWeight: 600,
-              color: '#94A3B8',
-              letterSpacing: '0.5px',
-            }}>{d.day}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function OrderBreakdown() {
-  const data = [
-    { label: 'Completed', value: 65, color: '#1A73E8' },
-    { label: 'In Transit', value: 20, color: '#4285F4' },
-    { label: 'Cancelled', value: 5, color: '#A8C7FA' },
-    { label: 'Pending', value: 10, color: '#E8F0FE' },
-  ];
-
-  const radius = 80;
-  const strokeWidth = 24;
-  const normalizedRadius = radius - strokeWidth / 2;
-  const circumference = 2 * Math.PI * normalizedRadius;
-
-  let accumulatedOffset = 0;
-
-  return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      border: '1px solid #E2E8F0',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <div style={{
-        fontFamily: manrope,
-        fontSize: '18px',
-        fontWeight: 800,
-        color: '#64748B',
-        letterSpacing: '1px',
-        textTransform: 'uppercase',
-        marginBottom: '24px',
-      }}>
-        ORDER BREAKDOWN
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-        <div style={{ position: 'relative', width: '200px', height: '200px', flexShrink: 0 }}>
-          <svg width="200" height="200" viewBox="0 0 200 200">
-            {data.map((item, i) => {
-              const strokeDasharray = `${(item.value / 100) * circumference} ${circumference}`;
-              const strokeDashoffset = -accumulatedOffset;
-              accumulatedOffset += (item.value / 100) * circumference;
-
-              return (
-                <circle
-                  key={i}
-                  cx="100"
-                  cy="100"
-                  r={normalizedRadius}
-                  fill="none"
-                  stroke={item.color}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={strokeDasharray}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="butt"
-                  style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }}
-                />
-              );
-            })}
-          </svg>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {data.map((item, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '50%',
-                background: item.color,
-                flexShrink: 0,
-              }} />
-              <span style={{
-                fontFamily: inter,
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#1E293B',
-              }}>
-                {item.label} ({item.value}%)
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AISmartInsights() {
-  return (
-    <div style={{
-      width: '320px',
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-    }}>
-      <div style={{
-        background: '#FFFFFF',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M10 1l2.5 6.5L19 8l-5 4.5L15.5 19 10 15.5 4.5 19 6 12.5 1 8l6.5-.5L10 1Z" fill="#3B82F6" />
-          </svg>
-          <span style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#3B82F6' }}>AI Smart Insights</span>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {insights.map((insight, i) => (
-            <div key={i} style={{
-              padding: '12px',
-              borderRadius: '10px',
-              background: insight.bgColor,
-              border: `1px solid ${insight.bgColor}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <div style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: insight.iconColor,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {insight.icon === 'alert' && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 3v3M6 8.5v.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round"/><circle cx="6" cy="6" r="5" stroke="#FFFFFF" strokeWidth="1.2"/></svg>
-                  )}
-                  {insight.icon === 'info' && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#FFFFFF" strokeWidth="1.2"/><path d="M6 5.5v3M6 3.5v1" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  )}
-                  {insight.icon === 'check' && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  )}
-                </div>
-                <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{insight.title}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {snapshot.insights.map((insight) => {
+            const tone = styleBySeverity[insight.severity];
+            return (
+              <div key={insight.title} style={{ padding: 14, borderRadius: 12, background: tone.bg }}>
+                <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 900, color: colors.text, marginBottom: 6 }}>{insight.title}</div>
+                <p style={{ margin: 0, fontFamily: inter, fontSize: 11, fontWeight: 600, color: colors.muted, lineHeight: '17px' }}>{insight.detail}</p>
               </div>
-              <p style={{
-                fontFamily: inter,
-                fontSize: '11px',
-                fontWeight: 500,
-                color: '#64748B',
-                lineHeight: '16px',
-                margin: 0,
-                paddingLeft: '28px',
-              }}>{insight.desc}</p>
+            );
+          })}
+        </div>
+      </div>
+      <div style={cardStyle({ padding: '16px 20px' })}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontFamily: manrope, fontSize: 11, fontWeight: 900, color: colors.faint, letterSpacing: 1, textTransform: 'uppercase' }}>Supply vs Demand</span>
+          <span style={{ background: '#DBEAFE', borderRadius: 5, padding: '2px 8px', fontFamily: inter, fontSize: 9, fontWeight: 900, color: colors.blue }}>LIVE</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 46 }}>
+          {snapshot.supplyDemand.map((point) => (
+            <div key={point.label} title={`${point.demand} orders / ${point.supply} drivers`} style={{ flex: 1, height: `${Math.max(4, point.ratio * 44)}px`, background: colors.blue, borderRadius: '3px 3px 0 0' }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontFamily: manrope, fontSize: 16, fontWeight: 900, color: colors.text }}>{title}</div>
+      {subtitle && <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, color: colors.faint, marginTop: 4 }}>{subtitle}</div>}
+    </div>
+  );
+}
+
+function OrderStatusMatrix({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
+  const total = snapshot.orderBreakdown.reduce((sum, item) => sum + item.count, 0);
+  const circumference = 2 * Math.PI * 58;
+  const segments = snapshot.orderBreakdown.reduce<Array<{ label: string; pct: number; dash: string; offset: number }>>((acc, item) => {
+    const priorLength = acc.reduce((sum, segment) => sum + (segment.pct / 100) * circumference, 0);
+    const length = (item.pct / 100) * circumference;
+    return [...acc, { label: item.label, pct: item.pct, dash: `${length} ${circumference}`, offset: -priorLength }];
+  }, []);
+  return (
+    <div style={cardStyle({ flex: 1 })}>
+      <SectionTitle title="Order Status Matrix" subtitle="Distribution from real booking states" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 30, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', width: 170, height: 170 }}>
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <circle cx="85" cy="85" r="58" fill="none" stroke="#F1F5F9" strokeWidth="14" />
+            {segments.map((segment) => (
+              <circle key={segment.label} cx="85" cy="85" r="58" fill="none" stroke={breakdownColors[segment.label] || colors.faint} strokeWidth="14" strokeDasharray={segment.dash} strokeDashoffset={segment.offset} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '85px 85px' }} />
+            ))}
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center' }}>
+            <div><div style={{ fontFamily: inter, fontSize: 10, fontWeight: 800, color: colors.faint }}>TOTAL</div><div style={{ fontFamily: manrope, fontSize: 24, fontWeight: 900, color: colors.text }}>{formatNumber(total)}</div></div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {snapshot.orderBreakdown.map((item) => (
+            <div key={item.label} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span style={{ width: 12, height: 12, borderRadius: 999, background: breakdownColors[item.label] || colors.faint }} />
+              <span style={{ fontFamily: inter, fontSize: 13, fontWeight: 800, color: colors.text }}>{item.label} ({item.pct.toFixed(1)}%)</span>
             </div>
           ))}
         </div>
-
-        <button suppressHydrationWarning type="button" style={{
-          marginTop: '16px',
-          width: '100%',
-          padding: '10px',
-          borderRadius: '8px',
-          border: 'none',
-          background: 'transparent',
-          fontFamily: inter,
-          fontSize: '12px',
-          fontWeight: 700,
-          color: '#3B82F6',
-          cursor: 'pointer',
-          textDecoration: 'underline',
-          textUnderlineOffset: '2px',
-        }}>
-          View Analytics Laboratory
-        </button>
-      </div>
-
-      {/* Supply vs Demand */}
-      <div style={{
-        background: '#FFFFFF',
-        borderRadius: '12px',
-        padding: '16px 20px',
-        boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ fontFamily: manrope, fontSize: '11px', fontWeight: 800, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase' }}>Supply vs Demand</span>
-          <span style={{
-            background: '#DBEAFE',
-            borderRadius: '4px',
-            padding: '2px 8px',
-            fontFamily: inter,
-            fontSize: '9px',
-            fontWeight: 800,
-            color: '#3B82F6',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-          }}>LIVE</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '40px' }}>
-          {supplyDemandData.map((v, i) => (
-            <div key={i} style={{
-              flex: 1,
-              height: `${v * 40}px`,
-              background: '#3B82F6',
-              borderRadius: '2px 2px 0 0',
-            }} />
-          ))}
-        </div>
       </div>
     </div>
   );
 }
 
-function OrderStatusMatrix() {
+function ZoneDensity({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
   return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-    }}>
-      <div style={{
-        fontFamily: manrope,
-        fontSize: '14px',
-        fontWeight: 800,
-        color: '#0F172A',
-        marginBottom: '4px',
-        alignSelf: 'flex-start',
-      }}>Order Status Matrix</div>
-
-      {/* Circular progress */}
-      <div style={{ position: 'relative', width: '160px', height: '160px', margin: '16px 0' }}>
-        <svg width="160" height="160" viewBox="0 0 160 160">
-          {/* Background circle */}
-          <circle cx="80" cy="80" r="60" fill="none" stroke="#F1F5F9" strokeWidth="12" />
-          {/* Delivered - blue */}
-          <circle cx="80" cy="80" r="60" fill="none" stroke="#3B82F6" strokeWidth="12"
-            strokeDasharray={`${0.824 * 377} ${377}`}
-            strokeDashoffset={-0.05 * 377}
-            strokeLinecap="round"
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
-          />
-          {/* Pending - green */}
-          <circle cx="80" cy="80" r="60" fill="none" stroke="#10B981" strokeWidth="12"
-            strokeDasharray={`${0.138 * 377} ${377}`}
-            strokeDashoffset={-(0.824 + 0.05) * 377}
-            strokeLinecap="round"
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
-          />
-          {/* Cancelled - red */}
-          <circle cx="80" cy="80" r="60" fill="none" stroke="#EF4444" strokeWidth="12"
-            strokeDasharray={`${0.038 * 377} ${377}`}
-            strokeDashoffset={-(0.824 + 0.138 + 0.05) * 377}
-            strokeLinecap="round"
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
-          />
-        </svg>
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center',
-        }}>
-          <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase' }}>TOTAL</div>
-          <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#0F172A' }}>12.4k</div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: '20px', alignSelf: 'stretch', justifyContent: 'center' }}>
-        {[
-          { label: 'DELIVERED', pct: '82.4%', color: '#3B82F6' },
-          { label: 'PENDING', pct: '13.8%', color: '#10B981' },
-          { label: 'CANCELLED', pct: '3.8%', color: '#EF4444' },
-        ].map((item) => (
-          <div key={item.label} style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{item.label}</div>
-            <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, color: item.color }}>{item.pct}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ZoneOrderDensity() {
-  return (
-    <div style={{
-      flex: 1.5,
-      background: '#0F172A',
-      borderRadius: '12px',
-      padding: '20px',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Gradient background effect */}
-      <div style={{
-        position: 'absolute',
-        top: '20%',
-        left: '30%',
-        width: '200px',
-        height: '200px',
-        background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(40px)',
-      }} />
-
+    <div style={cardStyle({ flex: 1.5, background: '#0F172A', position: 'relative', overflow: 'hidden', border: 'none' })}>
+      <div style={{ position: 'absolute', inset: '-60px 20% auto', height: 210, background: 'radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)', filter: 'blur(30px)' }} />
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{
-          fontFamily: manrope,
-          fontSize: '14px',
-          fontWeight: 800,
-          color: '#FFFFFF',
-          marginBottom: '2px',
-        }}>Zone Order Density</div>
-        <div style={{
-          fontFamily: inter,
-          fontSize: '11px',
-          fontWeight: 500,
-          color: '#64748B',
-          marginBottom: '16px',
-        }}>Real-time heatmap visualization</div>
-
-        {/* Map legend */}
-        <div style={{
-          position: 'absolute',
-          top: '0',
-          right: '0',
-          background: 'rgba(255,255,255,0.1)',
-          borderRadius: '8px',
-          padding: '10px 12px',
-          backdropFilter: 'blur(8px)',
-        }}>
-          <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '0.5px', marginBottom: '8px', textTransform: 'uppercase' }}>MAP LEGEND</div>
-          {[
-            { label: 'Critical Demand', color: '#3B82F6' },
-            { label: 'Active Market', color: '#93C5FD' },
-            { label: 'Stable Activity', color: '#E2E8F0' },
-          ].map((l) => (
-            <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: l.color }} />
-              <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#CBD5E1' }}>{l.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Zone cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '10px',
-          marginTop: '80px',
-        }}>
-          {zoneData.map((zone) => (
-            <div key={zone.name} style={{
-              background: 'rgba(255,255,255,0.95)',
-              borderRadius: '10px',
-              padding: '12px',
-              backdropFilter: 'blur(8px)',
-            }}>
-              <div style={{ fontFamily: inter, fontSize: '9px', fontWeight: 800, color: '#64748B', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>{zone.name}</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                <span style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 800, color: '#3B82F6' }}>{zone.value}</span>
-                <span style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: zone.statusColor }}>{zone.status}</span>
+        <div style={{ fontFamily: manrope, fontSize: 16, fontWeight: 900, color: '#FFFFFF' }}>Zone Order Density</div>
+        <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 54 }}>Top delivery address clusters in the selected window</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+          {(snapshot.zones.length ? snapshot.zones : [{ name: 'NO ACTIVITY', value: 0, status: 'Stable', intensity: 0 }]).map((zone) => (
+            <div key={zone.name} style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: 14 }}>
+              <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 900, color: colors.muted, letterSpacing: 0.5, marginBottom: 5 }}>{zone.name}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+                <span style={{ fontFamily: manrope, fontSize: 20, fontWeight: 900, color: colors.blue }}>{formatNumber(zone.value)}</span>
+                <span style={{ fontFamily: inter, fontSize: 10, fontWeight: 800, color: zone.status === 'Hot' ? colors.blue : colors.green }}>{zone.status}</span>
               </div>
             </div>
           ))}
@@ -748,277 +255,122 @@ function ZoneOrderDensity() {
   );
 }
 
-function DriverPerformanceMatrix() {
+function DriverPerformance({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
   return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      marginBottom: '16px',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-        <div>
-          <div style={{ fontFamily: manrope, fontSize: '16px', fontWeight: 800, color: '#0F172A' }}>Driver Performance matrix</div>
-          <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Real-time status and efficiency tracking</div>
+    <div style={cardStyle({ marginBottom: 16 })}>
+      <SectionTitle title="Driver Performance Matrix" subtitle="Top drivers, calculated from current bookings plus live driver profile state" />
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ minWidth: 820 }}>
+          <TableRow header cells={['DRIVER IDENTITY', 'FLEET CLASS', 'ACCEPTANCE', 'CANCEL RATE', 'ON-TIME %', 'RATING', 'STATUS']} />
+          {snapshot.driverPerformance.map((driver) => (
+            <TableRow key={driver.id} cells={[
+              driver.name,
+              driver.fleet,
+              `${driver.acceptancePct.toFixed(1)}%`,
+              `${driver.cancelRatePct.toFixed(1)}%`,
+              `${driver.onTimePct.toFixed(1)}%`,
+              driver.rating ? driver.rating.toFixed(1) : '0.0',
+              driver.status,
+            ]} />
+          ))}
+          {!snapshot.driverPerformance.length && <div style={{ padding: 16, fontFamily: inter, fontSize: 13, color: colors.muted }}>No driver activity in this window.</div>}
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {['Top Performers', 'Attention Required'].map((tab, i) => (
-            <button key={tab} suppressHydrationWarning type="button" style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: i === 0 ? 'none' : '1px solid #E2E8F0',
-              background: i === 0 ? '#F1F5F9' : '#FFFFFF',
-              fontFamily: inter,
-              fontSize: '11px',
-              fontWeight: i === 0 ? 700 : 500,
-              color: i === 0 ? '#0F172A' : '#64748B',
-              cursor: 'pointer',
-            }}>{tab}</button>
+      </div>
+    </div>
+  );
+}
+
+function TableRow({ cells, header = false }: { cells: string[]; header?: boolean }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.8fr 0.8fr', gap: 12, alignItems: 'center', padding: header ? '10px 0' : '13px 0', borderBottom: '1px solid #F1F5F9' }}>
+      {cells.map((cell, index) => (
+        <span key={`${cell}-${index}`} style={{ fontFamily: inter, fontSize: header ? 9 : 12, fontWeight: header ? 900 : 750, color: header ? colors.faint : colors.text, letterSpacing: header ? 0.8 : 0, textTransform: header ? 'uppercase' : 'none' }}>{cell}</span>
+      ))}
+    </div>
+  );
+}
+
+function ProfitabilityAudit({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
+  const rows = [
+    { label: 'Avg. Commission', value: formatCurrency(snapshot.profitability.avgCommission) },
+    { label: 'Discount Impact', value: `-${formatCurrency(snapshot.profitability.discountImpact)}` },
+    { label: 'Refund Ratio', value: `${snapshot.profitability.refundRatioPct.toFixed(2)}%` },
+  ];
+  return (
+    <div style={cardStyle({ flex: 0.7 })}>
+      <SectionTitle title="Profitability Audit" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {rows.map((row) => (
+          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+            <span style={{ fontFamily: inter, fontSize: 12, fontWeight: 700, color: colors.muted }}>{row.label}</span>
+            <span style={{ fontFamily: manrope, fontSize: 16, fontWeight: 900, color: row.label === 'Discount Impact' ? colors.red : colors.text }}>{row.value}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid #F1F5F9' }}>
+        <div style={{ fontFamily: manrope, fontSize: 28, fontWeight: 900, color: colors.blue }}>{snapshot.profitability.netProfitMarginPct.toFixed(1)}%</div>
+        <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: colors.faint }}>Net Profit Margin</div>
+      </div>
+    </div>
+  );
+}
+
+function OperationalLog({ snapshot }: { snapshot: AdminAnalyticsSnapshot }) {
+  return (
+    <div style={cardStyle({ flex: 1 })}>
+      <SectionTitle title="Operational Log" subtitle="Past 72 hours from real bookings" />
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ minWidth: 620 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1fr', gap: 12, padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+            {['DATE INDEX', 'VOLUME', 'GROSS REV', 'RESOURCES', 'AVG TAT'].map((head) => <span key={head} style={{ fontFamily: inter, fontSize: 9, fontWeight: 900, color: colors.faint, letterSpacing: 1 }}>{head}</span>)}
+          </div>
+          {snapshot.operationalLog.map((row) => (
+            <div key={row.date} style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1fr', gap: 12, padding: '13px 0', borderBottom: '1px solid #F8FAFC' }}>
+              <span style={cellStyle()}>{row.date}</span>
+              <span style={cellStyle(true)}>{formatNumber(row.volume)}</span>
+              <span style={cellStyle(true)}>{formatCurrency(row.grossRevenue)}</span>
+              <span style={cellStyle()}>{formatNumber(row.resources)} drivers</span>
+              <span style={cellStyle(true, colors.blue)}>{Math.round(row.avgTatMinutes)}m</span>
+            </div>
           ))}
         </div>
       </div>
-
-      {/* Table header */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.8fr 0.8fr',
-        padding: '12px 0',
-        borderBottom: '1px solid #F1F5F9',
-        marginTop: '16px',
-      }}>
-        {['DRIVER IDENTITY', 'FLEET CLASS', 'ACCEPTANCE', 'CANCEL RATE', 'ON-TIME %', 'RATING', 'STATUS'].map((h) => (
-          <span key={h} style={{
-            fontFamily: inter,
-            fontSize: '9px',
-            fontWeight: 800,
-            color: '#94A3B8',
-            letterSpacing: '0.8px',
-            textTransform: 'uppercase',
-          }}>{h}</span>
-        ))}
-      </div>
-
-      {/* Driver rows */}
-      {drivers.map((d, i) => (
-        <div key={i} style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.8fr 0.8fr',
-          alignItems: 'center',
-          padding: '12px 0',
-          borderBottom: i < drivers.length - 1 ? '1px solid #F8FAFC' : 'none',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', background: '#E2E8F0' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={d.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-            <div>
-              <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{d.name}</div>
-              <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 500, color: '#94A3B8' }}>{d.id}</div>
-            </div>
-          </div>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#374151' }}>{d.fleet}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{d.acceptance}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: d.cancelUp ? '#EF4444' : '#10B981' }}>{d.cancel}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{d.ontime}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#F59E0B' }}>★ {d.rating}</span>
-          <span style={{
-            display: 'inline-block',
-            padding: '4px 10px',
-            borderRadius: '9999px',
-            background: d.statusBg,
-            fontFamily: inter,
-            fontSize: '10px',
-            fontWeight: 800,
-            color: d.statusColor,
-            letterSpacing: '0.5px',
-            textAlign: 'center',
-          }}>{d.status}</span>
-        </div>
-      ))}
     </div>
   );
 }
 
-function ProfitabilityAudit() {
-  return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-    }}>
-      <div style={{
-        fontFamily: manrope,
-        fontSize: '14px',
-        fontWeight: 800,
-        color: '#0F172A',
-        marginBottom: '20px',
-      }}>Profitability Audit</div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {[
-          { label: 'Avg. Commission', value: 'RM 12.45', trend: '+3%', trendUp: true },
-          { label: 'Discount Impact', value: '-RM 2.1k', trend: '+12%', trendUp: false, isNegative: true },
-          { label: 'Refund Ratio', value: '0.82%', trend: '-0.1%', trendUp: true },
-        ].map((item) => (
-          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>{item.label}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{
-                fontFamily: manrope,
-                fontSize: '16px',
-                fontWeight: 800,
-                color: item.isNegative ? '#EF4444' : '#0F172A',
-              }}>{item.value}</span>
-              <span style={{
-                fontFamily: inter,
-                fontSize: '10px',
-                fontWeight: 700,
-                color: item.trendUp ? '#10B981' : '#EF4444',
-              }}>{item.trend}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{
-        marginTop: '20px',
-        paddingTop: '16px',
-        borderTop: '1px solid #F1F5F9',
-      }}>
-        <div style={{
-          fontFamily: manrope,
-          fontSize: '24px',
-          fontWeight: 800,
-          color: '#3B82F6',
-          marginBottom: '4px',
-        }}>24.5%</div>
-        <div style={{
-          fontFamily: inter,
-          fontSize: '11px',
-          fontWeight: 500,
-          color: '#94A3B8',
-        }}>Net Profit Margin</div>
-        <div style={{
-          fontFamily: inter,
-          fontSize: '10px',
-          fontWeight: 500,
-          color: '#10B981',
-        }}>High Performance Zone</div>
-      </div>
-    </div>
-  );
+function cellStyle(bold = false, color = colors.text): React.CSSProperties {
+  return { fontFamily: inter, fontSize: 12, fontWeight: bold ? 850 : 650, color };
 }
 
-function OperationalLog() {
-  return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
-      flex: 1,
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div>
-          <div style={{ fontFamily: manrope, fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Operational Log</div>
-          <div style={{ fontFamily: inter, fontSize: '11px', fontWeight: 500, color: '#94A3B8', letterSpacing: '1px', textTransform: 'uppercase' }}>Past 72 Hours Performance</div>
-        </div>
-        <button suppressHydrationWarning type="button" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: inter,
-          fontSize: '11px',
-          fontWeight: 700,
-          color: '#3B82F6',
-        }}>
-          Detailed PDF Audit
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#3B82F6" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-      </div>
-
-      {/* Table header */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
-        padding: '8px 0',
-        borderBottom: '1px solid #F1F5F9',
-        marginBottom: '8px',
-      }}>
-        {['DATE INDEX', 'VOLUME', 'GROSS REV', 'RESOURCES', 'AVG TAT'].map((h) => (
-          <span key={h} style={{
-            fontFamily: inter,
-            fontSize: '9px',
-            fontWeight: 800,
-            color: '#94A3B8',
-            letterSpacing: '1px',
-            textTransform: 'uppercase',
-          }}>{h}</span>
-        ))}
-      </div>
-
-      {/* Rows */}
-      {operationalLog.map((row, i) => (
-        <div key={i} style={{
-          display: 'grid',
-          gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
-          alignItems: 'center',
-          padding: '12px 0',
-          borderBottom: i < operationalLog.length - 1 ? '1px solid #F8FAFC' : 'none',
-        }}>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#374151' }}>{row.date}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{row.volume}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>{row.grossRev}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 500, color: '#64748B' }}>{row.resources}</span>
-          <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{row.avgTat}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
 export default function ReportsAnalyticsPage() {
+  const [period, setPeriod] = useState<AnalyticsPeriod>('today');
+  const loader = useCallback(() => getAdminAnalyticsSnapshot(period), [period]);
+  const state = useAdminPolling<AdminAnalyticsSnapshot>(loader, { intervalMs: 30_000 });
+  const snapshot = useMemo(() => state.data ?? emptyAnalyticsSnapshot(period), [state.data, period]);
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
-
-          {/* Filter Bar */}
-          <FilterBar />
-
-          {/* Stats Cards */}
-          <StatsCards />
-
-          {/* Orders & Revenue Trend + AI Smart Insights */}
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <TrendChart />
-            <AISmartInsights />
+          {state.error && <div style={{ ...cardStyle({ marginBottom: 16, borderColor: '#FCA5A5', color: colors.red, fontFamily: inter, fontWeight: 800 }) }}>{state.error}</div>}
+          <FilterBar period={period} setPeriod={setPeriod} lastUpdated={state.lastUpdated} stale={state.stale} loading={state.loading} refresh={state.refresh} />
+          <StatsCards snapshot={snapshot} />
+          <div style={{ display: 'flex', gap: 16, marginBottom: 16, alignItems: 'stretch', flexWrap: 'wrap' }}>
+            <TrendChart snapshot={snapshot} />
+            <InsightsPanel snapshot={snapshot} />
           </div>
-
-          {/* Order Status Matrix + Zone Order Density */}
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <OrderStatusMatrix />
-            <ZoneOrderDensity />
+          <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
+            <OrderStatusMatrix snapshot={snapshot} />
+            <ZoneDensity snapshot={snapshot} />
           </div>
-
-          {/* Driver Performance Matrix */}
-          <DriverPerformanceMatrix />
-
-          {/* Profitability Audit + Operational Log */}
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <ProfitabilityAudit />
-            <OperationalLog />
+          <DriverPerformance snapshot={snapshot} />
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <ProfitabilityAudit snapshot={snapshot} />
+            <OperationalLog snapshot={snapshot} />
           </div>
-
         </main>
       </div>
     </div>

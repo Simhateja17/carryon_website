@@ -1,82 +1,61 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
+import AdminDataStatus from '@/components/AdminDataStatus';
+import { useAdminUserManagement } from '@/hooks/useAdminUserManagement';
+import { updateAdminSecuritySettings } from '@/lib/api';
+import type {
+  AdminAuditLogItem,
+  AdminAuditSummary,
+  AdminRoleStat,
+  AdminSecuritySettings,
+  AdminUserDirectoryItem,
+} from '@/types';
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 type Tab = 'directory' | 'access' | 'audit' | 'security';
 
-/* ─── Data ───────────────────────────────────────────────────────── */
-const admins = [
-  {
-    id: 1,
-    name: 'Marcus Thorne',
-    created: 'Created Oct 12, 2023',
-    email: 'm.thorne@carryon.io',
-    role: 'SUPER ADMIN',
-    roleBg: '#E0EBFF',
-    roleColor: '#2563EB',
-    health: 'Active',
-    lastAuth: '2 mins ago',
-    avatar: '/marcus-thorne.png',
-  },
-  {
-    id: 2,
-    name: 'Sarah Jenkins',
-    created: 'Created Nov 05, 2023',
-    email: 's.jenkins@carryon.io',
-    role: 'MANAGER',
-    roleBg: '#E0EBFF',
-    roleColor: '#2563EB',
-    health: 'Active',
-    lastAuth: '1 hour ago',
-    avatar: '/sarah-jenkins.png',
-  },
-];
+function formatDate(value: string | null) {
+  if (!value) return 'Created date unavailable';
+  return `Created ${new Intl.DateTimeFormat('en', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(value))}`;
+}
 
-const auditLogs = [
-  {
-    id: 1,
-    time: '12:44:02 PM',
-    admin: 'Marcus Thorne',
-    adminColor: '#191C1E',
-    module: 'ORDERS',
-    moduleColor: '#2563EB',
-    moduleBg: '#EFF6FF',
-    detail: 'Cancelled order',
-    detailLink: '#ORD-5524',
-  },
-  {
-    id: 2,
-    time: '09:15:44 AM',
-    admin: 'Sarah Jenkins',
-    adminColor: '#191C1E',
-    module: 'PAYMENTS',
-    moduleColor: '#7C3AED',
-    moduleBg: '#F5F3FF',
-    detail: 'Refunded',
-    detailLink: 'RM 120.50 to #REF-2210',
-  },
-  {
-    id: 3,
-    time: 'Yesterday, 11:02 PM',
-    admin: 'System Auth',
-    adminColor: '#DC2626',
-    module: 'SECURITY',
-    moduleColor: '#DC2626',
-    moduleBg: '#FEF2F2',
-    detail: 'Blocked brute-force attempt',
-    detailLink: '',
-  },
-];
+function formatAuth(value: string | null) {
+  if (!value) return 'Never';
+  const elapsedMs = Date.now() - new Date(value).getTime();
+  const minutes = Math.max(0, Math.round(elapsedMs / 60_000));
+  if (minutes < 2) return 'Just now';
+  if (minutes < 60) return `${minutes} mins ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}
 
-const auditSummary = [
-  { icon: '🛒', value: '142', label: 'Orders Adjusted', iconBg: '#EFF6FF' },
-  { icon: '🛡', value: '8', label: 'Permissions Changed', iconBg: '#ECFDF5' },
-  { icon: '🚨', value: '23', label: 'Security Threats', iconBg: '#FEF2F2' },
-  { icon: '🔑', value: '5', label: 'Credentials Reset', iconBg: '#FFF7ED' },
-];
+function formatTimestamp(value: string) {
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
+function roleColors(role: string) {
+  if (role.includes('SUPER')) return { bg: '#E0EBFF', color: '#2563EB' };
+  if (role.includes('SUPPORT')) return { bg: '#ECFDF5', color: '#047857' };
+  if (role.includes('MANAGER')) return { bg: '#F5F3FF', color: '#7C3AED' };
+  return { bg: '#F1F5F9', color: '#334155' };
+}
+
+function moduleColors(module: string) {
+  const key = module.toUpperCase();
+  if (key.includes('SECURITY') || key.includes('AUTH')) return { bg: '#FEF2F2', color: '#DC2626' };
+  if (key.includes('PAYMENT') || key.includes('SETTING')) return { bg: '#F5F3FF', color: '#7C3AED' };
+  return { bg: '#EFF6FF', color: '#2563EB' };
+}
 
 /* ─── Avatar placeholder ─────────────────────────────────────────── */
 function AdminAvatar({ name, size = 40 }: { name: string; size?: number }) {
@@ -97,7 +76,7 @@ function AdminAvatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 /* ─── Directory Tab ──────────────────────────────────────────────── */
-function DirectoryTab() {
+function DirectoryTab({ admins }: { admins: AdminUserDirectoryItem[] }) {
   return (
     <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
       {/* Table header */}
@@ -134,7 +113,15 @@ function DirectoryTab() {
       </div>
 
       {/* Rows */}
-      {admins.map((a, i) => (
+      {admins.length === 0 && (
+        <div style={{ padding: '28px 24px', fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+          No administrators matched the current filters.
+        </div>
+      )}
+
+      {admins.map((a, i) => {
+        const role = roleColors(a.role);
+        return (
         <div key={a.id} style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1.6fr 1.2fr 0.9fr 0.8fr 1.6fr',
@@ -144,10 +131,10 @@ function DirectoryTab() {
         }}>
           {/* User Identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <AdminAvatar name={a.name} size={44} />
+              <AdminAvatar name={a.name} size={44} />
             <div>
               <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#191C1E' }}>{a.name}</div>
-              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>{a.created}</div>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>{formatDate(a.createdAt)}</div>
             </div>
           </div>
 
@@ -157,7 +144,7 @@ function DirectoryTab() {
           {/* Access Level */}
           <span style={{
             display: 'inline-flex', padding: '4px 10px', borderRadius: '9999px',
-            background: a.roleBg, color: a.roleColor,
+            background: role.bg, color: role.color,
             fontFamily: 'Inter', fontSize: '10px', fontWeight: 700,
             letterSpacing: '0.4px', textTransform: 'uppercase', width: 'fit-content',
           }}>
@@ -168,16 +155,24 @@ function DirectoryTab() {
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '6px',
             padding: '4px 10px', borderRadius: '9999px',
-            background: '#D1FAE5', color: '#065F46',
+            background: a.health === 'Active' ? '#D1FAE5' : a.health === 'Pending' ? '#FEF3C7' : '#FEE2E2',
+            color: a.health === 'Active' ? '#065F46' : a.health === 'Pending' ? '#92400E' : '#991B1B',
             fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
             width: 'fit-content',
           }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              background: a.health === 'Active' ? '#10B981' : a.health === 'Pending' ? '#F59E0B' : '#EF4444',
+              flexShrink: 0,
+              display: 'inline-block',
+            }} />
             {a.health}
           </span>
 
           {/* Last Auth */}
-          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>{a.lastAuth}</span>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>{formatAuth(a.lastSignInAt)}</span>
 
           {/* Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -214,7 +209,7 @@ function DirectoryTab() {
             ))}
           </div>
         </div>
-      ))}
+      )})}
     </div>
   );
 }
@@ -250,7 +245,7 @@ function PermCheck({ label, sub, checked, onChange }: {
 }
 
 /* ─── Access Levels Tab ─────────────────────────────────────────── */
-function AccessLevelsTab() {
+function AccessLevelsTab({ securitySettings }: { securitySettings: AdminSecuritySettings }) {
   const [perms, setPerms] = useState({
     viewOrders: true, modifyOrders: true, deleteRecords: false,
     gps: true, fleetAssign: true, kyc: false,
@@ -258,7 +253,6 @@ function AccessLevelsTab() {
   });
   const [roleId, setRoleId] = useState('');
   const [qp, setQp] = useState({ analytics: false, payout: false, sysConfig: false });
-  const [twoFA, setTwoFA] = useState(true);
 
   function toggle(key: keyof typeof perms) {
     setPerms(p => ({ ...p, [key]: !p[key] }));
@@ -446,17 +440,16 @@ function AccessLevelsTab() {
             </div>
             <button
               suppressHydrationWarning
-              onClick={() => setTwoFA(v => !v)}
               style={{
                 width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: twoFA ? '#2563EB' : '#D1D5DB',
+                background: securitySettings.twoFactorRequired ? '#2563EB' : '#D1D5DB',
                 position: 'relative', flexShrink: 0, transition: 'background 0.2s',
               }}
             >
               <span style={{
                 position: 'absolute', top: 2, borderRadius: '50%',
                 width: 20, height: 20, background: '#fff',
-                left: twoFA ? 22 : 2, transition: 'left 0.2s',
+                left: securitySettings.twoFactorRequired ? 22 : 2, transition: 'left 0.2s',
                 display: 'block',
               }} />
             </button>
@@ -468,7 +461,14 @@ function AccessLevelsTab() {
 }
 
 /* ─── Audit Vault Tab ────────────────────────────────────────────── */
-function AuditVaultTab() {
+function AuditVaultTab({ auditLogs, auditSummary }: { auditLogs: AdminAuditLogItem[]; auditSummary: AdminAuditSummary }) {
+  const summary = [
+    { icon: 'O', value: auditSummary.ordersAdjusted, label: 'Orders Adjusted', iconBg: '#EFF6FF' },
+    { icon: 'P', value: auditSummary.permissionsChanged, label: 'Permissions Changed', iconBg: '#ECFDF5' },
+    { icon: 'S', value: auditSummary.securityEvents, label: 'Security Events', iconBg: '#FEF2F2' },
+    { icon: 'C', value: auditSummary.credentialsReset, label: 'Credentials Reset', iconBg: '#FFF7ED' },
+  ];
+
   return (
     <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px' }}>
@@ -495,29 +495,34 @@ function AuditVaultTab() {
       </div>
 
       {/* Rows */}
-      {auditLogs.map((log, i) => (
+      {auditLogs.length === 0 && (
+        <div style={{ padding: '28px 24px', fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+          No admin audit events have been recorded yet.
+        </div>
+      )}
+
+      {auditLogs.map((log, i) => {
+        const colors = moduleColors(log.module);
+        return (
         <div key={log.id} style={{
           display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1fr 1.4fr',
           padding: '18px 24px', alignItems: 'center',
           borderBottom: i < auditLogs.length - 1 ? '1px solid #F1F5F9' : 'none',
         }}>
-          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>{log.time}</span>
-          <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: log.adminColor }}>{log.admin}</span>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>{formatTimestamp(log.createdAt)}</span>
+          <span style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#191C1E' }}>{log.admin}</span>
           <span style={{
             display: 'inline-flex', padding: '3px 10px', borderRadius: '6px', width: 'fit-content',
-            background: log.moduleBg, color: log.moduleColor,
+            background: colors.bg, color: colors.color,
             fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px',
           }}>
             {log.module}
           </span>
           <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#374151' }}>
-            {log.detail}{' '}
-            {log.detailLink && (
-              <span style={{ color: '#2563EB', fontWeight: 600 }}>{log.detailLink}</span>
-            )}
+            {log.detail}
           </div>
         </div>
-      ))}
+      )})}
 
       {/* Summary */}
       <div style={{ padding: '20px 24px', borderTop: '1px solid #F1F5F9' }}>
@@ -525,7 +530,7 @@ function AuditVaultTab() {
           ACTION SUMMARY (LAST 24H)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-          {auditSummary.map((s) => (
+          {summary.map((s) => (
             <div key={s.label} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
               background: '#F8FAFC', borderRadius: '10px', padding: '12px 14px',
@@ -533,7 +538,7 @@ function AuditVaultTab() {
               <div style={{
                 width: 36, height: 36, borderRadius: '8px', background: s.iconBg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16, flexShrink: 0,
+                fontSize: 13, fontWeight: 800, fontFamily: 'Inter', color: '#191C1E', flexShrink: 0,
               }}>
                 {s.icon}
               </div>
@@ -589,8 +594,31 @@ function ToggleRow({ label, sub, on, onChange, action }: {
 }
 
 /* ─── Security Hub Tab ───────────────────────────────────────────── */
-function SecurityHubTab() {
-  const [s, setS] = useState({ twoFA: true, loginAlerts: true, suspicious: false });
+function SecurityHubTab({
+  roleStats,
+  securitySettings,
+  onSecurityChange,
+}: {
+  roleStats: AdminRoleStat[];
+  securitySettings: AdminSecuritySettings;
+  onSecurityChange: (settings: AdminSecuritySettings) => void;
+}) {
+  const [saving, setSaving] = useState<keyof AdminSecuritySettings | null>(null);
+
+  async function toggle(key: keyof AdminSecuritySettings) {
+    const next = { ...securitySettings, [key]: !securitySettings[key] };
+    onSecurityChange(next);
+    setSaving(key);
+    try {
+      const saved = await updateAdminSecuritySettings(next);
+      onSecurityChange(saved);
+    } catch (err) {
+      onSecurityChange(securitySettings);
+      window.alert(err instanceof Error ? err.message : 'Failed to update security settings');
+    } finally {
+      setSaving(null);
+    }
+  }
 
   return (
     <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
@@ -599,10 +627,10 @@ function SecurityHubTab() {
         <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 800, color: '#191C1E', marginBottom: 4 }}>Hardened Security</div>
         <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B', marginBottom: 4 }}>Configure automated defense protocols.</div>
 
-        <ToggleRow label="2-Factor Authentication (2FA)" sub="Mandatory for all administrative accounts" on={s.twoFA} onChange={() => setS(p => ({ ...p, twoFA: !p.twoFA }))} />
-        <ToggleRow label="Real-time Login Alerts" sub="Push notifications for new device logins" on={s.loginAlerts} onChange={() => setS(p => ({ ...p, loginAlerts: !p.loginAlerts }))} />
-        <ToggleRow label="Suspicious Activity Detection" sub="Auto-block IPs from abnormal geolocations" on={s.suspicious} onChange={() => setS(p => ({ ...p, suspicious: !p.suspicious }))} />
-        <ToggleRow label="IP Restricted Access" sub="Whitelist 2 corporate HQ static IPs" action={{ label: 'MANAGE IPS' }} />
+        <ToggleRow label="2-Factor Authentication (2FA)" sub={saving === 'twoFactorRequired' ? 'Saving requirement...' : 'Mandatory for all administrative accounts'} on={securitySettings.twoFactorRequired} onChange={() => toggle('twoFactorRequired')} />
+        <ToggleRow label="Real-time Login Alerts" sub={saving === 'loginAlertsEnabled' ? 'Saving alerts...' : 'Push notifications for new device logins'} on={securitySettings.loginAlertsEnabled} onChange={() => toggle('loginAlertsEnabled')} />
+        <ToggleRow label="Suspicious Activity Detection" sub={saving === 'suspiciousActivityDetectionEnabled' ? 'Saving detection setting...' : 'Auto-block IPs from abnormal geolocations'} on={securitySettings.suspiciousActivityDetectionEnabled} onChange={() => toggle('suspiciousActivityDetectionEnabled')} />
+        <ToggleRow label="IP Restricted Access" sub={saving === 'ipRestrictedAccessEnabled' ? 'Saving IP restriction setting...' : 'Whitelist corporate static IPs'} on={securitySettings.ipRestrictedAccessEnabled} onChange={() => toggle('ipRestrictedAccessEnabled')} />
 
         {/* Compliance Notice */}
         <div style={{
@@ -622,18 +650,14 @@ function SecurityHubTab() {
       {/* Right: Quick Role Stats */}
       <div style={{ width: '260px', flexShrink: 0, background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
         <div style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 700, color: '#191C1E', marginBottom: 16 }}>Quick Role Stats</div>
-        {[
-          { label: 'Super Admins', value: '02' },
-          { label: 'Ops Managers', value: '08' },
-          { label: 'Support Agents', value: '15' },
-        ].map((r, i, arr) => (
+        {(roleStats.length > 0 ? roleStats : [{ label: 'No active admin roles', value: 0 }]).map((r, i, arr) => (
           <div key={r.label} style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             padding: '12px 0',
             borderBottom: i < arr.length - 1 ? '1px solid #F1F5F9' : 'none',
           }}>
             <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151' }}>{r.label}</span>
-            <span style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#191C1E' }}>{r.value}</span>
+            <span style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 700, color: '#191C1E' }}>{String(r.value).padStart(2, '0')}</span>
           </div>
         ))}
       </div>
@@ -644,6 +668,24 @@ function SecurityHubTab() {
 /* ─── Page ───────────────────────────────────────────────────────── */
 export default function UserManagementPage() {
   const [tab, setTab] = useState<Tab>('directory');
+  const [search, setSearch] = useState('');
+  const { snapshot, loading, error, stale, lastUpdated } = useAdminUserManagement();
+  const [securitySettings, setSecuritySettings] = useState(snapshot.securitySettings);
+
+  useEffect(() => {
+    setSecuritySettings(snapshot.securitySettings);
+  }, [snapshot.securitySettings]);
+
+  const filteredAdmins = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return snapshot.users;
+    return snapshot.users.filter((admin) => (
+      admin.name.toLowerCase().includes(query) ||
+      admin.email.toLowerCase().includes(query) ||
+      admin.role.toLowerCase().includes(query) ||
+      admin.health.toLowerCase().includes(query)
+    ));
+  }, [snapshot.users, search]);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'directory', label: 'Directory' },
@@ -701,6 +743,13 @@ export default function UserManagementPage() {
             </div>
           </div>
 
+          <AdminDataStatus error={error || undefined} stale={stale} lastUpdated={lastUpdated} />
+          {loading && (
+            <div style={{ marginBottom: 12, fontFamily: 'Inter', fontSize: 12, fontWeight: 600, color: '#64748B' }}>
+              Loading admin user-management data...
+            </div>
+          )}
+
           {/* Tab bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '24px', flexWrap: 'wrap' }}>
             {/* Tabs */}
@@ -734,6 +783,8 @@ export default function UserManagementPage() {
                     suppressHydrationWarning
                     type="text"
                     placeholder="Search by name, email or IP..."
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
                     style={{
                       width: '220px', height: '36px', paddingLeft: '30px', paddingRight: '10px',
                       border: '1px solid #E2E8F0', borderRadius: '8px',
@@ -759,10 +810,16 @@ export default function UserManagementPage() {
           </div>
 
           {/* Tab content */}
-          {tab === 'directory' && <DirectoryTab />}
-          {tab === 'access' && <AccessLevelsTab />}
-          {tab === 'audit' && <AuditVaultTab />}
-          {tab === 'security' && <SecurityHubTab />}
+          {tab === 'directory' && <DirectoryTab admins={filteredAdmins} />}
+          {tab === 'access' && <AccessLevelsTab securitySettings={securitySettings} />}
+          {tab === 'audit' && <AuditVaultTab auditLogs={snapshot.auditLogs} auditSummary={snapshot.auditSummary} />}
+          {tab === 'security' && (
+            <SecurityHubTab
+              roleStats={snapshot.roleStats}
+              securitySettings={securitySettings}
+              onSecurityChange={setSecuritySettings}
+            />
+          )}
 
         </main>
       </div>

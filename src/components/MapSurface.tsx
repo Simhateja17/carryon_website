@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MapCoordinate } from '@/types';
 
 type MarkerTone = 'driver' | 'pickup' | 'dropoff' | 'incident' | 'optimized';
+type CircleTone = 'coverage';
 
 export interface MapSurfaceMarker {
   id: string;
@@ -19,9 +20,20 @@ export interface MapSurfaceRoute {
   tone?: 'planned' | 'actual' | 'optimized';
 }
 
+export interface MapSurfaceCircle {
+  id: string;
+  center: MapCoordinate | null;
+  radiusMeters: number;
+  label: string;
+  detail?: string;
+  tone?: CircleTone;
+}
+
 interface MapSurfaceProps {
   markers?: MapSurfaceMarker[];
   routes?: MapSurfaceRoute[];
+  circles?: MapSurfaceCircle[];
+  highlightedCircleId?: string | null;
   center?: MapCoordinate | null;
   zoom?: number;
   fallback?: React.ReactNode;
@@ -44,6 +56,9 @@ const routeStyles = {
   actual: { strokeColor: '#EF4444', strokeOpacity: 0.9, strokeWeight: 4, strokeDasharray: false },
   optimized: { strokeColor: '#16A34A', strokeOpacity: 0.9, strokeWeight: 4, strokeDasharray: false },
 };
+const circleStyles: Record<CircleTone, { strokeColor: string; fillColor: string }> = {
+  coverage: { strokeColor: '#2563EB', fillColor: '#3B82F6' },
+};
 
 let loaderPromise: Promise<typeof google> | null = null;
 let optionsSet = false;
@@ -65,17 +80,52 @@ function validPosition(position: MapCoordinate | null | undefined): position is 
   return !!position && Number.isFinite(position.lat) && Number.isFinite(position.lng);
 }
 
-function fallbackCenter(markers: MapSurfaceMarker[], routes: MapSurfaceRoute[], center?: MapCoordinate | null) {
+function fallbackCenter(markers: MapSurfaceMarker[], routes: MapSurfaceRoute[], circles: MapSurfaceCircle[], center?: MapCoordinate | null) {
   if (validPosition(center)) return center;
+  const circle = circles.find((entry) => validPosition(entry.center));
+  if (circle?.center) return circle.center;
   const marker = markers.find((entry) => validPosition(entry.position));
   if (marker?.position) return marker.position;
   const routePoint = routes.flatMap((route) => route.path).find(validPosition);
   return routePoint || DEFAULT_CENTER;
 }
 
+function extendCircleBounds(bounds: google.maps.LatLngBounds, center: MapCoordinate, radiusMeters: number) {
+  const latDelta = radiusMeters / 111_320;
+  const lngScale = Math.max(0.1, Math.cos(center.lat * Math.PI / 180));
+  const lngDelta = radiusMeters / (111_320 * lngScale);
+  bounds.extend({ lat: center.lat + latDelta, lng: center.lng + lngDelta });
+  bounds.extend({ lat: center.lat - latDelta, lng: center.lng - lngDelta });
+}
+
+function createCircleInfo(circle: MapSurfaceCircle) {
+  const root = document.createElement('div');
+  root.style.font = '600 12px Inter, sans-serif';
+  root.style.color = '#0F172A';
+  root.style.padding = '2px 0';
+
+  const label = document.createElement('div');
+  label.textContent = circle.label;
+  label.style.fontWeight = '800';
+  label.style.marginBottom = circle.detail ? '3px' : '0';
+  root.appendChild(label);
+
+  if (circle.detail) {
+    const detail = document.createElement('div');
+    detail.textContent = circle.detail;
+    detail.style.color = '#64748B';
+    detail.style.fontWeight = '600';
+    root.appendChild(detail);
+  }
+
+  return root;
+}
+
 export default function MapSurface({
   markers = [],
   routes = [],
+  circles = [],
+  highlightedCircleId,
   center,
   zoom = 11,
   fallback,
@@ -88,9 +138,11 @@ export default function MapSurface({
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRefs = useRef<google.maps.Marker[]>([]);
   const routeRefs = useRef<google.maps.Polyline[]>([]);
+  const circleRefs = useRef<google.maps.Circle[]>([]);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [mapReady, setMapReady] = useState(false);
-  const resolvedCenter = useMemo(() => fallbackCenter(markers, routes, center), [center, markers, routes]);
+  const resolvedCenter = useMemo(() => fallbackCenter(markers, routes, circles, center), [center, circles, markers, routes]);
   const useDarkStyles = theme ? theme === 'dark' : dark;
 
   useEffect(() => {
@@ -129,11 +181,46 @@ export default function MapSurface({
     if (!map || !mapReady) return;
     markerRefs.current.forEach((marker) => marker.setMap(null));
     routeRefs.current.forEach((route) => route.setMap(null));
+    circleRefs.current.forEach((circle) => circle.setMap(null));
+    infoWindowRef.current?.close();
     markerRefs.current = [];
     routeRefs.current = [];
+    circleRefs.current = [];
 
     const bounds = new google.maps.LatLngBounds();
+    const focusedBounds = new google.maps.LatLngBounds();
     let hasBounds = false;
+    let hasFocusedBounds = false;
+
+    for (const circle of circles) {
+      if (!validPosition(circle.center) || !Number.isFinite(circle.radiusMeters) || circle.radiusMeters <= 0) continue;
+      const highlighted = circle.id === highlightedCircleId;
+      const style = circleStyles[circle.tone || 'coverage'];
+      extendCircleBounds(bounds, circle.center, circle.radiusMeters);
+      if (highlighted) {
+        extendCircleBounds(focusedBounds, circle.center, circle.radiusMeters);
+        hasFocusedBounds = true;
+      }
+      hasBounds = true;
+      const mapCircle = new google.maps.Circle({
+        map,
+        center: circle.center,
+        radius: circle.radiusMeters,
+        strokeColor: highlighted ? '#0F172A' : style.strokeColor,
+        strokeOpacity: highlighted ? 0.95 : 0.74,
+        strokeWeight: highlighted ? 3 : 2,
+        fillColor: highlighted ? '#22C55E' : style.fillColor,
+        fillOpacity: highlighted ? 0.18 : 0.12,
+        clickable: true,
+      });
+      mapCircle.addListener('click', () => {
+        if (!infoWindowRef.current) infoWindowRef.current = new google.maps.InfoWindow();
+        infoWindowRef.current.setContent(createCircleInfo(circle));
+        infoWindowRef.current.setPosition(circle.center!);
+        infoWindowRef.current.open({ map });
+      });
+      circleRefs.current.push(mapCircle);
+    }
 
     for (const route of routes) {
       const path = route.path.filter(validPosition);
@@ -178,13 +265,15 @@ export default function MapSurface({
       }));
     }
 
-    if (hasBounds) {
+    if (hasFocusedBounds) {
+      map.fitBounds(focusedBounds, 56);
+    } else if (hasBounds) {
       map.fitBounds(bounds, 56);
     } else {
       map.setCenter(resolvedCenter);
       map.setZoom(zoom);
     }
-  }, [mapReady, markers, resolvedCenter, routes, zoom]);
+  }, [circles, highlightedCircleId, mapReady, markers, resolvedCenter, routes, zoom]);
 
   if (loadFailed || !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return fallback ? <>{fallback}</> : <FallbackMap height={height} minHeight={minHeight} />;

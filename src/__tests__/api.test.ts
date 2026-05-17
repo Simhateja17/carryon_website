@@ -5,11 +5,17 @@ import {
   getAdminBookings,
   getAdminCustomers,
   getAdminCustomerStats,
+  getAdminUserManagement,
+  updateAdminSecuritySettings,
   getNotifications,
+  getFleetCitySuggestions,
   getFleetSettings,
+  getSafetyFraudSnapshot,
   updateFleetSettings,
   sendNotification,
+  createAdminDriverRegistration,
   getRouteDistance,
+  updatePricingVehicles,
 } from "@/lib/api";
 
 // ── apiFetch ────────────────────────────────────────────────
@@ -162,6 +168,32 @@ describe("sendNotification", () => {
   });
 });
 
+describe("createAdminDriverRegistration", () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("POSTs a driver registration through the admin proxy", async () => {
+    const payload = {
+      name: "Nur Aisyah",
+      email: "driver@example.com",
+      phone: "+60123456789",
+      dateOfBirth: "1990-01-01",
+      governmentId: "900101-01-1234",
+      addressLine1: "12 Jalan Ampang",
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: { id: "driver-1" } }), {
+        status: 201,
+      })
+    );
+
+    await createAdminDriverRegistration(payload);
+    const call = vi.mocked(fetch).mock.calls[0];
+    expect(call[0]).toBe("/api/admin/drivers");
+    expect(call[1]?.method).toBe("POST");
+    expect(JSON.parse(call[1]?.body as string)).toEqual(payload);
+  });
+});
+
 describe("fleet settings API", () => {
   beforeEach(() => vi.restoreAllMocks());
 
@@ -188,8 +220,8 @@ describe("fleet settings API", () => {
         telematicsFaultsEnabled: false,
         criticalNotification: "Fleet Sync Pending",
       },
-      regions: [{ id: "klang-valley", name: "Klang Valley", hubCount: 42, zone: "Greater KL", enabled: true }],
-      vehicleClasses: [{ type: "BIKE" as const, label: "Bikes", description: "Bike routes", enabled: true }],
+      regions: [{ id: "klang-valley", name: "Klang Valley", hubCount: 42, zone: "Greater KL", enabled: true, latitude: 3.139, longitude: 101.6869, radiusKm: 40 }],
+      vehicleClasses: [{ type: "BIKE" as const, label: "Bikes", description: "Bike routes", enabled: true, pricePerKm: 0.9 }],
     };
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ success: true, data: payload }), { status: 200 })
@@ -200,6 +232,91 @@ describe("fleet settings API", () => {
     expect(call[0]).toBe("/api/admin/settings/fleet");
     expect(call[1]?.method).toBe("PUT");
     expect(JSON.parse(call[1]?.body as string)).toEqual(payload);
+  });
+
+  it("POSTs city suggestion queries through the admin proxy", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: [] }), { status: 200 })
+    );
+
+    await getFleetCitySuggestions("Johor");
+    const call = vi.mocked(fetch).mock.calls[0];
+    expect(call[0]).toBe("/api/admin/settings/city-suggestions");
+    expect(call[1]?.method).toBe("POST");
+    expect(JSON.parse(call[1]?.body as string)).toEqual({ query: "Johor" });
+  });
+});
+
+describe("pricing API", () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("PUTs vehicle fare updates through the admin proxy", async () => {
+    const vehicles = [
+      { id: "v1", type: "BIKE", name: "Bike", basePrice: 2.7, pricePerKm: 0.9, minimumFare: 4.5, isAvailable: true },
+    ];
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: vehicles }), { status: 200 })
+    );
+
+    await updatePricingVehicles(vehicles);
+    const call = vi.mocked(fetch).mock.calls[0];
+    expect(call[0]).toBe("/api/admin/pricing/vehicles");
+    expect(call[1]?.method).toBe("PUT");
+    expect(JSON.parse(call[1]?.body as string)).toEqual({ vehicles });
+  });
+});
+
+describe("admin user management API", () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("fetches the user management snapshot", async () => {
+    const payload = {
+      success: true,
+      data: {
+        users: [],
+        roleStats: [],
+        auditLogs: [],
+        auditSummary: {
+          ordersAdjusted: 0,
+          permissionsChanged: 0,
+          securityEvents: 0,
+          credentialsReset: 0,
+        },
+        securitySettings: {
+          twoFactorRequired: true,
+          loginAlertsEnabled: true,
+          suspiciousActivityDetectionEnabled: false,
+          ipRestrictedAccessEnabled: false,
+        },
+      },
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify(payload), { status: 200 })
+    );
+
+    await expect(getAdminUserManagement()).resolves.toEqual(payload.data);
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/admin/users",
+      expect.objectContaining({ headers: expect.any(Object) })
+    );
+  });
+
+  it("PUTs security settings through the admin proxy", async () => {
+    const settings = {
+      twoFactorRequired: true,
+      loginAlertsEnabled: false,
+      suspiciousActivityDetectionEnabled: true,
+      ipRestrictedAccessEnabled: false,
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: settings }), { status: 200 })
+    );
+
+    await expect(updateAdminSecuritySettings(settings)).resolves.toEqual(settings);
+    const call = vi.mocked(fetch).mock.calls[0];
+    expect(call[0]).toBe("/api/admin/users/security");
+    expect(call[1]?.method).toBe("PUT");
+    expect(JSON.parse(call[1]?.body as string)).toEqual(settings);
   });
 });
 
@@ -331,5 +448,37 @@ describe("getRouteDistance", () => {
     expect(call[0]).toBe("/api/admin/maps/distance");
     expect(call[1]?.method).toBe("POST");
     expect(JSON.parse(call[1]?.body as string)).toEqual({ from, to });
+  });
+});
+
+describe("getSafetyFraudSnapshot", () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("fetches the composed safety and fraud read model", async () => {
+    const payload = {
+      success: true,
+      data: {
+        generatedAt: "2026-05-17T00:00:00.000Z",
+        kpis: {
+          activeSos: 0,
+          fraudTrendPct: 0,
+          highRiskZone: { label: "No active risk zone", concentrationPct: 0 },
+          preventionRatePct: 100,
+        },
+        alerts: [],
+        riskProfiles: [],
+        cases: [],
+        system: { uptimeLabel: "1h 0m", nodeLabel: "admin-api", lastUpdatedLabel: "now" },
+      },
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify(payload), { status: 200 })
+    );
+
+    await getSafetyFraudSnapshot();
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/admin/safety-fraud",
+      expect.objectContaining({ headers: expect.any(Object) })
+    );
   });
 });

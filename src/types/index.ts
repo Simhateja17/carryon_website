@@ -50,6 +50,50 @@ export interface DriverListItem {
   reviewSource?: "SUBMITTED_ONBOARDING" | "LEGACY_UNVERIFIED";
 }
 
+export interface AdminDriverRegistrationPayload {
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  governmentId?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  postcode?: string;
+  state?: string;
+  driversLicenseNumber?: string;
+  licenseClass?: string;
+  licenseExpiry?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
+  pdpaConsent?: boolean;
+  backgroundCheckConsent?: boolean;
+  noOffencesDeclared?: boolean;
+  vehicle?: {
+    type: DriverVehicle["type"];
+    make?: string;
+    model?: string;
+    year: number;
+    licensePlate?: string;
+    color?: string;
+    chassisNumber?: string;
+    engineNumber?: string;
+    ownership?: string;
+    ownerName?: string;
+    roadTaxExpiry?: string;
+    insurerName?: string;
+    insurancePolicyNumber?: string;
+    insuranceExpiry?: string;
+    hasCommercialCover?: boolean;
+  };
+  documents?: Array<{
+    type: DriverDocument["type"];
+    imageUrl: string;
+    expiryDate?: string;
+  }>;
+}
+
 export interface DriverDocument {
   id: string;
   driverId: string;
@@ -660,4 +704,71 @@ export interface RouteDistanceResult {
   durationSeconds: number;
   distanceKm: number;
   durationMinutes: number;
+}
+
+export type SupportRequesterType = "CUSTOMER" | "DRIVER";
+export type SupportTicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+export type SupportTicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export interface AdminSupportAttachment {
+  id?: string;
+  ticketId?: string;
+  messageId?: string;
+  fileUrl: string;
+  storagePath: string;
+  mimeType: string;
+  fileSize: number;
+  createdAt?: string;
+}
+
+export interface AdminSupportMessage {
+  id: string;
+  ticketId: string;
+  rawTicketId: string;
+  senderId: string;
+  isStaff: boolean;
+  messageType: "USER_MESSAGE" | "STAFF_MESSAGE" | "INTERNAL_NOTE" | "SYSTEM_EVENT";
+  isCustomerVisible: boolean;
+  message: string;
+  imageUrl?: string | null;
+  attachments: AdminSupportAttachment[];
+  createdAt: string;
+}
+
+export interface AdminSupportRequester {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface AdminSupportBooking {
+  id: string;
+  orderCode: string;
+  status: string;
+  vehicleType: string;
+}
+
+export interface AdminSupportTicket {
+  id: string;
+  rawId: string;
+  requesterType: SupportRequesterType;
+  requester: AdminSupportRequester | null;
+  booking: AdminSupportBooking | null;
+  subject: string;
+  category: string;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  source: string;
+  intakePath?: Array<{ id: string; label: string }> | null;
+  intakeAnswers?: unknown;
+  assignedAdminId?: string | null;
+  assignedAdminEmail?: string | null;
+  assignedAt?: string | null;
+  resolvedAt?: string | null;
+  closedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lastMessage?: AdminSupportMessage | null;
+  messages?: AdminSupportMessage[];
 }

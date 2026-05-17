@@ -93,6 +93,15 @@ export async function getAdminBookings(params: import("@/types").AdminOrdersPara
   return apiFetch<import("@/types").AdminOrdersResponse>(`/api/admin/bookings${qs ? `?${qs}` : ""}`);
 }
 
+export async function getAdminAnalyticsSnapshot(
+  period: import("@/types").AnalyticsPeriod = "today"
+) {
+  const res = await apiFetch<{ success: boolean; data: import("@/types").AdminAnalyticsSnapshot }>(
+    `/api/admin/analytics?period=${encodeURIComponent(period)}`
+  );
+  return res.data;
+}
+
 // ── Customers ───────────────────────────────────────────────
 // GET /api/admin/customers?page=N
 // Requires "customers" in ALLOWED_ADMIN_ROUTES (added to proxy).
@@ -120,11 +129,45 @@ export async function getAdminCustomerStats(): Promise<import("@/types").AdminCu
   return res.data;
 }
 
+// ── Admin User Management ─────────────────────────────────────
+
+export async function getAdminUserManagement(): Promise<import("@/types").AdminUserManagementSnapshot> {
+  const res = await apiFetch<{ success: boolean; data: import("@/types").AdminUserManagementSnapshot }>(
+    "/api/admin/users"
+  );
+  return res.data;
+}
+
+export async function updateAdminSecuritySettings(
+  payload: import("@/types").AdminSecuritySettings
+): Promise<import("@/types").AdminSecuritySettings> {
+  const res = await apiFetch<{ success: boolean; data: import("@/types").AdminSecuritySettings }>(
+    "/api/admin/users/security",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }
+  );
+  return res.data;
+}
+
 // ── Admin Driver Management ────────────────────────────────
 
 export async function getAdminDrivers() {
   return apiFetch<{ success: boolean; data: import("@/types").DriverListItem[] }>(
     "/api/admin/drivers"
+  );
+}
+
+export async function createAdminDriverRegistration(
+  payload: import("@/types").AdminDriverRegistrationPayload
+) {
+  return apiFetch<{ success: boolean; data: import("@/types").DriverListItem }>(
+    "/api/admin/drivers",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }
   );
 }
 
@@ -207,6 +250,74 @@ export async function reviewExtraCharge(
   );
 }
 
+// ── Admin Support ───────────────────────────────────────
+
+export async function getSupportTickets(params: {
+  status?: string;
+  priority?: string;
+  requesterType?: string;
+  assigned?: string;
+  search?: string;
+} = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value && value !== "ALL") query.set(key, value);
+  });
+  const qs = query.toString();
+  return apiFetch<{ success: boolean; data: import("@/types").AdminSupportTicket[] }>(
+    `/api/admin/support/tickets${qs ? `?${qs}` : ""}`
+  );
+}
+
+export async function getSupportTicket(ticketId: string) {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminSupportTicket }>(
+    `/api/admin/support/tickets/${encodeURIComponent(ticketId)}`
+  );
+}
+
+export async function claimSupportTicket(ticketId: string) {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminSupportTicket }>(
+    `/api/admin/support/tickets/${encodeURIComponent(ticketId)}/claim`,
+    { method: "POST", body: JSON.stringify({}) }
+  );
+}
+
+export async function replyToSupportTicket(
+  ticketId: string,
+  message: string,
+  internal = false,
+  attachments: import("@/types").AdminSupportAttachment[] = []
+) {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminSupportMessage }>(
+    `/api/admin/support/tickets/${encodeURIComponent(ticketId)}/reply`,
+    { method: "POST", body: JSON.stringify({ message, internal, attachments }) }
+  );
+}
+
+export async function uploadSupportAttachment(file: File) {
+  const form = new FormData();
+  form.set("file", file);
+  const res = await fetch("/api/admin/support/attachments", {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(error.message || `API error: ${res.status}`);
+  }
+  return res.json() as Promise<{ success: boolean; data: import("@/types").AdminSupportAttachment }>;
+}
+
+export async function updateSupportTicketStatus(
+  ticketId: string,
+  status: import("@/types").SupportTicketStatus
+) {
+  return apiFetch<{ success: boolean; data: import("@/types").AdminSupportTicket }>(
+    `/api/admin/support/tickets/${encodeURIComponent(ticketId)}/status`,
+    { method: "POST", body: JSON.stringify({ status }) }
+  );
+}
+
 // ── Admin Read Models ────────────────────────────────────────
 
 export async function getCommandCenterSnapshot() {
@@ -243,6 +354,25 @@ export async function updateFleetSettings(payload: import("@/types").AdminFleetS
     {
       method: "PUT",
       body: JSON.stringify(payload),
+    }
+  );
+}
+
+export interface AdminFleetCitySuggestion {
+  placeId: string;
+  mainText: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  zone: string;
+}
+
+export async function getFleetCitySuggestions(query: string) {
+  return apiFetch<{ success: boolean; data: AdminFleetCitySuggestion[] }>(
+    "/api/admin/settings/city-suggestions",
+    {
+      method: "POST",
+      body: JSON.stringify({ query }),
     }
   );
 }
@@ -295,6 +425,12 @@ export async function getLiveMapDashboard() {
 export async function getIncidentMap() {
   return apiFetch<{ success: boolean; data: import("@/types").IncidentMapSnapshot }>(
     "/api/admin/maps/incidents"
+  );
+}
+
+export async function getSafetyFraudSnapshot() {
+  return apiFetch<{ success: boolean; data: import("@/types").SafetyFraudSnapshot }>(
+    "/api/admin/safety-fraud"
   );
 }
 

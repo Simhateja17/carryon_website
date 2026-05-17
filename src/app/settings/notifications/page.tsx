@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 import { getNotificationSettings, updateNotificationSettings } from '@/lib/api';
+import { cloneNotificationAlerts, notificationSettingsAlerts } from '@/lib/notificationSettings';
 import type { NotificationAlertSetting, NotificationSettingsSnapshot } from '@/types';
 
 /* ── Toggle switch ───────────────────────────────────────────── */
@@ -140,41 +141,7 @@ function GroupIcon({ type }: { type: 'admin' | 'dispatch' | 'driver' }) {
 type AlertRow = NotificationAlertSetting;
 
 export default function NotificationsPage() {
-  const fallbackAlerts: AlertRow[] = [
-    {
-      type: 'delay',
-      label: 'Critical Delays',
-      sub: 'Shipment is >2 hours behind schedule',
-      sms: true,
-      push: true,
-      email: false,
-    },
-    {
-      type: 'order',
-      label: 'New Orders',
-      sub: 'When a client places a new delivery request',
-      sms: false,
-      push: true,
-      email: true,
-    },
-    {
-      type: 'offline',
-      label: 'Driver Offline',
-      sub: 'Sudden disconnect during active duty',
-      sms: true,
-      push: true,
-      email: false,
-    },
-    {
-      type: 'fuel',
-      label: 'Low Fuel Warnings',
-      sub: 'Telematics detect <15% fuel levels',
-      sms: false,
-      push: true,
-      email: false,
-    },
-  ];
-  const [alerts, setAlerts] = useState<AlertRow[]>(fallbackAlerts);
+  const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [snapshot, setSnapshot] = useState<NotificationSettingsSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -187,7 +154,7 @@ export default function NotificationsPage() {
     try {
       const res = await getNotificationSettings();
       setSnapshot(res.data);
-      setAlerts(res.data.settings.alerts);
+      setAlerts(cloneNotificationAlerts(res.data.settings.alerts));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load notification settings');
     } finally {
@@ -203,50 +170,8 @@ export default function NotificationsPage() {
     setAlerts((prev) => prev.map((a, i) => (i === idx ? { ...a, [ch]: !a[ch] } : a)));
   };
 
-  const auditItems = snapshot?.auditItems.length ? snapshot.auditItems : [
-    {
-      icon: 'edit',
-      text: 'Alex M. updated critical alerts',
-      time: '2 hours ago',
-    },
-    {
-      icon: 'plus',
-      text: 'New Dispatcher Group created',
-      time: 'Yesterday, 4:32 PM',
-    },
-    {
-      icon: 'warning',
-      text: 'System suppressed 12 duplicate alerts',
-      time: '2 days ago',
-    },
-  ];
-
-  const groups = snapshot?.groups.length ? snapshot.groups : [
-    {
-      type: 'admin' as const,
-      label: 'Admins',
-      badge: 'ACTIVE',
-      badgeBg: '#DBEAFE',
-      badgeColor: '#2563EB',
-      sub: '12 Members \u2022 Global\nAccess',
-    },
-    {
-      type: 'dispatch' as const,
-      label: 'Dispatchers',
-      badge: 'ACTIVE',
-      badgeBg: '#DBEAFE',
-      badgeColor: '#2563EB',
-      sub: '45 Members \u2022 Regional',
-    },
-    {
-      type: 'driver' as const,
-      label: 'Drivers',
-      badge: 'RESTRICTED',
-      badgeBg: '#DBEAFE',
-      badgeColor: '#2563EB',
-      sub: '850 Members \u2022 Mobile\nOnly',
-    },
-  ];
+  const auditItems = snapshot?.auditItems ?? [];
+  const groups = snapshot?.groups ?? [];
 
   return (
     <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', background: '#F7F9FB' }}>
@@ -395,6 +320,11 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   ))}
+                  {!loading && alerts.length === 0 && (
+                    <div style={{ padding: '18px', borderRadius: '12px', background: '#F8FAFC', fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+                      No notification alert rules are configured yet.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -475,6 +405,11 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   ))}
+                  {!loading && groups.length === 0 && (
+                    <div style={{ gridColumn: '1 / -1', padding: '18px', borderRadius: '12px', background: '#F8FAFC', fontFamily: 'Inter', fontSize: '13px', color: '#64748B' }}>
+                      No recipient group activity has been recorded yet.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -651,6 +586,11 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                   ))}
+                  {!loading && auditItems.length === 0 && (
+                    <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>
+                      No notification settings updates have been recorded yet.
+                    </div>
+                  )}
                 </div>
                 <button
                   suppressHydrationWarning
@@ -740,7 +680,7 @@ export default function NotificationsPage() {
               onClick={() => {
                 setMessage('');
                 setError('');
-                setAlerts(snapshot?.settings.alerts || fallbackAlerts);
+                setAlerts(cloneNotificationAlerts(notificationSettingsAlerts(snapshot)));
               }}
               style={{
                 display: 'flex',
@@ -768,7 +708,7 @@ export default function NotificationsPage() {
                 setMessage('');
                 try {
                   const res = await updateNotificationSettings(alerts);
-                  setAlerts(res.data.alerts);
+                  setAlerts(cloneNotificationAlerts(res.data.alerts));
                   setMessage('Notification settings saved.');
                   await loadSettings();
                 } catch (err) {

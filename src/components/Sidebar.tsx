@@ -14,6 +14,7 @@ function getSectionForPath(p: string): string | null {
   if (p.startsWith('/orders')) return 'orders';
   if (p.startsWith('/drivers')) return 'drivers';
   if (p.startsWith('/customers')) return 'customers';
+  if (p.startsWith('/support')) return 'support';
   if (p.startsWith('/settings')) return 'settings';
   return null;
 }
@@ -139,9 +140,9 @@ function Chevron({ open }: { open: boolean }) {
 
 // ── Section header row (expandable nav item) ───────────────────────────────────
 function SectionRow({
-  active, icon, label, open, onClick,
+  active, icon, label, open, onClick, showChevron = true,
 }: {
-  active?: boolean; icon: ReactNode; label: string; open: boolean; onClick: () => void;
+  active?: boolean; icon: ReactNode; label: string; open: boolean; onClick: () => void; showChevron?: boolean;
 }) {
   return (
     <button
@@ -165,7 +166,7 @@ function SectionRow({
       <span style={{ flex: 1, fontFamily: manrope, fontSize: '14px', fontWeight: 500, lineHeight: '20px', letterSpacing: '0.35px', color: active ? '#1E40AF' : '#475569', textTransform: 'uppercase' }}>
         {label}
       </span>
-      <Chevron open={open} />
+      {showChevron && <Chevron open={open} />}
     </button>
   );
 }
@@ -214,7 +215,6 @@ const settingsSubItems = [
   { label: 'NOTIFICATIONS', href: '/settings/notifications', match: (p: string) => p.startsWith('/settings/notifications') },
   { label: 'ADMIN & ROLES', href: '/settings/user-management', match: (p: string) => p.startsWith('/settings/user-management') },
   { label: 'PRICING AND FARE MANAGEMENT', href: '/settings/pricing', match: (p: string) => p.startsWith('/settings/pricing') },
-  { label: 'BILLING & API', href: '/settings/billing-api', match: (p: string) => p.startsWith('/settings/billing-api') },
 ];
 
 // ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -240,6 +240,7 @@ export default function Sidebar() {
   const ordersActive = pathname.startsWith('/orders');
   const driversActive = pathname.startsWith('/drivers');
   const customersActive = pathname.startsWith('/customers');
+  const supportActive = pathname.startsWith('/support');
 
   return (
     <aside style={{ width: '255px', height: '100vh', minHeight: '1047px', flexShrink: 0, background: '#F1F4F9', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -274,6 +275,7 @@ export default function Sidebar() {
               label="DASHBOARD"
               open={openSection === 'dashboard'}
               onClick={() => toggle('dashboard', '/command-center')}
+              showChevron={false}
             />
           </div>
 
@@ -313,6 +315,7 @@ export default function Sidebar() {
               label="LIVE ROUTING"
               open={false}
               onClick={() => router.push('/live-map')}
+              showChevron={false}
             />
           </div>
 
@@ -357,6 +360,19 @@ export default function Sidebar() {
               label="CUSTOMERS"
               open={false}
               onClick={() => router.push('/customers')}
+              showChevron={false}
+            />
+          </div>
+
+          {/* ── SUPPORT ── */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <SectionRow
+              active={supportActive}
+              icon={<IconMessenger active={supportActive} />}
+              label="SUPPORT"
+              open={false}
+              onClick={() => router.push('/support')}
+              showChevron={false}
             />
           </div>
 

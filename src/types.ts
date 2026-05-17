@@ -48,6 +48,50 @@ export interface DriverListItem {
   reviewSource?: "SUBMITTED_ONBOARDING" | "LEGACY_UNVERIFIED";
 }
 
+export interface AdminDriverRegistrationPayload {
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  governmentId?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  postcode?: string;
+  state?: string;
+  driversLicenseNumber?: string;
+  licenseClass?: string;
+  licenseExpiry?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
+  pdpaConsent?: boolean;
+  backgroundCheckConsent?: boolean;
+  noOffencesDeclared?: boolean;
+  vehicle?: {
+    type: DriverVehicle["type"];
+    make?: string;
+    model?: string;
+    year: number;
+    licensePlate?: string;
+    color?: string;
+    chassisNumber?: string;
+    engineNumber?: string;
+    ownership?: string;
+    ownerName?: string;
+    roadTaxExpiry?: string;
+    insurerName?: string;
+    insurancePolicyNumber?: string;
+    insuranceExpiry?: string;
+    hasCommercialCover?: boolean;
+  };
+  documents?: Array<{
+    type: DriverDocument["type"];
+    imageUrl: string;
+    expiryDate?: string;
+  }>;
+}
+
 export interface DriverDocument {
   id: string;
   driverId: string;
@@ -630,6 +674,58 @@ export interface AdminCustomerStats {
   totalRevenue: number;
 }
 
+// ── Admin User Management ──────────────────────────────────────────────────
+
+export interface AdminUserDirectoryItem {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  roleKey: string;
+  health: "Active" | "Pending" | "Suspended";
+  createdAt: string | null;
+  lastSignInAt: string | null;
+  emailConfirmedAt: string | null;
+}
+
+export interface AdminRoleStat {
+  label: string;
+  value: number;
+}
+
+export interface AdminAuditLogItem {
+  id: string;
+  createdAt: string;
+  admin: string;
+  actorId: string;
+  module: string;
+  action: string;
+  detail: string;
+  entityId: string;
+}
+
+export interface AdminAuditSummary {
+  ordersAdjusted: number;
+  permissionsChanged: number;
+  securityEvents: number;
+  credentialsReset: number;
+}
+
+export interface AdminSecuritySettings {
+  twoFactorRequired: boolean;
+  loginAlertsEnabled: boolean;
+  suspiciousActivityDetectionEnabled: boolean;
+  ipRestrictedAccessEnabled: boolean;
+}
+
+export interface AdminUserManagementSnapshot {
+  users: AdminUserDirectoryItem[];
+  roleStats: AdminRoleStat[];
+  auditLogs: AdminAuditLogItem[];
+  auditSummary: AdminAuditSummary;
+  securitySettings: AdminSecuritySettings;
+}
+
 export interface VehicleCatalogEntry {
   type: "BIKE" | "CAR" | "PICKUP" | "VAN_7FT" | "VAN_9FT" | "LORRY_10FT" | "LORRY_14FT" | "LORRY_17FT";
   label: string;
@@ -642,6 +738,7 @@ export interface AdminFleetVehicleClass {
   label: string;
   description: string;
   enabled: boolean;
+  pricePerKm: number;
   active?: number;
 }
 
@@ -651,20 +748,12 @@ export interface AdminFleetRegion {
   hubCount: number;
   zone: string;
   enabled: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  radiusKm: number | null;
 }
 
 export interface AdminFleetSettingsUpdatePayload {
-  payout: {
-    baseRatePerKm: number;
-    peakMultiplier: number;
-  };
-  maintenance: {
-    mileageThresholdEnabled: boolean;
-    mileageThresholdKm: number;
-    emissionCheckEnabled: boolean;
-    telematicsFaultsEnabled: boolean;
-    criticalNotification: string;
-  };
   regions: AdminFleetRegion[];
   vehicleClasses: AdminFleetVehicleClass[];
 }
@@ -763,4 +852,117 @@ export interface RevenueIssues {
   totalDelivered: number;
   totalFailed: number;
   totalRefunded: number;
+}
+
+// ── Safety & Fraud Read Model ───────────────────────────────────────────────
+
+export type SafetyFraudAlertType = "sos" | "suspicious" | "payment";
+export type SafetyFraudSeverity = "Critical" | "Warning" | "Info";
+export type SafetyFraudCaseStatus = "Pending Review" | "Watchlist" | "Resolved";
+
+export interface SafetyFraudAlert {
+  id: string;
+  type: SafetyFraudAlertType;
+  title: string;
+  user: string;
+  subjectId: string;
+  location: string;
+  occurredAt: string;
+  timeLabel: string;
+  severity: SafetyFraudSeverity;
+}
+
+export interface SafetyFraudRiskProfile {
+  id: string;
+  name: string;
+  score: number;
+  level: "HIGH RISK" | "MED RISK" | "LOW RISK";
+  detail: string;
+}
+
+export interface SafetyFraudCase {
+  id: string;
+  user: string;
+  subjectId: string;
+  ip: string;
+  type: string;
+  score: number;
+  status: SafetyFraudCaseStatus;
+  createdAt: string;
+}
+
+export interface SafetyFraudSnapshot {
+  generatedAt: string;
+  kpis: {
+    activeSos: number;
+    fraudTrendPct: number;
+    highRiskZone: {
+      label: string;
+      concentrationPct: number;
+    };
+    preventionRatePct: number;
+  };
+  alerts: SafetyFraudAlert[];
+  riskProfiles: SafetyFraudRiskProfile[];
+  cases: SafetyFraudCase[];
+  system: {
+    uptimeLabel: string;
+    nodeLabel: string;
+    lastUpdatedLabel: string;
+  };
+}
+
+export type AnalyticsPeriod = "today" | "weekly" | "monthly";
+
+export interface AnalyticsMetric {
+  value: number;
+  previous: number | null;
+  changePct: number | null;
+  direction: "higher" | "lower";
+  favorable: boolean;
+}
+
+export interface AdminAnalyticsSnapshot {
+  generatedAt: string;
+  timezone: string;
+  period: AnalyticsPeriod;
+  window: { start: string; end: string };
+  metrics: {
+    totalOrders: AnalyticsMetric;
+    totalRevenue: AnalyticsMetric;
+    activeDrivers: AnalyticsMetric;
+    avgDeliveryMinutes: AnalyticsMetric;
+    cancelRatePct: AnalyticsMetric;
+    avgRating: AnalyticsMetric;
+  };
+  trend: Array<{ label: string; orders: number; revenue: number }>;
+  orderAnalytics: Array<{ label: string; value: number }>;
+  orderBreakdown: Array<{ label: string; count: number; pct: number }>;
+  zones: Array<{ name: string; value: number; intensity: number; status: string }>;
+  driverPerformance: Array<{
+    id: string;
+    name: string;
+    avatar: string | null;
+    fleet: string;
+    acceptancePct: number;
+    cancelRatePct: number;
+    onTimePct: number;
+    rating: number;
+    status: string;
+  }>;
+  profitability: {
+    avgCommission: number;
+    discountImpact: number;
+    refundRatioPct: number;
+    netProfitMarginPct: number;
+  };
+  operationalLog: Array<{
+    date: string;
+    volume: number;
+    grossRevenue: number;
+    resources: number;
+    avgTatMinutes: number;
+  }>;
+  supplyDemand: Array<{ label: string; demand: number; supply: number; ratio: number }>;
+  insights: Array<{ severity: "critical" | "warning" | "info" | "success"; title: string; detail: string }>;
 }

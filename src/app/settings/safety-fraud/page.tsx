@@ -3,28 +3,38 @@
 import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import AdminDataStatus from '@/components/AdminDataStatus';
+import { getSafetyFraudSnapshot } from '@/lib/api';
+import { useAdminPolling } from '@/lib/useAdminPolling';
+import type {
+  SafetyFraudAlert,
+  SafetyFraudCase,
+  SafetyFraudCaseStatus,
+  SafetyFraudRiskProfile,
+  SafetyFraudSeverity,
+  SafetyFraudSnapshot,
+} from '@/types';
 
 const inter = "'Inter', sans-serif";
 const manrope = "'Manrope', sans-serif";
 
-/* ── Toggle ─────────────────────────────────────────────────── */
-function Toggle({ on }: { on: boolean }) {
-  return (
-    <div style={{
-      width: '44px', height: '24px', borderRadius: '999px',
-      background: on ? '#2563EB' : '#E2E8F0',
-      position: 'relative', flexShrink: 0, cursor: 'pointer',
-    }}>
-      <div style={{
-        position: 'absolute', top: '2px',
-        left: on ? '22px' : '2px',
-        width: '20px', height: '20px', borderRadius: '50%',
-        background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-        transition: 'left 0.15s ease',
-      }} />
-    </div>
-  );
-}
+const emptySnapshot: SafetyFraudSnapshot = {
+  generatedAt: '',
+  kpis: {
+    activeSos: 0,
+    fraudTrendPct: 0,
+    highRiskZone: { label: 'No active risk zone', concentrationPct: 0 },
+    preventionRatePct: 100,
+  },
+  alerts: [],
+  riskProfiles: [],
+  cases: [],
+  system: {
+    uptimeLabel: 'unknown',
+    nodeLabel: 'admin-api',
+    lastUpdatedLabel: 'now',
+  },
+};
 
 /* ── Tab Switcher ───────────────────────────────────────────── */
 function TabSwitcher({ active, onChange }: { active: string; onChange: (t: string) => void }) {
@@ -55,7 +65,8 @@ function TabSwitcher({ active, onChange }: { active: string; onChange: (t: strin
 }
 
 /* ── SOS Card ───────────────────────────────────────────────── */
-function SOSCard() {
+function SOSCard({ snapshot }: { snapshot: SafetyFraudSnapshot }) {
+  const activeSos = snapshot.alerts.find((alert) => alert.type === 'sos');
   return (
     <div style={{
       flex: 1.3, minWidth: 0,
@@ -76,7 +87,7 @@ function SOSCard() {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>
-              SOS Triggered: #C-9011
+              {activeSos ? activeSos.title : 'No active SOS signal'}
             </span>
             <span style={{
               padding: '3px 8px', borderRadius: '9999px',
@@ -84,11 +95,11 @@ function SOSCard() {
               fontFamily: inter, fontSize: '9px', fontWeight: 700,
               letterSpacing: '0.5px', textTransform: 'uppercase',
             }}>
-              Active Emergency
+              {snapshot.kpis.activeSos > 0 ? 'Active Emergency' : 'Clear'}
             </span>
           </div>
           <div style={{ fontFamily: inter, fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
-            Driver: Marco Rossi • Vehicle: BX-901-LK
+            {activeSos ? `${activeSos.user} • ID: ${activeSos.subjectId.slice(0, 10)}` : 'Live safety channel clear'}
           </div>
         </div>
       </div>
@@ -114,11 +125,11 @@ function SOSCard() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
           <div>
             <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Location</div>
-            <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>Lower Manhattan, 5th Ave</div>
+            <div style={{ fontFamily: inter, fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>{activeSos?.location || 'No active incident'}</div>
           </div>
           <div>
             <div style={{ fontFamily: inter, fontSize: '10px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Time Active</div>
-            <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>04m 22s</div>
+            <div style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{activeSos?.timeLabel || '--'}</div>
           </div>
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             <button suppressHydrationWarning style={{
@@ -145,8 +156,9 @@ function SOSCard() {
 }
 
 /* ── Fraud Trend Card ───────────────────────────────────────── */
-function FraudTrendCard() {
-  const bars = [28, 42, 35, 58, 82];
+function FraudTrendCard({ trendPct, cases }: { trendPct: number; cases: SafetyFraudCase[] }) {
+  const bars = cases.length > 0 ? cases.slice(0, 5).map((entry) => Math.max(12, entry.score)) : [8, 8, 8, 8, 8];
+  const trendLabel = `${trendPct >= 0 ? '+' : ''}${trendPct.toFixed(1)}%`;
   return (
     <div style={{
       flex: 1, minWidth: 0,
@@ -158,7 +170,7 @@ function FraudTrendCard() {
         Fraud Trend
       </div>
       <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#2563EB', lineHeight: '36px', marginTop: '8px' }}>
-        +12.4%
+        {trendLabel}
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '60px', marginTop: '12px' }}>
         {bars.map((h, i) => (
@@ -175,7 +187,7 @@ function FraudTrendCard() {
 }
 
 /* ── High Risk Zone Card ────────────────────────────────────── */
-function HighRiskZoneCard() {
+function HighRiskZoneCard({ snapshot }: { snapshot: SafetyFraudSnapshot }) {
   return (
     <div style={{
       flex: 1, minWidth: 0,
@@ -187,18 +199,18 @@ function HighRiskZoneCard() {
         High Risk Zone
       </div>
       <div style={{ marginTop: '8px' }}>
-        <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Brooklyn, NY</div>
-        <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#DC2626', lineHeight: '32px' }}>42%</div>
+        <div style={{ fontFamily: manrope, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>{snapshot.kpis.highRiskZone.label}</div>
+        <div style={{ fontFamily: manrope, fontSize: '24px', fontWeight: 800, color: '#DC2626', lineHeight: '32px' }}>{snapshot.kpis.highRiskZone.concentrationPct}%</div>
       </div>
       <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '12px', lineHeight: '16px' }}>
-        Concentration of coupon misuse and identity spoofing reported.
+        Concentration of payment, extra-charge, and safety signals in the current window.
       </div>
     </div>
   );
 }
 
 /* ── Prevention Rate Card ───────────────────────────────────── */
-function PreventionRateCard() {
+function PreventionRateCard({ rate }: { rate: number }) {
   return (
     <div style={{
       flex: 1, minWidth: 0,
@@ -210,11 +222,11 @@ function PreventionRateCard() {
         Prevention Rate
       </div>
       <div style={{ marginTop: '8px' }}>
-        <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#059669', lineHeight: '36px' }}>94.8%</div>
+        <div style={{ fontFamily: manrope, fontSize: '28px', fontWeight: 800, color: '#059669', lineHeight: '36px' }}>{rate.toFixed(1)}%</div>
         <div style={{
           height: '6px', borderRadius: '9999px', background: '#F1F5F9', overflow: 'hidden', marginTop: '8px',
         }}>
-          <div style={{ width: '94.8%', height: '100%', borderRadius: '9999px', background: '#059669' }} />
+          <div style={{ width: `${Math.max(0, Math.min(100, rate))}%`, height: '100%', borderRadius: '9999px', background: '#059669' }} />
         </div>
       </div>
       <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '8px' }}>
@@ -225,7 +237,7 @@ function PreventionRateCard() {
 }
 
 /* ── Severity Badge ─────────────────────────────────────────── */
-function SeverityBadge({ level }: { level: 'Critical' | 'Warning' | 'Info' }) {
+function SeverityBadge({ level }: { level: SafetyFraudSeverity }) {
   const styles = {
     Critical: { bg: '#FEE2E2', color: '#DC2626', dot: '#DC2626' },
     Warning: { bg: '#FEF3C7', color: '#D97706', dot: '#F59E0B' },
@@ -246,7 +258,7 @@ function SeverityBadge({ level }: { level: 'Critical' | 'Warning' | 'Info' }) {
 }
 
 /* ── Alert Icon ─────────────────────────────────────────────── */
-function AlertIcon({ type }: { type: 'sos' | 'suspicious' | 'payment' }) {
+function AlertIcon({ type }: { type: SafetyFraudAlert['type'] }) {
   if (type === 'sos') {
     return (
       <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -280,13 +292,7 @@ function AlertIcon({ type }: { type: 'sos' | 'suspicious' | 'payment' }) {
 }
 
 /* ── Real-time Alerts Feed ──────────────────────────────────── */
-function RealTimeAlertsFeed() {
-  const alerts = [
-    { type: 'sos' as const, title: 'SOS Triggered', user: 'Marco Rossi', id: 'DR-9082', location: 'Manhattan, NY', time: '14:22:10', severity: 'Critical' as const },
-    { type: 'suspicious' as const, title: 'Suspicious booking', user: 'Elena Fisher', id: 'US-1142', location: 'Remote (API)', time: '14:19:45', severity: 'Warning' as const },
-    { type: 'payment' as const, title: 'Payment fraud', user: 'Victor Sullivan', id: 'US-9920', location: 'Los Angeles, CA', time: '14:15:02', severity: 'Critical' as const },
-  ];
-
+function RealTimeAlertsFeed({ alerts }: { alerts: SafetyFraudAlert[] }) {
   return (
     <div style={{
       flex: 1, minWidth: 0,
@@ -322,8 +328,15 @@ function RealTimeAlertsFeed() {
           </tr>
         </thead>
         <tbody>
-          {alerts.map((a, i) => (
-            <tr key={i}>
+          {alerts.length === 0 && (
+            <tr>
+              <td colSpan={5} style={{ padding: '24px 12px', fontFamily: inter, fontSize: '13px', color: '#64748B', textAlign: 'center' }}>
+                No live safety or fraud alerts in the current window.
+              </td>
+            </tr>
+          )}
+          {alerts.map((a) => (
+            <tr key={a.id}>
               <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <AlertIcon type={a.type} />
@@ -332,13 +345,13 @@ function RealTimeAlertsFeed() {
               </td>
               <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
                 <div style={{ fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{a.user}</div>
-                <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>ID: {a.id}</div>
+                <div style={{ fontFamily: inter, fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>ID: {a.subjectId.slice(0, 12)}</div>
               </td>
               <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', color: '#475569' }}>
                 {a.location}
               </td>
               <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', color: '#475569' }}>
-                {a.time}
+                {a.timeLabel}
               </td>
               <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC' }}>
                 <SeverityBadge level={a.severity} />
@@ -352,13 +365,13 @@ function RealTimeAlertsFeed() {
 }
 
 /* ── Top Risk Profiles ──────────────────────────────────────── */
-function TopRiskProfiles() {
-  const profiles = [
-    { name: 'Jack Drake', score: 92, max: 100, level: 'HIGH RISK', color: '#DC2626', detail: 'Cancellation: 88%', avatar: '#1F2937' },
-    { name: 'Sarah Chen', score: 54, max: 100, level: 'MED RISK', color: '#475569', detail: 'Failed Pay: 3 in 30d', avatar: '#334155' },
-    { name: 'Liam Brown', score: 12, max: 100, level: 'LOW RISK', color: '#059669', detail: 'Reports: Clean', avatar: '#1E293B' },
-  ];
+function riskProfileColor(profile: SafetyFraudRiskProfile) {
+  if (profile.score >= 70) return '#DC2626';
+  if (profile.score >= 35) return '#D97706';
+  return '#059669';
+}
 
+function TopRiskProfiles({ profiles }: { profiles: SafetyFraudRiskProfile[] }) {
   return (
     <div style={{
       background: '#FFFFFF', borderRadius: '12px',
@@ -367,39 +380,47 @@ function TopRiskProfiles() {
     }}>
       <div style={{ fontFamily: manrope, fontSize: '20px', fontWeight: 700, color: '#0F172A' }}>Top Risk Profiles</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {profiles.map((p, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '12px 14px 12px 0', borderRadius: '10px', background: '#F8FAFC',
-            overflow: 'hidden',
-          }}>
-            <div style={{ width: '3px', alignSelf: 'stretch', borderRadius: '0 2px 2px 0', background: p.color, flexShrink: 0 }} />
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '50%',
-              background: p.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.3" />
-                <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{p.name}</span>
-                <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color: p.color }}>{p.score}/{p.max}</span>
-              </div>
-              <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{p.detail}</div>
-              <div style={{
-                marginTop: '4px',
-                fontFamily: inter, fontSize: '9px', fontWeight: 700,
-                color: p.color, letterSpacing: '0.5px', textTransform: 'uppercase',
-              }}>
-                {p.level}
-              </div>
-            </div>
+        {profiles.length === 0 && (
+          <div style={{ padding: '14px', borderRadius: '10px', background: '#F8FAFC', fontFamily: inter, fontSize: '13px', color: '#64748B' }}>
+            No elevated risk profiles found.
           </div>
-        ))}
+        )}
+        {profiles.map((p) => {
+          const color = riskProfileColor(p);
+          return (
+            <div key={p.id} style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '12px 14px 12px 0', borderRadius: '10px', background: '#F8FAFC',
+              overflow: 'hidden',
+            }}>
+              <div style={{ width: '3px', alignSelf: 'stretch', borderRadius: '0 2px 2px 0', background: color, flexShrink: 0 }} />
+              <div style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                background: '#1F2937', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.3" />
+                  <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                  <span style={{ fontFamily: inter, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{p.name}</span>
+                  <span style={{ fontFamily: inter, fontSize: '12px', fontWeight: 700, color }}>{p.score}/100</span>
+                </div>
+                <div style={{ fontFamily: inter, fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{p.detail}</div>
+                <div style={{
+                  marginTop: '4px',
+                  fontFamily: inter, fontSize: '9px', fontWeight: 700,
+                  color, letterSpacing: '0.5px', textTransform: 'uppercase',
+                }}>
+                  {p.level}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       <button suppressHydrationWarning style={{
         width: '100%', height: '34px', borderRadius: '8px',
@@ -414,7 +435,7 @@ function TopRiskProfiles() {
 }
 
 /* ── Fraud Status Badge ─────────────────────────────────────── */
-function FraudStatusBadge({ status }: { status: 'Pending Review' | 'Watchlist' | 'Resolved' }) {
+function FraudStatusBadge({ status }: { status: SafetyFraudCaseStatus }) {
   const styles = {
     'Pending Review': { bg: '#DBEAFE', color: '#2563EB' },
     'Watchlist': { bg: '#D1FAE5', color: '#059669' },
@@ -434,12 +455,7 @@ function FraudStatusBadge({ status }: { status: 'Pending Review' | 'Watchlist' |
 }
 
 /* ── Fraud Detection Pipeline ───────────────────────────────── */
-function FraudDetectionPipeline() {
-  const cases = [
-    { id: 'FR-88029', user: 'Arthur Morgan', ip: '192.168.1.1', type: 'Coupon misuse', score: 82, status: 'Pending Review' as const },
-    { id: 'FR-88031', user: 'Sadie Adler', ip: '104.22.11.0', type: 'Fake booking', score: 45, status: 'Watchlist' as const },
-  ];
-
+function FraudDetectionPipeline({ cases }: { cases: SafetyFraudCase[] }) {
   return (
     <div style={{
       background: '#FFFFFF', borderRadius: '12px',
@@ -461,7 +477,7 @@ function FraudDetectionPipeline() {
             <circle cx="7" cy="7" r="5" stroke="#059669" strokeWidth="1.3" />
             <path d="M7 4.5v3l2 1.5" stroke="#059669" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
-          AI GUARD ACTIVE
+          RULE ENGINE ACTIVE
         </span>
       </div>
 
@@ -481,8 +497,15 @@ function FraudDetectionPipeline() {
           </tr>
         </thead>
         <tbody>
-          {cases.map((c, i) => (
-            <tr key={i}>
+          {cases.length === 0 && (
+            <tr>
+              <td colSpan={5} style={{ padding: '24px 12px', fontFamily: inter, fontSize: '13px', color: '#64748B', textAlign: 'center' }}>
+                No fraud cases require review.
+              </td>
+            </tr>
+          )}
+          {cases.map((c) => (
+            <tr key={c.id}>
               <td style={{ padding: '14px 12px', borderBottom: '1px solid #F8FAFC', fontFamily: inter, fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
                 {c.id}
               </td>
@@ -529,6 +552,14 @@ function FraudDetectionPipeline() {
 /* ── Page ───────────────────────────────────────────────────── */
 export default function SafetyFraudPage() {
   const [activeTab, setActiveTab] = useState('Alerts');
+  const safetyFraud = useAdminPolling(
+    async () => {
+      const res = await getSafetyFraudSnapshot();
+      return res.data;
+    },
+    { intervalMs: 30_000 }
+  );
+  const snapshot = safetyFraud.data || emptySnapshot;
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F6F8FA' }}>
@@ -536,6 +567,7 @@ export default function SafetyFraudPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Navbar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#F6F8FA', boxSizing: 'border-box' }}>
+          <AdminDataStatus error={safetyFraud.error} stale={safetyFraud.stale} lastUpdated={safetyFraud.lastUpdated} />
 
           {/* ── Header Row ─────────────────────────────────────────── */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -569,10 +601,10 @@ export default function SafetyFraudPage() {
 
           {/* ── KPI Cards Row ──────────────────────────────────────── */}
           <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-            <SOSCard />
-            <FraudTrendCard />
-            <HighRiskZoneCard />
-            <PreventionRateCard />
+            <SOSCard snapshot={snapshot} />
+            <FraudTrendCard trendPct={snapshot.kpis.fraudTrendPct} cases={snapshot.cases} />
+            <HighRiskZoneCard snapshot={snapshot} />
+            <PreventionRateCard rate={snapshot.kpis.preventionRatePct} />
           </div>
 
           {/* ── Filters Bar ────────────────────────────────────────── */}
@@ -583,7 +615,7 @@ export default function SafetyFraudPage() {
             {[
               { label: 'Risk Level: All', icon: 'filter' },
               { label: 'Alert Type: All', icon: 'filter' },
-              { label: 'Oct 20, 2023 - Today', icon: 'calendar' },
+              { label: safetyFraud.loading ? 'Loading live data' : 'Last 7 days', icon: 'calendar' },
             ].map((f) => (
               <button
                 suppressHydrationWarning
@@ -639,15 +671,15 @@ export default function SafetyFraudPage() {
           {/* ── Two Column: Alerts Feed + Risk Profiles ──────────── */}
           <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <div style={{ flex: '1.5 1 0', minWidth: '500px' }}>
-              <RealTimeAlertsFeed />
+              <RealTimeAlertsFeed alerts={snapshot.alerts} />
             </div>
             <div style={{ flex: '1 1 0', minWidth: '280px' }}>
-              <TopRiskProfiles />
+              <TopRiskProfiles profiles={snapshot.riskProfiles} />
             </div>
           </div>
 
           {/* ── Fraud Detection Pipeline ──────────────────────────── */}
-          <FraudDetectionPipeline />
+          <FraudDetectionPipeline cases={snapshot.cases} />
 
           {/* ── Footer ────────────────────────────────────────────── */}
           <div style={{
@@ -661,15 +693,15 @@ export default function SafetyFraudPage() {
                 Carry On Logistics Admin V4.2.0
               </span>
               <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                System Uptime: 99.98%
+                System Uptime: {snapshot.system.uptimeLabel}
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#059669', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                Server Node: NYC-PROD-01
+                Server Node: {snapshot.system.nodeLabel}
               </span>
               <span style={{ fontFamily: inter, fontSize: '11px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                Security Token Expires in 4h 12m
+                Data Refreshed: {safetyFraud.lastUpdated?.toLocaleTimeString() || snapshot.system.lastUpdatedLabel}
               </span>
             </div>
           </div>
