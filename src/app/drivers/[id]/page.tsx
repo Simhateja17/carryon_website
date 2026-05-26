@@ -20,6 +20,17 @@ const VERIFICATION_LABELS: Record<string, string> = {
   REJECTED: "Rejected",
 };
 
+const REQUIRED_DRIVER_ONBOARDING_DOCUMENT_TYPES: readonly DriverDocument["type"][] = [
+  "MYKAD_FRONT",
+  "MYKAD_BACK",
+  "SELFIE",
+  "DRIVERS_LICENSE",
+  "DRIVERS_LICENSE_BACK",
+  "VEHICLE_REGISTRATION",
+  "VEHICLE_PHOTO_FRONT",
+  "VEHICLE_PHOTO_BACK",
+];
+
 export default function DriverDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -160,9 +171,19 @@ export default function DriverDetailPage() {
 
   const pendingDocCount = driver.documents.filter((doc) => doc.status === "PENDING").length;
   const rejectedDocCount = driver.documents.filter((doc) => doc.status === "REJECTED").length;
+  const approvedDocumentTypes = new Set(
+    driver.documents
+      .filter((doc) => doc.status === "APPROVED")
+      .map((doc) => doc.type)
+  );
+  const missingApprovedRequiredDocTypes = REQUIRED_DRIVER_ONBOARDING_DOCUMENT_TYPES.filter(
+    (type) => !approvedDocumentTypes.has(type)
+  );
   const approvalBlockers = [
     !driver.vehicle ? "Vehicle details are missing." : "",
-    driver.documents.length === 0 ? "No documents have been uploaded." : "",
+    missingApprovedRequiredDocTypes.length > 0
+      ? `Required approved documents are missing: ${missingApprovedRequiredDocTypes.join(", ")}.`
+      : "",
     pendingDocCount > 0 ? `${pendingDocCount} document${pendingDocCount === 1 ? " is" : "s are"} still pending.` : "",
     rejectedDocCount > 0 ? `${rejectedDocCount} rejected document${rejectedDocCount === 1 ? "" : "s"} must be corrected.` : "",
     !driver.profile?.pdpaConsent ? "PDPA consent is missing." : "",
