@@ -24,6 +24,42 @@ export interface Driver {
   createdAt: string;
 }
 
+export type DriverReadinessStatus =
+  | "READY_TO_GO_ONLINE"
+  | "ADMIN_REVIEW_REQUIRED"
+  | "DOCUMENTS_EXPIRED"
+  | "DOCUMENTS_REQUIRED"
+  | "PAYOUT_SETUP_REQUIRED"
+  | "NOT_READY";
+
+export type DriverReadinessBlockerCode =
+  | "ADMIN_APPROVAL_REQUIRED"
+  | "REQUIRED_DOCUMENT_MISSING"
+  | "REQUIRED_DOCUMENT_EXPIRED"
+  | "STRIPE_PAYOUTS_DISABLED";
+
+export interface DriverReadinessBlocker {
+  code: DriverReadinessBlockerCode;
+  message: string;
+  documentType?: DriverDocument["type"];
+}
+
+export interface DriverOnlineReadiness {
+  canGoOnline: boolean;
+  status: DriverReadinessStatus;
+  label: string;
+  blockers: DriverReadinessBlocker[];
+  primaryBlocker: DriverReadinessBlocker | null;
+  missingRequiredDocuments: DriverDocument["type"][];
+  expiredDocuments: DriverDocument["type"][];
+  payoutRequirements: {
+    stripeAccountId: string | null;
+    detailsSubmitted: boolean;
+    payoutsEnabled: boolean;
+    requirements: unknown;
+  };
+}
+
 export interface DriverListItem {
   id: string;
   name: string;
@@ -48,6 +84,7 @@ export interface DriverListItem {
   hasVehicle: boolean;
   vehicleSummary: string | null;
   reviewSource?: "SUBMITTED_ONBOARDING" | "LEGACY_UNVERIFIED";
+  onlineReadiness?: DriverOnlineReadiness;
 }
 
 export interface AdminDriverRegistrationPayload {
@@ -194,6 +231,8 @@ export interface DriverDetail {
   createdAt: string;
   onboardingSubmittedAt?: string | null;
   reviewSource?: "SUBMITTED_ONBOARDING" | "LEGACY_UNVERIFIED";
+  onlineReadiness?: DriverOnlineReadiness;
+  payout?: DriverOnlineReadiness["payoutRequirements"];
   profile?: {
     dateOfBirth?: string;
     gender?: string;

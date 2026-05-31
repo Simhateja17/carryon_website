@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DriverAdvancedFiltersPanel from '@/components/DriverAdvancedFiltersPanel';
 import { getAdminDrivers } from '@/lib/api';
-import type { DriverListItem } from '@/types';
+import type { DriverListItem, DriverOnlineReadiness } from '@/types';
 
 /* ── Types ───────────────────────────────────────────────────── */
-type DriverStatus = 'ONLINE' | 'BUSY' | 'OFFLINE';
+type DriverStatus = 'ONLINE' | 'BUSY' | 'OFFLINE' | 'BLOCKED';
 
 interface Driver {
   id: string;
@@ -30,6 +30,8 @@ interface Driver {
   rating: number;
   earnings: string;
   earningsSub?: string;
+  readinessLabel: string;
+  readinessMessage: string;
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -37,9 +39,15 @@ function toDriverRow(driver: DriverListItem): Driver {
   const approvedRatio = driver.documentsCount > 0
     ? Math.round((driver.documentsApproved / driver.documentsCount) * 100)
     : driver.isVerified ? 100 : 0;
-  const status: DriverStatus = driver.isOnline
+  const readiness: DriverOnlineReadiness | undefined = driver.onlineReadiness;
+  const isOperationallyBlocked = driver.verificationStatus === 'APPROVED' && readiness?.canGoOnline === false;
+  const status: DriverStatus = isOperationallyBlocked
+    ? 'BLOCKED'
+    : driver.isOnline
     ? driver.verificationStatus === 'APPROVED' ? 'ONLINE' : 'BUSY'
     : 'OFFLINE';
+  const readinessLabel = readiness?.label || (driver.isVerified ? 'Verified' : 'Review required');
+  const readinessMessage = readiness?.primaryBlocker?.message || (readiness?.canGoOnline ? 'Ready for dispatch' : 'No blocker details available');
 
   return {
     id: driver.id,
@@ -47,19 +55,21 @@ function toDriverRow(driver: DriverListItem): Driver {
     name: driver.name || 'Unnamed Driver',
     email: driver.email || '--',
     licenseClass: driver.verificationStatus.replace('_', ' '),
-    licenseType: driver.isVerified ? 'Verified' : 'Review',
+    licenseType: readinessLabel,
     dotColor: driver.isOnline ? '#22C55E' : '#94A3B8',
     avatarSrc: driver.photo?.startsWith('http') ? driver.photo : '/driver-avatar.png',
     vehicleName: driver.vehicleSummary || 'No vehicle submitted',
     vehicleId: driver.hasVehicle ? `ID: ${driver.id.slice(0, 6).toUpperCase()}` : 'Awaiting vehicle',
-    routeFrom: driver.isOnline ? 'Available' : 'No Active Route',
-    routeTo: driver.isOnline ? 'Dispatch Pool' : '',
-    routeInfo: driver.isOnline ? undefined : `JOINED ${new Date(driver.createdAt).toLocaleDateString()}`,
+    routeFrom: driver.isOnline && !isOperationallyBlocked ? 'Available' : 'No Active Route',
+    routeTo: driver.isOnline && !isOperationallyBlocked ? 'Dispatch Pool' : '',
+    routeInfo: isOperationallyBlocked ? readinessMessage : driver.isOnline ? undefined : `JOINED ${new Date(driver.createdAt).toLocaleDateString()}`,
     status,
     acceptance: approvedRatio,
     rating: driver.rating || 0,
     earnings: `${driver.totalTrips} trips`,
-    earningsSub: driver.hasFcmToken ? 'Push enabled' : 'No push token',
+    earningsSub: readiness?.canGoOnline ? 'Ready for online' : readinessLabel,
+    readinessLabel,
+    readinessMessage,
   };
 }
 
@@ -69,6 +79,8 @@ function statusBadgeStyle(status: DriverStatus): { bg: string; color: string } {
       return { bg: '#2563EB', color: '#fff' };
     case 'BUSY':
       return { bg: '#6366F1', color: '#fff' };
+    case 'BLOCKED':
+      return { bg: '#F59E0B', color: '#111827' };
     case 'OFFLINE':
     default:
       return { bg: '#E2E8F0', color: '#64748B' };

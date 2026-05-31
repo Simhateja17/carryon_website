@@ -20,6 +20,15 @@ const VERIFICATION_LABELS: Record<string, string> = {
   REJECTED: "Rejected",
 };
 
+const READINESS_STYLES: Record<string, string> = {
+  READY_TO_GO_ONLINE: "bg-green-50 text-green-800 border-green-200",
+  ADMIN_REVIEW_REQUIRED: "bg-blue-50 text-blue-800 border-blue-200",
+  DOCUMENTS_EXPIRED: "bg-red-50 text-red-800 border-red-200",
+  DOCUMENTS_REQUIRED: "bg-amber-50 text-amber-900 border-amber-200",
+  PAYOUT_SETUP_REQUIRED: "bg-purple-50 text-purple-800 border-purple-200",
+  NOT_READY: "bg-gray-50 text-gray-700 border-gray-200",
+};
+
 const REQUIRED_DRIVER_ONBOARDING_DOCUMENT_TYPES: readonly DriverDocument["type"][] = [
   "MYKAD_FRONT",
   "MYKAD_BACK",
@@ -191,6 +200,8 @@ export default function DriverDetailPage() {
     !driver.profile?.noOffencesDeclared ? "No-offences declaration is missing." : "",
   ].filter(Boolean);
   const canApproveDriver = approvalBlockers.length === 0;
+  const readiness = driver.onlineReadiness;
+  const readinessBlockers = readiness?.blockers || [];
 
   return (
     <main className="flex-1 overflow-y-auto p-8 box-border">
@@ -217,6 +228,15 @@ export default function DriverDetailPage() {
         >
           {VERIFICATION_LABELS[driver.verificationStatus] || driver.verificationStatus}
         </span>
+        {readiness && (
+          <span
+            className={`px-3 py-1 text-sm font-medium rounded-full border ${
+              READINESS_STYLES[readiness.status] || READINESS_STYLES.NOT_READY
+            }`}
+          >
+            {readiness.label}
+          </span>
+        )}
       </div>
 
       {/* Action error banner */}
@@ -238,7 +258,7 @@ export default function DriverDetailPage() {
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Review Decision</h2>
             <p className="text-sm text-gray-500">
-              Approving verifies the driver and allows them to accept deliveries. Rejecting keeps them out of the fleet until they correct the issue.
+              Approving verifies the driver. Online driving still requires valid delivery documents and enabled Stripe payouts.
             </p>
             {driver.verificationRejectionReason && (
               <p className="mt-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
@@ -281,13 +301,22 @@ export default function DriverDetailPage() {
           </div>
         </div>
 
-        {driver.verificationStatus === "APPROVED" ? (
+        {driver.verificationStatus === "APPROVED" && readiness?.canGoOnline ? (
           <p className="mt-4 flex items-center gap-2 text-green-700 text-sm font-medium">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Driver is verified and can accept deliveries.
+            Driver is verified and ready to go online.
           </p>
+        ) : driver.verificationStatus === "APPROVED" && readiness ? (
+          <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="text-sm font-medium text-amber-900">Driver is admin-approved but not ready to go online.</p>
+            <ul className="list-disc pl-5 text-sm text-amber-800 space-y-1 mt-2">
+              {readinessBlockers.map((blocker, index) => (
+                <li key={`${blocker.code}-${blocker.documentType || index}`}>{blocker.message}</li>
+              ))}
+            </ul>
+          </div>
         ) : canApproveDriver ? (
           <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-3">
             <p className="text-sm text-green-800">All required review checks are complete.</p>
@@ -313,6 +342,55 @@ export default function DriverDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Online readiness */}
+      {readiness && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">Online Readiness</h2>
+              <p className="text-sm text-gray-500">
+                This is the same backend gate used when the driver toggles from offline to online.
+              </p>
+            </div>
+            <span
+              className={`inline-flex self-start px-3 py-1 text-sm font-semibold rounded-full border ${
+                READINESS_STYLES[readiness.status] || READINESS_STYLES.NOT_READY
+              }`}
+            >
+              {readiness.label}
+            </span>
+          </div>
+          {readiness.canGoOnline ? (
+            <p className="mt-4 text-sm font-medium text-green-700">No blockers. The driver can go online from the driver app.</p>
+          ) : (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-900 mb-2">Current blockers</p>
+              <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                {readinessBlockers.map((blocker, index) => (
+                  <li key={`${blocker.code}-${blocker.documentType || index}`}>{blocker.message}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+            <InfoCard
+              label="Stripe Account"
+              value={readiness.payoutRequirements.stripeAccountId || "Not created"}
+            />
+            <InfoCard
+              label="Stripe Details"
+              value={readiness.payoutRequirements.detailsSubmitted ? "Submitted" : "Not submitted"}
+              valueClassName={readiness.payoutRequirements.detailsSubmitted ? "text-green-600" : "text-amber-700"}
+            />
+            <InfoCard
+              label="Payouts"
+              value={readiness.payoutRequirements.payoutsEnabled ? "Enabled" : "Not enabled"}
+              valueClassName={readiness.payoutRequirements.payoutsEnabled ? "text-green-600" : "text-amber-700"}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Driver Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
