@@ -34,7 +34,8 @@ export type DriverReadinessBlockerCode =
   | "ADMIN_APPROVAL_REQUIRED"
   | "REQUIRED_DOCUMENT_MISSING"
   | "REQUIRED_DOCUMENT_EXPIRED"
-  | "STRIPE_PAYOUTS_DISABLED";
+  | "STRIPE_PAYOUTS_DISABLED"
+  | "BANK_DETAILS_NOT_APPROVED";
 
 export interface DriverReadinessBlocker {
   code: DriverReadinessBlockerCode;
@@ -55,8 +56,12 @@ export interface DriverOnlineReadiness {
     detailsSubmitted: boolean;
     payoutsEnabled: boolean;
     requirements: unknown;
+    bankDetailsStatus?: DriverBankDetailsStatus;
+    bankDetailsRejectionReason?: string | null;
   };
 }
+
+export type DriverBankDetailsStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface DriverListItem {
   id: string;
@@ -71,6 +76,10 @@ export interface DriverListItem {
   verificationRejectionReason?: string | null;
   verificationReviewedAt?: string | null;
   verificationReviewedByAdminId?: string | null;
+  bankDetailsStatus?: DriverBankDetailsStatus;
+  bankDetailsRejectionReason?: string | null;
+  bankDetailsReviewedAt?: string | null;
+  bankDetailsReviewedByAdminId?: string | null;
   rating: number;
   totalTrips: number;
   emergencyContact: string;
@@ -225,6 +234,10 @@ export interface DriverDetail {
   verificationRejectionReason?: string | null;
   verificationReviewedAt?: string | null;
   verificationReviewedByAdminId?: string | null;
+  bankDetailsStatus?: DriverBankDetailsStatus;
+  bankDetailsRejectionReason?: string | null;
+  bankDetailsReviewedAt?: string | null;
+  bankDetailsReviewedByAdminId?: string | null;
   emergencyContact: string;
   createdAt: string;
   onboardingSubmittedAt?: string | null;
@@ -265,6 +278,58 @@ export interface DriverDetail {
   documents: DriverDocument[];
   vehicle: DriverVehicle | null;
 }
+
+export interface DriverPayoutTransaction {
+  id: string;
+  type: string;
+  amount: number;
+  grossAmount?: number;
+  platformFeeAmount?: number;
+  description?: string;
+  stripeTransferId?: string | null;
+  manualReference?: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface DriverPayoutItem {
+  id: string;
+  driverId: string;
+  walletId: string;
+  transactionId: string | null;
+  amount: number;
+  amountMinor: number;
+  currency: string;
+  stripeTransferId: string | null;
+  stripePayoutId?: string | null;
+  manualReference?: string | null;
+  paidAt?: string | null;
+  paidByAdminId?: string | null;
+  status: "PENDING" | "TRANSFERRED" | "COMPLETED" | "FAILED";
+  failureMessage: string | null;
+  bankDestination?: {
+    bankName?: string;
+    bankAccountHolder?: string;
+    bankAccountNumber?: string;
+    duitNowId?: string;
+    hasDuitNowId?: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+  requestedAmount: number;
+  feeAmount: number;
+  transferAmount: number;
+  transaction: DriverPayoutTransaction | null;
+}
+
+export interface DriverPayoutsPage {
+  items: DriverPayoutItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface AdminPayoutsPage extends DriverPayoutsPage {}
 
 export interface Notification {
   id: string;

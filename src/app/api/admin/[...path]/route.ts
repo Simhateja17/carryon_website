@@ -58,6 +58,23 @@ const DriverPiiRevealSchema = z.object({
   reason: z.string().trim().min(3).max(160),
 }).strict();
 
+const DriverBankReviewSchema = z.object({
+  status: z.enum(["APPROVED", "REJECTED"]),
+  rejectionReason: z.string().trim().max(1000).optional(),
+}).strict();
+
+const PayoutMarkPaidSchema = z.object({
+  reference: z.string().trim().min(3).max(160),
+}).strict();
+
+const PayoutFailSchema = z.object({
+  reason: z.string().trim().min(3).max(1000),
+}).strict();
+
+const PayoutDestinationRevealSchema = z.object({
+  reason: z.string().trim().min(3).max(160),
+}).strict();
+
 const DriverRegistrationSchema = z.object({
   name: z.string().trim().min(1).max(160),
   email: z.string().trim().email().max(254),
@@ -188,6 +205,10 @@ const MUTATION_SCHEMAS: Array<{ method: string; pattern: RegExp; schema: z.ZodTy
   { method: "PUT",  pattern: /^drivers\/[^/]+\/documents\/[^/]+\/review$/, schema: DocumentReviewSchema },
   { method: "PUT",  pattern: /^drivers\/[^/]+\/verify$/, schema: DriverVerifySchema },
   { method: "POST", pattern: /^drivers\/[^/]+\/pii\/reveal$/, schema: DriverPiiRevealSchema },
+  { method: "PUT",  pattern: /^drivers\/[^/]+\/bank-details\/review$/, schema: DriverBankReviewSchema },
+  { method: "POST", pattern: /^payouts\/[^/]+\/mark-paid$/, schema: PayoutMarkPaidSchema },
+  { method: "POST", pattern: /^payouts\/[^/]+\/fail$/, schema: PayoutFailSchema },
+  { method: "POST", pattern: /^payouts\/[^/]+\/destination\/reveal$/, schema: PayoutDestinationRevealSchema },
   { method: "POST", pattern: /^extra-charges\/[^/]+\/review$/, schema: ExtraChargeReviewSchema },
   { method: "POST", pattern: /^support\/tickets\/[^/]+\/reply$/, schema: SupportReplySchema },
   { method: "POST", pattern: /^support\/tickets\/[^/]+\/status$/, schema: SupportStatusSchema },
@@ -203,6 +224,7 @@ const PRODUCTION_URL = "https://api.carryon.my";
 const ALLOWED_ADMIN_ROUTES: Record<string, Set<string>> = {
   "command-center": new Set(["GET"]),
   drivers: new Set(["GET", "PUT", "POST"]),
+  payouts: new Set(["GET", "POST"]),
   notifications: new Set(["GET", "POST"]),
   "extra-charges": new Set(["GET", "POST"]),
   "safety-fraud": new Set(["GET"]),

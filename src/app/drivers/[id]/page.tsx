@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getDriverDetail, revealDriverSensitiveField, reviewDocument, updateDriverVerification } from "@/lib/api";
-import type { DriverDetail, DriverDocument, DriverSensitiveField } from "@/types";
+import { getDriverDetail, getDriverPayouts, revealDriverSensitiveField, reviewDocument, reviewDriverBankDetails, updateDriverVerification } from "@/lib/api";
+import type { DriverDetail, DriverDocument, DriverPayoutItem, DriverPayoutsPage, DriverSensitiveField } from "@/types";
 import { DriverDocumentsReviewSection } from "./DriverDocumentsReviewSection";
 
 const VERIFICATION_STYLES: Record<string, string> = {
@@ -46,7 +46,9 @@ export default function DriverDetailPage() {
   const driverId = params.id as string;
 
   const [driver, setDriver] = useState<DriverDetail | null>(null);
+  const [payouts, setPayouts] = useState<DriverPayoutsPage | null>(null);
   const [loading, setLoading] = useState(true);
+  const [payoutsLoading, setPayoutsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectDocId, setRejectDocId] = useState<string | null>(null);
@@ -70,8 +72,21 @@ export default function DriverDetailPage() {
     }
   }
 
+  async function loadPayouts() {
+    try {
+      setPayoutsLoading(true);
+      const res = await getDriverPayouts(driverId);
+      setPayouts(res.data);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to load payouts");
+    } finally {
+      setPayoutsLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadDriver();
+    loadPayouts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverId]);
 
@@ -148,6 +163,23 @@ export default function DriverDetailPage() {
     }
   }
 
+  async function handleBankReview(status: "APPROVED" | "REJECTED") {
+    const reason = status === "REJECTED"
+      ? window.prompt("Reason for rejecting bank payout details")?.trim()
+      : undefined;
+    if (status === "REJECTED" && !reason) return;
+    setActionLoading(`bank-${status}`);
+    setActionError(null);
+    try {
+      await reviewDriverBankDetails(driverId, status, reason);
+      await loadDriver();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to review bank payout details");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   if (loading) {
     return (
       <main className="flex-1 overflow-y-auto p-8 box-border">
@@ -198,6 +230,12 @@ export default function DriverDetailPage() {
     !driver.profile?.pdpaConsent ? "PDPA consent is missing." : "",
     !driver.profile?.backgroundCheckConsent ? "Background check consent is missing." : "",
     !driver.profile?.noOffencesDeclared ? "No-offences declaration is missing." : "",
+    !driver.profile?.bankName || !driver.profile?.bankAccountHolder || !driver.sensitive?.bankAccountNumber?.hasValue
+      ? "Required bank payout details are missing."
+      : "",
+    driver.profile?.bankName && driver.profile?.bankAccountHolder && driver.sensitive?.bankAccountNumber?.hasValue && driver.bankDetailsStatus !== "APPROVED"
+      ? "Bank payout details must be approved."
+      : "",
   ].filter(Boolean);
   const canApproveDriver = approvalBlockers.length === 0;
   const readiness = driver.onlineReadiness;
@@ -258,7 +296,7 @@ export default function DriverDetailPage() {
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Review Decision</h2>
             <p className="text-sm text-gray-500">
-              Approving verifies the driver. Online driving still requires valid delivery documents and enabled Stripe payouts.
+              Approving verifies the driver. Online driving still requires valid delivery documents and approved bank payout details.
             </p>
             {driver.verificationRejectionReason && (
               <p className="mt-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
@@ -375,22 +413,28 @@ export default function DriverDetailPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
             <InfoCard
-              label="Stripe Account"
-              value={readiness.payoutRequirements.stripeAccountId || "Not created"}
+              label="Bank Details"
+              value={readiness.payoutRequirements.detailsSubmitted ? "Submitted" : "Missing"}
             />
             <InfoCard
-              label="Stripe Details"
-              value={readiness.payoutRequirements.detailsSubmitted ? "Submitted" : "Not submitted"}
-              valueClassName={readiness.payoutRequirements.detailsSubmitted ? "text-green-600" : "text-amber-700"}
+              label="Bank Review"
+              value={readiness.payoutRequirements.bankDetailsStatus || driver.bankDetailsStatus || "PENDING"}
+              valueClassName={(readiness.payoutRequirements.bankDetailsStatus || driver.bankDetailsStatus) === "APPROVED" ? "text-green-600" : "text-amber-700"}
             />
             <InfoCard
               label="Payouts"
-              value={readiness.payoutRequirements.payoutsEnabled ? "Enabled" : "Not enabled"}
+              value={readiness.payoutRequirements.payoutsEnabled ? "Ready" : "Blocked"}
               valueClassName={readiness.payoutRequirements.payoutsEnabled ? "text-green-600" : "text-amber-700"}
             />
           </div>
         </div>
       )}
+
+      <DriverPayoutsSection
+        payouts={payouts}
+        loading={payoutsLoading}
+        onCopy={(value) => navigator.clipboard?.writeText(value)}
+      />
 
       {/* Driver Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -456,7 +500,34 @@ export default function DriverDetailPage() {
 
       {/* License and Banking */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">License and Banking</h2>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">License and Banking</h2>
+            <p className="text-sm text-gray-500">Bank payout details must be reviewed before driver approval and withdrawals.</p>
+            {driver.bankDetailsRejectionReason && (
+              <p className="mt-2 text-sm text-red-700">Bank rejection reason: {driver.bankDetailsRejectionReason}</p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${driver.bankDetailsStatus === "APPROVED" ? "bg-green-50 text-green-700 border-green-200" : driver.bankDetailsStatus === "REJECTED" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
+              Bank {driver.bankDetailsStatus || "PENDING"}
+            </span>
+            <button
+              onClick={() => handleBankReview("APPROVED")}
+              disabled={actionLoading?.startsWith("bank-")}
+              className="px-3 py-1 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              {actionLoading === "bank-APPROVED" ? "Approving..." : "Approve bank"}
+            </button>
+            <button
+              onClick={() => handleBankReview("REJECTED")}
+              disabled={actionLoading?.startsWith("bank-")}
+              className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              Reject bank
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <SensitiveDetail label="License Number" field="driversLicenseNumber" driver={driver} revealed={revealedFields.driversLicenseNumber} loading={actionLoading === "reveal-driversLicenseNumber"} onReveal={handleReveal} />
           <Detail label="License Class" value={driver.profile?.licenseClass || ""} />
@@ -615,6 +686,116 @@ export default function DriverDetailPage() {
       )}
     </main>
   );
+}
+
+function DriverPayoutsSection({
+  payouts,
+  loading,
+  onCopy,
+}: {
+  payouts: DriverPayoutsPage | null;
+  loading: boolean;
+  onCopy: (value: string) => void;
+}) {
+  const items = payouts?.items || [];
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Payouts</h2>
+          <p className="text-sm text-gray-500">Manual withdrawal history for this driver.</p>
+        </div>
+        {payouts && (
+          <span className="text-xs font-semibold text-gray-500 bg-gray-100 rounded-full px-3 py-1">
+            {payouts.total} total
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-500">Loading payouts...</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-gray-400">No payout requests yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
+                <th className="py-2 pr-4 font-semibold">Date</th>
+                <th className="py-2 pr-4 font-semibold">Requested</th>
+                <th className="py-2 pr-4 font-semibold">Fee</th>
+                <th className="py-2 pr-4 font-semibold">Transfer</th>
+                <th className="py-2 pr-4 font-semibold">Reference</th>
+                <th className="py-2 pr-4 font-semibold">Status</th>
+                <th className="py-2 pr-4 font-semibold">Failure</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {items.map((payout) => (
+                <tr key={payout.id} className="align-top">
+                  <td className="py-3 pr-4 text-gray-700 whitespace-nowrap">{formatDateTime(payout.createdAt)}</td>
+                  <td className="py-3 pr-4 text-gray-900 font-medium">{formatCurrency(payout.requestedAmount, payout.currency)}</td>
+                  <td className="py-3 pr-4 text-gray-700">{formatCurrency(payout.feeAmount, payout.currency)}</td>
+                  <td className="py-3 pr-4 text-gray-900 font-semibold">{formatCurrency(payout.transferAmount, payout.currency)}</td>
+                  <td className="py-3 pr-4">
+                    {payout.manualReference ? (
+                      <button
+                        type="button"
+                        onClick={() => onCopy(payout.manualReference || "")}
+                        className="font-mono text-xs text-indigo-700 hover:text-indigo-900"
+                        title={payout.manualReference}
+                      >
+                        {truncateReference(payout.manualReference)}
+                      </button>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="py-3 pr-4">
+                    <PayoutStatusBadge status={payout.status} />
+                  </td>
+                  <td className="py-3 pr-4 max-w-xs">
+                    {payout.failureMessage ? (
+                      <span className="text-red-600">{payout.failureMessage}</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PayoutStatusBadge({ status }: { status: DriverPayoutItem["status"] }) {
+  const className = {
+    PENDING: "bg-yellow-50 text-yellow-800 border-yellow-200",
+    TRANSFERRED: "bg-blue-50 text-blue-800 border-blue-200",
+    COMPLETED: "bg-green-50 text-green-800 border-green-200",
+    FAILED: "bg-red-50 text-red-800 border-red-200",
+  }[status] || "bg-gray-50 text-gray-700 border-gray-200";
+
+  return (
+    <span className={`inline-flex px-2 py-1 rounded-full border text-xs font-semibold ${className}`}>
+      {status}
+    </span>
+  );
+}
+
+function formatCurrency(value: number, currency = "myr") {
+  return `${currency.toUpperCase()} ${Number(value || 0).toFixed(2)}`;
+}
+
+function formatDateTime(value: string) {
+  return value ? new Date(value).toLocaleString() : "-";
+}
+
+function truncateReference(value: string) {
+  return value.length > 18 ? `${value.slice(0, 10)}...${value.slice(-6)}` : value;
 }
 
 function InfoCard({

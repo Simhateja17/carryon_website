@@ -12,7 +12,7 @@ function getSectionForPath(p: string): string | null {
   if (p.startsWith('/incident-center')) return 'incident';
   if (p.startsWith('/live-map')) return 'live';
   if (p.startsWith('/orders')) return 'orders';
-  if (p.startsWith('/drivers')) return 'drivers';
+  if (p.startsWith('/drivers') || p.startsWith('/payouts')) return 'drivers';
   if (p.startsWith('/customers')) return 'customers';
   if (p.startsWith('/support')) return 'support';
   if (p.startsWith('/settings')) return 'settings';
@@ -238,7 +238,7 @@ export default function Sidebar() {
   const incidentActive = pathname.startsWith('/incident-center');
   const liveActive = pathname.startsWith('/live-map');
   const ordersActive = pathname.startsWith('/orders');
-  const driversActive = pathname.startsWith('/drivers');
+  const driversActive = pathname.startsWith('/drivers') || pathname.startsWith('/payouts');
   const customersActive = pathname.startsWith('/customers');
   const supportActive = pathname.startsWith('/support');
 
@@ -348,6 +348,7 @@ export default function Sidebar() {
           {openSection === 'drivers' && (
             <div style={{ paddingLeft: '48px', paddingRight: '16px' }}>
               <SubLink label="ONBOARDING REVIEW" onClick={() => router.push('/drivers/onboarding')} active={pathname === '/drivers/onboarding'} />
+              <SubLink label="PAYOUT QUEUE" onClick={() => router.push('/payouts')} active={pathname === '/payouts'} />
               <SubLink label="REGISTER DRIVER" onClick={() => router.push('/drivers/register')} active={pathname === '/drivers/register'} />
             </div>
           )}

@@ -183,6 +183,56 @@ export async function getDriverDetail(id: string) {
   );
 }
 
+export async function getDriverPayouts(driverId: string, page = 1) {
+  return apiFetch<{ success: boolean; data: import("@/types").DriverPayoutsPage }>(
+    `/api/admin/drivers/${driverId}/payouts?page=${page}`
+  );
+}
+
+export async function getAdminPayouts(params: {
+  status?: "PENDING" | "COMPLETED" | "FAILED" | "TRANSFERRED" | "ALL";
+  page?: number;
+  limit?: number;
+} = {}) {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("limit", String(params.limit ?? 20));
+  if (params.status && params.status !== "ALL") query.set("status", params.status);
+  return apiFetch<{ success: boolean; data: import("@/types").AdminPayoutsPage }>(
+    `/api/admin/payouts?${query}`
+  );
+}
+
+export async function markPayoutPaid(payoutId: string, reference: string) {
+  return apiFetch<{ success: boolean; data: import("@/types").DriverPayoutItem }>(
+    `/api/admin/payouts/${payoutId}/mark-paid`,
+    {
+      method: "POST",
+      body: JSON.stringify({ reference }),
+    }
+  );
+}
+
+export async function failPayout(payoutId: string, reason: string) {
+  return apiFetch<{ success: boolean; data: import("@/types").DriverPayoutItem }>(
+    `/api/admin/payouts/${payoutId}/fail`,
+    {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }
+  );
+}
+
+export async function revealPayoutDestination(payoutId: string, reason: string) {
+  return apiFetch<{
+    success: boolean;
+    data: { payoutId: string; bankDestination: NonNullable<import("@/types").DriverPayoutItem["bankDestination"]>; expiresAt: string };
+  }>(`/api/admin/payouts/${payoutId}/destination/reveal`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
 export async function revealDriverSensitiveField(
   driverId: string,
   field: import("@/types").DriverSensitiveField,
@@ -205,6 +255,20 @@ export async function reviewDocument(
 ) {
   return apiFetch<{ success: boolean; data: import("@/types").DriverDocument }>(
     `/api/admin/drivers/${driverId}/documents/${docId}/review`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ status, rejectionReason }),
+    }
+  );
+}
+
+export async function reviewDriverBankDetails(
+  driverId: string,
+  status: "APPROVED" | "REJECTED",
+  rejectionReason?: string
+) {
+  return apiFetch<{ success: boolean; data: import("@/types").DriverDetail }>(
+    `/api/admin/drivers/${driverId}/bank-details/review`,
     {
       method: "PUT",
       body: JSON.stringify({ status, rejectionReason }),
