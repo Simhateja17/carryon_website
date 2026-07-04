@@ -125,6 +125,8 @@ function TransactionDetailPanel({ detail }: { detail: RevenueTransactionDetail }
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
               { label: 'Gross Amount', value: formatMoney(fb.grossAmount), color: '#0F172A' },
+              { label: 'Taxable Subtotal', value: formatMoney(fb.taxableAmount), color: '#0F172A' },
+              { label: `Tax Payable (${Math.round((fb.taxRate || 0) * 100)}%)`, value: formatMoney(fb.taxAmount), color: '#D97706' },
               ...(fb.distance > 0 ? [{ label: `Distance (${fb.distance.toFixed(1)} km)`, value: '', color: '#64748B' }] : []),
               ...(fb.waitTimeCharge > 0 ? [{ label: 'Wait Time Charge', value: formatMoney(fb.waitTimeCharge), color: '#0F172A' }] : []),
               ...(fb.discountAmount > 0 ? [{ label: 'Discount', value: `-${formatMoney(fb.discountAmount)}`, color: '#DC2626' }] : []),
@@ -331,9 +333,11 @@ export default function RevenuePage() {
           </p>
 
           {/* Stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
             {[
               { label: 'TOTAL COMMISSION EARNED', value: stats ? formatMoney(stats.totalCommission) : '—', icon: 'commission' },
+              { label: 'TAX TO PAY', value: stats ? formatMoney(stats.taxPayable) : '—', icon: 'tax' },
+              { label: 'TAX COLLECTED', value: stats ? formatMoney(stats.taxCollected) : '—', icon: 'tax' },
               { label: 'TOTAL REVENUE', value: stats ? formatMoney(stats.totalRevenue) : '—', icon: 'revenue' },
               { label: 'AVG. COMMISSION/ORDER', value: stats ? formatMoney(stats.avgCommissionPerOrder) : '—', icon: 'avg' },
             ].map((s) => (
@@ -352,6 +356,9 @@ export default function RevenuePage() {
                   )}
                   {s.icon === 'revenue' && (
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14c2-2 4-1 6 1s4 1 6-1" stroke="#94A3B8" strokeWidth="1.4" strokeLinecap="round"/><path d="M2 10c2-2 4-1 6 1s4 1 6-1" stroke="#94A3B8" strokeWidth="1.4" strokeLinecap="round"/><path d="M2 6c2-2 4-1 6 1s4 1 6-1" stroke="#94A3B8" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                  )}
+                  {s.icon === 'tax' && (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 2.5h8a1.5 1.5 0 0 1 1.5 1.5v11.5l-2-1-2 1-2-1-2 1-2-1V4A1.5 1.5 0 0 1 5 2.5Z" stroke="#94A3B8" strokeWidth="1.4" strokeLinejoin="round"/><path d="M7 7h5M7 10h5" stroke="#94A3B8" strokeWidth="1.4" strokeLinecap="round"/></svg>
                   )}
                   {s.icon === 'avg' && (
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#94A3B8" strokeWidth="1.4"/><path d="M5 7h2M5 10h4M5 13h6" stroke="#94A3B8" strokeWidth="1.4" strokeLinecap="round"/></svg>

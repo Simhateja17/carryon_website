@@ -873,7 +873,10 @@ export interface AdminFleetSettingsSnapshot {
 
 export interface RevenueStats {
   totalRevenue: number;
+  netRevenueBeforeTax: number;
   totalCommission: number;
+  taxCollected: number;
+  taxPayable: number;
   avgCommissionPerOrder: number;
   orderCount: number;
   period: "weekly" | "monthly";
@@ -911,6 +914,9 @@ export interface RevenueTransactionDetail {
   delivery: string;
   feeBreakdown: {
     grossAmount: number;
+    taxableAmount: number;
+    taxAmount: number;
+    taxRate: number;
     distance: number;
     waitTimeCharge: number;
     discountAmount: number;
