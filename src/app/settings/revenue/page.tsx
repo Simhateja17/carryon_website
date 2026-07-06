@@ -426,10 +426,7 @@ export default function RevenuePage() {
                       <span style={{ fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#64748B' }}>Payment Method</span>
                       <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} style={{ height: '34px', minWidth: '132px', padding: '0 12px', borderRadius: '9px', background: '#fff', border: '1px solid #D6DEE8', fontFamily: 'Inter', fontSize: '14px', color: '#374151', cursor: 'pointer' }}>
                         <option value="all">All Methods</option>
-                        <option value="CASH">Cash</option>
-                        <option value="WALLET">Wallet</option>
-                        <option value="CARD">Card</option>
-                        <option value="UPI">UPI</option>
+                        <option value="STRIPE">Stripe</option>
                       </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

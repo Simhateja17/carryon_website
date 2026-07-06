@@ -22,7 +22,7 @@ const RideRequestSchema = z.object({
   to: RideLocationSchema,
   price: z.number().min(0, "Price must be non-negative"),
   vehicleType: z.enum(VEHICLE_TYPES),
-  paymentMethod: z.enum(["CASH", "UPI", "CARD", "WALLET"]).optional(),
+  paymentMethod: z.enum(["STRIPE", "CASH", "UPI", "CARD", "WALLET"]).optional(),
   driverIds: z.array(z.string()).optional(),
 });
 
@@ -200,7 +200,6 @@ const AdminSecuritySettingsSchema = z.object({
 
 const MUTATION_SCHEMAS: Array<{ method: string; pattern: RegExp; schema: z.ZodTypeAny }> = [
   { method: "POST", pattern: /^notifications\/send$/, schema: SendNotificationSchema },
-  { method: "POST", pattern: /^notifications\/ride-request$/, schema: RideRequestSchema },
   { method: "POST", pattern: /^drivers$/, schema: DriverRegistrationSchema },
   { method: "PUT",  pattern: /^drivers\/[^/]+\/documents\/[^/]+\/review$/, schema: DocumentReviewSchema },
   { method: "PUT",  pattern: /^drivers\/[^/]+\/verify$/, schema: DriverVerifySchema },

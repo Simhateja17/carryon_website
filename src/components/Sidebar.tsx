@@ -329,11 +329,6 @@ export default function Sidebar() {
               onClick={() => toggle('orders', '/orders')}
             />
           </div>
-          {openSection === 'orders' && (
-            <div style={{ paddingLeft: '48px', paddingRight: '16px' }}>
-              <SubLink label="CREATE NEW ORDERS" onClick={() => router.push('/orders/create')} active={pathname.startsWith('/orders/create')} />
-            </div>
-          )}
 
           {/* ── DRIVERS (expandable) ── */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>

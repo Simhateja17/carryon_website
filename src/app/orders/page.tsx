@@ -241,10 +241,6 @@ export default function OrdersPage() {
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M1 10v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" stroke="#2F80ED" strokeWidth="1.5" strokeLinecap="round" /></svg>
                 Export CSV
               </button>
-              <button suppressHydrationWarning type="button" onClick={() => router.push('/orders/create')} style={{ height: '40px', padding: '0 20px', borderRadius: '8px', background: '#2F80ED', border: 'none', fontFamily: 'Inter', fontSize: '13px', fontWeight: 700, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="white" strokeWidth="1.4" /><path d="M7 4v6M4 7h6" stroke="white" strokeWidth="1.4" strokeLinecap="round" /></svg>
-                CREATE NEW ORDER
-              </button>
             </div>
           </div>
 

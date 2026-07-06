@@ -395,7 +395,7 @@ export interface CreateRideRequestPayload {
     | "LORRY_10FT"
     | "LORRY_14FT"
     | "LORRY_17FT";
-  paymentMethod?: "CASH" | "UPI" | "CARD" | "WALLET";
+  paymentMethod?: "STRIPE" | "CASH" | "UPI" | "CARD" | "WALLET";
   driverIds?: string[];
 }
 

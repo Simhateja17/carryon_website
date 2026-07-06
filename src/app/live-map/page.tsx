@@ -146,10 +146,9 @@ function ActiveAlertsCard({ alerts }: { alerts: LiveMapAlert[] }) {
   );
 }
 
-function DriverPopup({ dispatch, onMessage, onNewDispatch }: {
+function DriverPopup({ dispatch, onMessage }: {
   dispatch: LiveMapFeaturedDispatch | null;
   onMessage: () => void;
-  onNewDispatch: () => void;
 }) {
   if (!dispatch) return null;
   const progress = Math.max(0, Math.min(100, Math.round(dispatch.routeProgressPercent)));
@@ -245,10 +244,6 @@ function DriverPopup({ dispatch, onMessage, onNewDispatch }: {
           </button>
         </div>
       </div>
-
-      <button suppressHydrationWarning onClick={onNewDispatch} style={{ width: '100%', height: '48px', borderRadius: '16px', background: '#2563EB', border: 'none', fontFamily: 'Inter', fontSize: '16px', fontWeight: 800, color: '#FFFFFF', cursor: 'pointer' }}>
-        + New Dispatch
-      </button>
     </div>
   );
 }
@@ -321,7 +316,6 @@ export default function LiveMapPage() {
           <DriverPopup
             dispatch={snapshot?.featuredDispatch || null}
             onMessage={() => router.push('/fleet-messenger')}
-            onNewDispatch={() => router.push('/orders/create')}
           />
 
           <MapControls />

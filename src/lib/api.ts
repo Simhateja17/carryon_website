@@ -59,13 +59,8 @@ export async function sendNotification(payload: import("@/types").SendNotificati
 }
 
 export async function createRideRequest(payload: import("@/types").CreateRideRequestPayload) {
-  return apiFetch<{
-    success: boolean;
-    data: import("@/types").CreateRideRequestResult;
-  }>("/api/admin/notifications/ride-request", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  void payload;
+  throw new Error("Admin-created bookings are disabled. Bookings must be created and paid through the customer app.");
 }
 
 export async function getRecipientOtps(

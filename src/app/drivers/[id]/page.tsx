@@ -240,6 +240,9 @@ export default function DriverDetailPage() {
   const canApproveDriver = approvalBlockers.length === 0;
   const readiness = driver.onlineReadiness;
   const readinessBlockers = readiness?.blockers || [];
+  const bankDetailsStatus = driver.bankDetailsStatus || "PENDING";
+  const canApproveBank = bankDetailsStatus !== "APPROVED";
+  const canRejectBank = bankDetailsStatus === "PENDING";
 
   return (
     <main className="flex-1 overflow-y-auto p-8 box-border">
@@ -509,23 +512,27 @@ export default function DriverDetailPage() {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${driver.bankDetailsStatus === "APPROVED" ? "bg-green-50 text-green-700 border-green-200" : driver.bankDetailsStatus === "REJECTED" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
-              Bank {driver.bankDetailsStatus || "PENDING"}
+            <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${bankDetailsStatus === "APPROVED" ? "bg-green-50 text-green-700 border-green-200" : bankDetailsStatus === "REJECTED" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
+              Bank {bankDetailsStatus}
             </span>
-            <button
-              onClick={() => handleBankReview("APPROVED")}
-              disabled={actionLoading?.startsWith("bank-")}
-              className="px-3 py-1 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {actionLoading === "bank-APPROVED" ? "Approving..." : "Approve bank"}
-            </button>
-            <button
-              onClick={() => handleBankReview("REJECTED")}
-              disabled={actionLoading?.startsWith("bank-")}
-              className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              Reject bank
-            </button>
+            {canApproveBank && (
+              <button
+                onClick={() => handleBankReview("APPROVED")}
+                disabled={actionLoading?.startsWith("bank-")}
+                className="px-3 py-1 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {actionLoading === "bank-APPROVED" ? "Approving..." : "Approve bank"}
+              </button>
+            )}
+            {canRejectBank && (
+              <button
+                onClick={() => handleBankReview("REJECTED")}
+                disabled={actionLoading?.startsWith("bank-")}
+                className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                Reject bank
+              </button>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

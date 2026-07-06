@@ -21,7 +21,7 @@ const RideRequestSchema = z.object({
     "BIKE", "CAR", "PICKUP", "VAN_7FT", "VAN_9FT",
     "LORRY_10FT", "LORRY_14FT", "LORRY_17FT",
   ]),
-  paymentMethod: z.enum(["CASH", "UPI", "CARD", "WALLET"]).optional(),
+  paymentMethod: z.enum(["STRIPE", "CASH", "UPI", "CARD", "WALLET"]).optional(),
   driverIds: z.array(z.string()).optional(),
 });
 
