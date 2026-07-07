@@ -727,6 +727,8 @@ export interface AdminOrder {
   driver: { id: string; name: string; photo: string | null; phone: string } | null;
   pickupAddress: { address: string; contactName: string } | null;
   deliveryAddress: { address: string; contactName: string } | null;
+  pickupProofUrl: string | null;
+  deliveryProofUrl: string | null;
 }
 
 export interface AdminOrdersParams {

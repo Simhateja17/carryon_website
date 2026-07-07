@@ -184,6 +184,8 @@ export interface OrderViewModel {
   statusTextColor: string;
   rawStatus: BookingStatus;
   createdAt: string;
+  pickupProofUrl: string | null;
+  deliveryProofUrl: string | null;
 }
 
 const STATUS_DISPLAY: Record<BookingStatus, { label: string; bg: string; text: string }> = {
@@ -215,5 +217,7 @@ export function toOrderViewModel(booking: AdminOrder): OrderViewModel {
     statusTextColor: display.text,
     rawStatus: booking.status,
     createdAt: booking.createdAt,
+    pickupProofUrl: booking.pickupProofUrl,
+    deliveryProofUrl: booking.deliveryProofUrl,
   };
 }

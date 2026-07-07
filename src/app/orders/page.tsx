@@ -84,6 +84,51 @@ function SkeletonRow() {
   );
 }
 
+function ProofPhotoCard({ label, url }: { label: string; url: string | null }) {
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '11px', letterSpacing: '0.5px', color: '#64748B', textTransform: 'uppercase' }}>{label}</span>
+      <div style={{ width: '100%', height: '180px', borderRadius: '10px', background: '#F1F5F9', border: '1px solid #E2E8F0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <span style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', padding: '0 16px', textAlign: 'center' }}>Not captured yet</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrderProofModal({ order, onClose }: { order: OrderViewModel; onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '24px' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: '480px', maxWidth: '100%', background: '#fff', borderRadius: '16px', boxShadow: '0px 20px 25px -5px rgba(0,0,0,0.15)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontFamily: 'Manrope', fontWeight: 700, fontSize: '18px', color: '#0F172A', margin: 0 }}>{order.id}</h2>
+            <p style={{ fontFamily: 'Inter', fontSize: '12px', color: '#64748B', margin: '4px 0 0' }}>{order.customer} · {order.destination}</p>
+          </div>
+          <button suppressHydrationWarning onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4l10 10M14 4L4 14" stroke="#64748B" strokeWidth="1.6" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <ProofPhotoCard label="Proof of Pickup" url={order.pickupProofUrl} />
+          <ProofPhotoCard label="Proof of Delivery" url={order.deliveryProofUrl} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const selectStyle: React.CSSProperties = {
   height: '32px', borderRadius: '8px', background: '#F2F4F6', border: 'none',
   fontFamily: 'Inter', fontSize: '12px', color: '#2F80ED',
@@ -115,6 +160,7 @@ export default function OrdersPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [retryCounter, setRetryCounter] = useState(0);
+  const [proofOrder, setProofOrder] = useState<OrderViewModel | null>(null);
 
   // Debounce search input (300ms)
   useEffect(() => {
@@ -375,7 +421,7 @@ export default function OrdersPage() {
                         </span>
                       </div>
                       <div style={{ paddingRight: '32px', display: 'flex', justifyContent: 'flex-end' }}>
-                        <button suppressHydrationWarning style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}>
+                        <button suppressHydrationWarning onClick={() => setProofOrder(order)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}>
                           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4" r="1.2" fill="#94A3B8" /><circle cx="9" cy="9" r="1.2" fill="#94A3B8" /><circle cx="9" cy="14" r="1.2" fill="#94A3B8" /></svg>
                         </button>
                       </div>
@@ -403,6 +449,8 @@ export default function OrdersPage() {
           </div>
         </div>
       </div>
+
+      {proofOrder && <OrderProofModal order={proofOrder} onClose={() => setProofOrder(null)} />}
     </div>
   );
 }
